@@ -236,9 +236,9 @@ class CWolf
 		print "Content-Type: text/html; charset=EUC-JP\n\n"
     	print(HEAD1)
 		if (title)
-			print "<title>天国ログ #{title}</title>"
+			print "<title>AI天国 #{title}</title>"
 		else
-			print "<title>天国ログ</title>"
+			print "<title>AI天国</title>"
 		end
 
 		if (@cgi['date'] == "0" || @cgi['cmd'] == 'mkvil')
