@@ -5,11 +5,11 @@
 		<tr>
 			<td align="left" valign="top">
 				<table class="vil_main">
-				<tr><td width ="<%= LIST_WIDTH %>"><a href="index.cgi">¥È¥Ã¥×¥Ú¡¼¥¸</a></td><td></td></tr>
+				<tr><td width ="<%= LIST_WIDTH %>"><a href="index.cgi">ãƒˆãƒƒãƒ—ãƒšãƒ¼ã‚¸</a></td><td></td></tr>
 				<tr>
       				<td></td>
       				<td>
-						<h2><%= @vid %>Â¼ <%= @vil.name %></h2>
+						<h2><%= @vid %>æ‘ <%= @vil.name %></h2>
 						<p>
 <%=
 date =
@@ -43,9 +43,9 @@ for i in 0..@vil.date
 
 	datestr =
 	if (i == 0)
-		"¾ğÊó"
+		"æƒ…å ±"
 	else
-		"#{i}ÆüÌÜ"
+		"#{i}æ—¥ç›®"
 	end
 	if (i == date)
 		date_all += %Q(<span class="today">#{datestr}</span> )
@@ -57,26 +57,26 @@ for i in 0..@vil.date
 		date_all += %Q(<a href="#{href}">#{datestr}</a> )
 	end
 end
-date_all += %Q(<a href="?vid=#{@vid}#form">ºÇ¿·</a> |)
-sa = %Q( <a href="?vid=#{@vid}&type=say&date=#{date}#{exidhref}">¿Í</a>)
-wh = %Q( <a href="?vid=#{@vid}&type=whisper&date=#{date}#{exidhref}">Ïµ</a>)
-gr = %Q( <a href="?vid=#{@vid}&type=groan&date=#{date}#{exidhref}">Êè</a>)
-th = %Q( <a href="?vid=#{@vid}&type=think&date=#{date}#{exidhref}">ÆÈ</a>)
+date_all += %Q(<a href="?vid=#{@vid}#form">æœ€æ–°</a> |)
+sa = %Q( <a href="?vid=#{@vid}&type=say&date=#{date}#{exidhref}">äºº</a>)
+wh = %Q( <a href="?vid=#{@vid}&type=whisper&date=#{date}#{exidhref}">ç‹¼</a>)
+gr = %Q( <a href="?vid=#{@vid}&type=groan&date=#{date}#{exidhref}">å¢“</a>)
+th = %Q( <a href="?vid=#{@vid}&type=think&date=#{date}#{exidhref}">ç‹¬</a>)
 if(type != '')
 	if (type == 'say')
-		sa = %Q( <span class="today">¿Í</span>)
+		sa = %Q( <span class="today">äºº</span>)
 	elsif (type == 'whisper')
-		wh = %Q( <span class="today">Ïµ</span>)
+		wh = %Q( <span class="today">ç‹¼</span>)
 	elsif (type == 'groan')
-		gr = %Q( <span class="today">Êè</span>)
+		gr = %Q( <span class="today">å¢“</span>)
 	elsif (type == 'think')
-		th = %Q( <span class="today">ÆÈ</span>)
+		th = %Q( <span class="today">ç‹¬</span>)
 	end
 end
 if (!all)
-	al = %Q( <a href="?vid=#{@vid}&date=#{date}&log=all">Á´</a>)
+	al = %Q( <a href="?vid=#{@vid}&date=#{date}&log=all">å…¨</a>)
 else
-	al = %Q( <span class="today">Á´</span>)
+	al = %Q( <span class="today">å…¨</span>)
 end
 date_all += sa + wh + gr + th + al
 date_all
@@ -112,7 +112,7 @@ date_all
 						<table class="list">
 						<tr>
 							<th colspan="2">
-								À¸Â¸ <%= @vil.survivors.size %>¿Í
+								ç”Ÿå­˜ <%= @vil.survivors.size %>äºº
 							</th>
 						</tr>
 <%=
@@ -132,21 +132,21 @@ s = ''
 		s += %Q(#{p.say_remain}/#{@vil.sayfull})
 	end
 	if (@vil.tenko != -1 && p.tenko && p.tenko != -1)
-		s += %Q(<span class="comp_vote">ÅÀ¸Æ#{p.tenko}</span>)
+		s += %Q(<span class="comp_vote">ç‚¹å‘¼#{p.tenko}</span>)
 	end
 	if (@vil.state == 1)
 		if (!@vil.night && !@vil.card && @vil.date == 2 && p.commit == 0)
-			s += %Q(<br><span class="comp_vote">¥³¥ß¥Ã¥ÈºÑ</span>)
+			s += %Q(<br><span class="comp_vote">ã‚³ãƒŸãƒƒãƒˆæ¸ˆ</span>)
 		else
 			if (p.vote != -1)
-				s += %Q(<span class="comp_vote">ÅêÉ¼ºÑ</span>)
+				s += %Q(<span class="comp_vote">æŠ•ç¥¨æ¸ˆ</span>)
 			end
 		end
 	end
 	if (@vil.state > 1 || (@vil.open_skill && @player && @player.dead != 0))
 		s += %Q(<br>#{Skill.skills[p.sid].name})
 		if (p.lovers.size != 0)
-			s += %Q(<span class="cupid">(Îø¿Í)</span>)
+			s += %Q(<span class="cupid">(æ‹äºº)</span>)
 		end
 	elsif (@vil.state == 1)
 		if (@player)
@@ -154,9 +154,9 @@ s = ''
 				if(p.fortune_t.key?(@player))
 					d = p.fortune_t[@player]
 					if (p.sid == 1)
-						s += %Q(<br><span class="wolf">#{d}ÆüÌÜ¡§#{Skill.skills[1].name}</span>)
+						s += %Q(<br><span class="wolf">#{d}æ—¥ç›®ï¼š#{Skill.skills[1].name}</span>)
 					else
-						s += %Q(<br><span class="human">#{d}ÆüÌÜ¡§¿Í´Ö</span>)
+						s += %Q(<br><span class="human">#{d}æ—¥ç›®ï¼šäººé–“</span>)
 					end
 				end
 			elsif (@player.sid == 11)
@@ -167,7 +167,7 @@ s = ''
 				end
 			elsif (@player.sid == 16)
 				if (p.guard_t.key?(@player))
-					s += %Q(<br><span class="guard">¸î±Ò½ªÎ»</span>)
+					s += %Q(<br><span class="guard">è­·è¡›çµ‚äº†</span>)
 				end
 			end
 		end
@@ -179,7 +179,7 @@ s
 
 						<tr>
 							<th colspan="2">
-								µ¾À· <%= @vil.victims.size %>¿Í
+								çŠ ç‰² <%= @vil.victims.size %>äºº
 							</th>
 						</tr>
 <%=
@@ -195,16 +195,16 @@ s = ''
 	if (@vil.state > 1 || (@vil.open_skill && @player && @player.dead != 0))
 		s += %Q(<br>#{Skill.skills[p.sid].name})
 		if (p.lovers.size != 0)
-			s += %Q(<span class="cupid">(Îø¿Í)</span>)
+			s += %Q(<span class="cupid">(æ‹äºº)</span>)
 		end
 	elsif (@vil.state == 1 && @player)
 		if (@player.sid == 2)
 			if(p.fortune_t.key?(@player))
 				d = p.fortune_t[@player]
 				if (p.sid == 1)
-					s += %Q(<br><span class="wolf">#{d}ÆüÌÜ¡§#{Skill.skills[1].name}</span>)
+					s += %Q(<br><span class="wolf">#{d}æ—¥ç›®ï¼š#{Skill.skills[1].name}</span>)
 				else
-					s += %Q(<br><span class="human">#{d}ÆüÌÜ¡§¿Í´Ö</span>)
+					s += %Q(<br><span class="human">#{d}æ—¥ç›®ï¼šäººé–“</span>)
 				end
 			end
 		elsif (@player.sid == 11)
@@ -221,7 +221,7 @@ s
 %>
 						<tr>
 							<th colspan="2">
-								½è·º <%= @vil.executions.size %>¿Í
+								å‡¦åˆ‘ <%= @vil.executions.size %>äºº
 							</th>
 						</tr>
 <%=
@@ -237,16 +237,16 @@ s = ''
 	if (@vil.state > 1 || (@vil.open_skill && @player && @player.dead != 0))
 		s += %Q(<br>#{Skill.skills[p.sid].name})
 		if (p.lovers.size != 0)
-			s += %Q(<span class="cupid">(Îø¿Í)</span>)
+			s += %Q(<span class="cupid">(æ‹äºº)</span>)
 		end
 	elsif (@vil.state == 1 && @player)
 		if (@player.sid == 2)
 			if(p.fortune_t.key?(@player))
 				d = p.fortune_t[@player]
 				if (p.sid == 1)
-					s += %Q(<br><span class="wolf">#{d}ÆüÌÜ¡§#{Skill.skills[1].name}</span>)
+					s += %Q(<br><span class="wolf">#{d}æ—¥ç›®ï¼š#{Skill.skills[1].name}</span>)
 				else
-					s += %Q(<br><span class="human">#{d}ÆüÌÜ¡§¿Í´Ö</span>)
+					s += %Q(<br><span class="human">#{d}æ—¥ç›®ï¼šäººé–“</span>)
 				end
 			end
 		elsif (@player.sid == 11)
@@ -259,7 +259,7 @@ s = ''
 			if (p.sid == 1)
 				s += %Q(<div class="wolf">#{Skill.skills[1].name}</div>)
 			else
-				s += %Q(<div class="human">¿Í´Ö</div>)
+				s += %Q(<div class="human">äººé–“</div>)
 			end
 		end
 	end
@@ -273,7 +273,7 @@ s
 <%
 s_log = Array.new
 date = @vil.date if (date > @vil.date)
-File.open("db/log#{(@vid - 1) / 100}/#{@vid}_#{date}.html", "r:euc-jp") do |ifile|
+File.open("db/log#{(@vid - 1) / 100}/#{@vid}_#{date}.html", "r:utf-8") do |ifile|
 	lines = ifile.readlines
 	(lines.size - 1).downto(0) do |i|
 		line = lines[i]
@@ -321,15 +321,15 @@ File.open("db/log#{(@vid - 1) / 100}/#{@vid}_#{date}.html", "r:euc-jp") do |ifil
 		s_log.push(line)
 		if (exid == 0 && !all && type == '')
 			if(s_log.size > 39 && !part)
-				s = %Q(¾ÊÎ¬¤µ¤ì¤Æ¤¤¤Ş¤¹¡£<a href="?vid=#{@vid}&date=#{date}&log=all">¤¹¤Ù¤ÆÉ½¼¨¤¹¤ë¡£</a>)
+				s = %Q(çœç•¥ã•ã‚Œã¦ã„ã¾ã™ã€‚<a href="?vid=#{@vid}&date=#{date}&log=all">ã™ã¹ã¦è¡¨ç¤ºã™ã‚‹ã€‚</a>)
 				if(@vil.state == 2 && date == @vil.date && lines.size > 300)
-					s += %Q(¡¡<a href="?vid=#{@vid}&date=#{date}&log=part">ºÇ¿·300¤òÉ½¼¨¤¹¤ë</a>)
+					s += %Q(ã€€<a href="?vid=#{@vid}&date=#{date}&log=part">æœ€æ–°300ã‚’è¡¨ç¤ºã™ã‚‹</a>)
 				end
 				s_log.push(alllog_announce(s))
 				break
 			elsif(s_log.size > 299 && part && @vil.state == 2)
-				s = %Q(¾ÊÎ¬¤µ¤ì¤Æ¤¤¤Ş¤¹¡£<a href="?vid=#{@vid}&date=#{date}&log=all">¤¹¤Ù¤ÆÉ½¼¨¤¹¤ë¡£</a>)
-				s += %Q(¡¡<a href="?vid=#{@vid}&date=#{date}">ºÇ¿·40¤òÉ½¼¨¤¹¤ë</a>)
+				s = %Q(çœç•¥ã•ã‚Œã¦ã„ã¾ã™ã€‚<a href="?vid=#{@vid}&date=#{date}&log=all">ã™ã¹ã¦è¡¨ç¤ºã™ã‚‹ã€‚</a>)
+				s += %Q(ã€€<a href="?vid=#{@vid}&date=#{date}">æœ€æ–°40ã‚’è¡¨ç¤ºã™ã‚‹</a>)
 				s_log.push(alllog_announce(s))
 				break
 			end
@@ -349,29 +349,29 @@ if (@vil.date == date && @vil.update_time && @vil.state == 1)
 		if (t > 0)
 			dt = Time.at(t)
 			hour = dt.to_i / 3600
-			s_ti = %Q(<span id="resttime">#{hour}»ş´Ö #{dt.min}Ê¬ #{dt.sec}ÉÃ</span>)
+			s_ti = %Q(<span id="resttime">#{hour}æ™‚é–“ #{dt.min}åˆ† #{dt.sec}ç§’</span>)
 			if (@vil.night_commit && @vil.night)
-				s_ti += "¸å¡¢¤Ş¤¿¤ÏÇ½ÎÏ¼ÔÁ´°÷¤¬¹ÔÆ°¤ò·èÄê¤¹¤ì¤Ğ¹¹¿·¤µ¤ì¤Ş¤¹¡£"
+				s_ti += "å¾Œã€ã¾ãŸã¯èƒ½åŠ›è€…å…¨å“¡ãŒè¡Œå‹•ã‚’æ±ºå®šã™ã‚Œã°æ›´æ–°ã•ã‚Œã¾ã™ã€‚"
 			else
-				s_ti += "¸å¤Ë¹¹¿·¤µ¤ì¤Ş¤¹¡£"
+				s_ti += "å¾Œã«æ›´æ–°ã•ã‚Œã¾ã™ã€‚"
 			end
 			s_time += time_announce(s_ti)
 			s_time += SHOW_UPDATE_SCRIPT
 		else
-			s_time += time_announce(%Q(¹¹¿·»ş´Ö¤ò¤¹¤Ç¤Ë²á¤®¤Æ¤¤¤Ş¤¹¡£))
+			s_time += time_announce(%Q(æ›´æ–°æ™‚é–“ã‚’ã™ã§ã«éãã¦ã„ã¾ã™ã€‚))
 		end
 	else
 		ts = Time.at(@vil.update_time)
-		s_time += time_announce("¤³¤ÎÂ¼¤Ï¡¢#{ts.mon}·î #{ts.day}Æü #{ts.hour}»ş #{ts.min}Ê¬¤Ë¹¹¿·¤µ¤ì¤Ş¤¹¡£")
+		s_time += time_announce("ã“ã®æ‘ã¯ã€#{ts.mon}æœˆ #{ts.day}æ—¥ #{ts.hour}æ™‚ #{ts.min}åˆ†ã«æ›´æ–°ã•ã‚Œã¾ã™ã€‚")
 	end
 elsif (@vil.upstart_time && @vil.state == 0)
 	ts = Time.at(@vil.upstart_time)
-	str = "¤³¤ÎÂ¼¤Ï¡¢#{ts.mon}·î #{ts.day}Æü #{ts.hour}»ş #{ts.min}Ê¬¤Ë #{@vil.entry_min}¿Í°Ê¾å¤¤¤ì¤Ğ³«»Ï¤µ¤ì¤Ş¤¹¡£"
-	str += "¤¿¤À¤·¿Í¿ô¤Ë±ş¤¸¤¿ÊÔÀ®¤¬Ìµ¤¤¾ì¹ç¤Ï³«»Ï¤µ¤ì¤Ş¤»¤ó¡£" if (@vil.composition == WIDE_CUSTOM)
+	str = "ã“ã®æ‘ã¯ã€#{ts.mon}æœˆ #{ts.day}æ—¥ #{ts.hour}æ™‚ #{ts.min}åˆ†ã« #{@vil.entry_min}äººä»¥ä¸Šã„ã‚Œã°é–‹å§‹ã•ã‚Œã¾ã™ã€‚"
+	str += "ãŸã ã—äººæ•°ã«å¿œã˜ãŸç·¨æˆãŒç„¡ã„å ´åˆã¯é–‹å§‹ã•ã‚Œã¾ã›ã‚“ã€‚" if (@vil.composition == WIDE_CUSTOM)
 	s_time += time_announce(str)
 elsif (@vil.date == date && @vil.update_time && @vil.state == 2)
 	ts = Time.at(@vil.update_time)
-	s_time += time_announce("¤³¤ÎÂ¼¤Ï¡¢#{ts.mon}·î #{ts.day}Æü #{ts.hour}»ş #{ts.min}Ê¬¤Ë½ªÎ»¤·¤Ş¤¹¡£")
+	s_time += time_announce("ã“ã®æ‘ã¯ã€#{ts.mon}æœˆ #{ts.day}æ—¥ #{ts.hour}æ™‚ #{ts.min}åˆ†ã«çµ‚äº†ã—ã¾ã™ã€‚")
 end
 %>
 <% if (@conf.up2down == 0) %>
@@ -409,19 +409,19 @@ end
 				<%=
 				s = ''
 				if (@vil.tenko == -1)
-					s += "<option value = -1>ÅÀ¸Æ¤ò¤·¤Ê¤¤ *"
+					s += "<option value = -1>ç‚¹å‘¼ã‚’ã—ãªã„ *"
 					s += "\n"
-					s += "<option value = 0>ÅÀ¸Æ³«»Ï"
+					s += "<option value = 0>ç‚¹å‘¼é–‹å§‹"
 				else
-					s += "<option value = 0>ºÆÅÀ¸Æ³«»Ï"
+					s += "<option value = 0>å†ç‚¹å‘¼é–‹å§‹"
 					s += "\n"
-					s += "<option value = -1>ÅÀ¸Æ¤ò¤ä¤á¤ë"
+					s += "<option value = -1>ç‚¹å‘¼ã‚’ã‚„ã‚ã‚‹"
 				end
 				s += "\n"
 				s
 				%>
 				</select>
-				<input type="submit" value="È¯¸À³ÎÇ§" class="submit">
+				<input type="submit" value="ç™ºè¨€ç¢ºèª" class="submit">
 			</div>
 		</form>
 	<% end %>
@@ -442,7 +442,7 @@ end
 					<td></td>
 					<td><p><%= date_all %></p></td>
 				</tr>
-				<tr><td><a href="index.cgi">¥È¥Ã¥×¥Ú¡¼¥¸</a></td><td></td></tr>
+				<tr><td><a href="index.cgi">ãƒˆãƒƒãƒ—ãƒšãƒ¼ã‚¸</a></td><td></td></tr>
 				</table>
 			</td>
 		</tr>

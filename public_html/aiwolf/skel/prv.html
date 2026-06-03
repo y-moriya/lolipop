@@ -6,11 +6,11 @@
 		<tr>
 			<td align="left" valign="top">
 				<table class="vil_main">
-				<tr><td width="<%= LIST_WIDTH %>"><a href="index.cgi">�ȥåץڡ���</a></td><td></td></tr>
+				<tr><td width="<%= LIST_WIDTH %>"><a href="index.cgi">トップページ</a></td><td></td></tr>
 				<tr>
-					<td></td><td>ȯ����������С��Ǥ���</td>
+					<td></td><td>発言回数オーバーです。</td>
 				</tr>
-				<tr><td></td><td><a href="index.cgi?vid=<%= @vid %>#form">¼�ؤ�ɤ�</a></td></tr>
+				<tr><td></td><td><a href="index.cgi?vid=<%= @vid %>#form">村へもどる</a></td></tr>
 				</table>
 			</td>
 		</tr>
@@ -37,7 +37,7 @@
 						<tr>
 							<td width="140">
 								<form action="index.cgi" method="post">
-								<input type="hidden" name="j_data" value="���ܸ�Υǡ���">
+								<input type="hidden" name="j_data" value="日本語のデータ">
 								<input type="hidden" name="cmd" value="msg">
 								<input type="hidden" name="prv" value="on">
 								<input type="hidden" name="message" value="<%= @val_msg %>">
@@ -45,13 +45,13 @@
 								<input type="hidden" name="loud" value="on">
 	<% end %>
 								<input type="hidden" name="vid" value="<%= @vid %>">
-								<input type="submit" value="ȯ��" class="submit">
+								<input type="submit" value="発言" class="submit">
 								</form>
 							</td>
 							<td>
 								<form action="index.cgi" method="post">
 								<input type="hidden" name="vid" value="<%= @vid %>">
-								<input type="submit" value="����󥻥�" class="submit">
+								<input type="submit" value="キャンセル" class="submit">
 								</form>
 							</td>
 						</tr>

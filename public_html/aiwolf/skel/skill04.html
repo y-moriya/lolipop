@@ -6,26 +6,26 @@
 <tr>
 	<td></td>
 	<td class="action_body">
-¥¹¥¦¥£¥Ã¥Á¡§
+ã‚¹ã‚¦ã‚£ãƒƒãƒï¼š
 	<select name="target_id">
 <%=
 s = ''
 if (@player.target == -1)
-	s += "<option value = -1>Ì¤ÀßÄê *"
+	s += "<option value = -1>æœªè¨­å®š *"
 else
-	s += "<option value = -1>°ú¤¯"
+	s += "<option value = -1>å¼•ã"
 end
 s += "\n"	
 if (@player.target == 0)
-  s += %Q(<option value = "0" selected>²¡¤¹ *)
+  s += %Q(<option value = "0" selected>æŠ¼ã™ *)
 else
-  s += %Q(<option value = "0">²¡¤¹)
+  s += %Q(<option value = "0">æŠ¼ã™)
 end
 s += "\n"
 s 
 %>
 	</select>
-	<input type="submit" value="ÊÑ¹¹" class="submit">
+	<input type="submit" value="å¤‰æ›´" class="submit">
 	</td>
 	<td></td>
 </tr>

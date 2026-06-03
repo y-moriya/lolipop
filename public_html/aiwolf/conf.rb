@@ -1,4 +1,4 @@
-# -*- coding: euc-jp -*-
+# -*- coding: utf-8 -*-
 class Conf
 	attr_reader :up2down, :win_id, :focus, :part
 

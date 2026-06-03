@@ -5,7 +5,7 @@
 		<tr>
 			<td align="left" valign="top">
 				<table class="vil_main">
-				<tr><td width="<%= LIST_WIDTH %>"><a href="index.cgi">¥È¥Ã¥×¥Ú¡¼¥¸</a></td><td></td></tr>
+				<tr><td width="<%= LIST_WIDTH %>"><a href="index.cgi">ãƒˆãƒƒãƒ—ãƒšãƒ¼ã‚¸</a></td><td></td></tr>
 				<tr>
 					<td></td>
 					<td>
@@ -20,7 +20,7 @@
 	recorddb.transaction do
 		if (recorddb.root?(userid)  && userid != '')
 			s += "<tr><td><h2>#{userid}</h2></td></tr>"
-			s += "<tr><td>#{announce("¥×¥í¥Õ¥£¡¼¥ë").sub(/<!--say-->/, '')}</td></tr>"
+			s += "<tr><td>#{announce("ãƒ—ãƒ­ãƒ•ã‚£ãƒ¼ãƒ«").sub(/<!--say-->/, '')}</td></tr>"
 			prodb = PStore.new('db/profile.db')
 			prodb.transaction do
 				if (prodb.root?(userid))
@@ -31,18 +31,18 @@
 					prodb[userid] = Hash.new
 				end
 			end
-			s += "<tr><td>#{announce("Â¼¤Îµ­Ï¿").sub(/<!--say-->/, '')}</td></tr>"
+			s += "<tr><td>#{announce("æ‘ã®è¨˜éŒ²").sub(/<!--say-->/, '')}</td></tr>"
 			if (recorddb[userid].size != 0)
 				s += %Q(<tr><td><table class="vil_index">)
 				rec = recorddb[userid]
 				(rec.size - 1).downto(0) do |i|
 					v = rec[i]
 					kako = (File.exist?("db/vil#{(v['vid'] - 1) / 100}/#{v['vid']}.db")) ? "" : "http://www7.atpages.jp/buta/"
-					s += %Q(<tr><td><a class="vid" href="?vid=#{v['vid']}&amp;date=0">#{v['vid']}Â¼</a></td><td><a href="#{kako}?vid=#{v['vid']}&amp;date=1&amp;log=all">#{v['sname']}</a></td><td>#{v['num']}¿Í</td><td>#{Composition.compositions[v['composition']].name}</td><td>#{v['p_name']}</td></tr>)
+					s += %Q(<tr><td><a class="vid" href="?vid=#{v['vid']}&amp;date=0">#{v['vid']}æ‘</a></td><td><a href="#{kako}?vid=#{v['vid']}&amp;date=1&amp;log=all">#{v['sname']}</a></td><td>#{v['num']}äºº</td><td>#{Composition.compositions[v['composition']].name}</td><td>#{v['p_name']}</td></tr>)
 				end
 				s += "</table></td></tr>"
 				if (@login.login && @login.userid == userid)
-					s += "<tr><td>#{announce("¥×¥í¥Õ¥£¡¼¥ëÊÔ½¸")}</td></tr>"
+					s += "<tr><td>#{announce("ãƒ—ãƒ­ãƒ•ã‚£ãƒ¼ãƒ«ç·¨é›†")}</td></tr>"
 					s += %Q(<form action="index.cgi" method="post"><input type="hidden" name="cmd" value="profile"><input type="hidden" name="userid" value="#{@login.userid}">)
 					s += %Q(<tr><td>)
 					s += %Q(<textarea name="pro_text" rows="7" class="action_textarea">)
@@ -51,14 +51,14 @@
 							s += prodb[userid]['pre']
 						end
 					end
-					s += %Q(</textarea><input type="submit" value="ÊÔ½¸" class="submit"></td></tr>)
+					s += %Q(</textarea><input type="submit" value="ç·¨é›†" class="submit"></td></tr>)
 					s += "</form>"
 				end
 			else
-				s += "<tr><td>¤Ş¤ÀÀïÀÓ¤¬¤¢¤ê¤Ş¤»¤ó¡£</td></tr>"
+				s += "<tr><td>ã¾ã æˆ¦ç¸¾ãŒã‚ã‚Šã¾ã›ã‚“ã€‚</td></tr>"
 			end
 		else
-			s += "<tr><td>ÅĞÏ¿¤µ¤ì¤Æ¤Ê¤¤ID¤Ç¤¹¡£</td></tr>"
+			s += "<tr><td>ç™»éŒ²ã•ã‚Œã¦ãªã„IDã§ã™ã€‚</td></tr>"
 		end
 	end
 	s
@@ -66,7 +66,7 @@
 						</table>
 					</td>
 				</tr>
-				<tr><td><a href="index.cgi">¥È¥Ã¥×¥Ú¡¼¥¸</a></td><td></td></tr>
+				<tr><td><a href="index.cgi">ãƒˆãƒƒãƒ—ãƒšãƒ¼ã‚¸</a></td><td></td></tr>
 				</table>
 			</td>
 		</tr>

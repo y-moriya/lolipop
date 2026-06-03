@@ -5,31 +5,31 @@
 		<tr>
 			<td align="left" valign="top">
 				<table class="vil_main">
-				<tr><td width="<%= LIST_WIDTH %>"><a href="index.cgi">�ȥåץڡ���</a></td><td></td></tr>
+				<tr><td width="<%= LIST_WIDTH %>"><a href="index.cgi">トップページ</a></td><td></td></tr>
 				<tr>
 					<td></td>
 					<td>
 						<table>
-						<tr><td><h2>�������</h2></td></tr>
-						<tr><td class="caption">��¼ϵ��������ţÿ�����ѵ�����פʤɤ�ʸ�������̵���������С�4��22�ͤ���������Ƥ��뤳�Ȥ��Ǥ��ޤ���<br>
-												���٤�ʣ������������Ƥ��������ϲ��Ԥ�Ϥ���Ǥ���������<br>
-												��ʬ����Ƥ��������Ϻ�����뤳�Ȥ��Ǥ��ޤ���<br>
-												¼�ͤ�1�ͤ�����ʤ��ä���硢���������ϥ��ߡ�̵�����Ѥˤʤ�ޤ���<br>
-												�磻�ɥ�������Ȥ�������Ʊ���Ǥ���</tr>
+						<tr><td><h2>編成投稿</h2></td></tr>
+						<tr><td class="caption">「村狼占霊狂狩共妖Ｃ信聖中Ｑ求邪風」などの文字を改行無しに入れれば、4〜22人の編成を投稿することができます。<br>
+												一度に複数の編成を投稿したい場合は改行をはさんでください。<br>
+												自分が投稿した編成は削除することができます。<br>
+												村人を1人も入れなかった場合、その編成はダミー無し専用になります。<br>
+												ワイドカスタムとだいたい同じです。</tr>
 						<tr>
 							<td>
 <% if (@login.login) %>
 							<form action="index.cgi" method="post">
 							<input type="hidden" name="cmd" value="pscomp">
 							<textarea name="comp_text" rows="7" class="action_textarea"></textarea>
-							<input type="submit" value="�������" class="submit">
+							<input type="submit" value="編成投稿" class="submit">
 							</form>
 <% else %>
-							��Ƥ���ˤϥ������󤷤Ƥ���������
+							投稿するにはログインしてください。
 <% end %>
 							</td>
 						</tr>
-						<tr><td><%= announce("��Ƥ��줿��������") %></td></tr>
+						<tr><td><%= announce("投稿された編成一覧") %></td></tr>
 						<form action="index.cgi" method="post">
 						<input type="hidden" name="cmd" value="delcomp">
 						<tr>
@@ -46,7 +46,7 @@
 			next if (!pscompdb.root?(n))
 			psn = pscompdb[n]
 			next if (psn.size == 0)
-			s += %Q(<tr><td colspan="#{ if (@login.login && @login.userid == MASTER) then 3 else 2 end }" class="vil_title">#{n}��</td></tr>)
+			s += %Q(<tr><td colspan="#{ if (@login.login && @login.userid == MASTER) then 3 else 2 end }" class="vil_title">#{n}人</td></tr>)
 			(psn.size - 1).downto(0) do |i|
 				s += "<tr>"
 				if (@login.userid == MASTER || @login.userid == psn[i]['userid'])
@@ -69,13 +69,13 @@
 							</td>
 						</tr>
 <% if (che) %>
-						<tr><td><br><input type="submit" value="������������" class="submit"></td></tr>
+						<tr><td><br><input type="submit" value="編成を削除する" class="submit"></td></tr>
 <% end %>
 						</form>
 						</table>
 					</td>
 				</tr>
-				<tr><td width="<%= LIST_WIDTH %>"><a href="index.cgi">�ȥåץڡ���</a></td><td></td></tr>
+				<tr><td width="<%= LIST_WIDTH %>"><a href="index.cgi">トップページ</a></td><td></td></tr>
 				</table>
 			</td>
 		</tr>

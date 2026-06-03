@@ -6,14 +6,14 @@
 <tr>
 	<td></td>
 	<td class="action_body">
-ผูหโคนค๋กง
+้ช้ญ”ใใ๏ผ
 	<select name="target_id">
 <%=
 s = ''
 if (@player.target == -1)
-	s += "<option value = -1>ฬคภ฿ฤ๊ *"
+	s += "<option value = -1>ๆช่จญๅฎ *"
 else
-	s += "<option value = -1>ฅญฅใฅ๓ฅปฅ๋"
+	s += "<option value = -1>ใญใฃใณใปใซ"
 end
 s += "\n"
 @vil.pids.each do |p|
@@ -29,7 +29,7 @@ end
 s 
 %>
 	</select>
-	<input type="submit" value="สันน" class="submit">
+	<input type="submit" value="ๅคๆด" class="submit">
 	</td>
 	<td></td>
 </tr>

@@ -1,4 +1,4 @@
-# -*- coding: euc-jp -*-
+# -*- coding: utf-8 -*-
 # require 'jcode'
 # $KCODE='e'
 
@@ -100,7 +100,7 @@ class CWolf
 		end
 
 		if(@vil.death_defeat)
-			Skill.skills[1].name = "¿Í¶ô¤¤"
+			Skill.skills[1].name = "äººå–°ã„"
 		end
 
 		if (@vil.state < 3 && @vil.update_time && @vil.update_time < Time.now.to_i)
@@ -162,17 +162,17 @@ class CWolf
 		j_code = NKF.guess(j_data)
 		opt =
 			if (j_code == NKF::JIS)
-				'-xeJ'
+				'-xwJ'
 			elsif (j_code == NKF::EUC)
-				'-xeE'
+				'-xwE'
 			elsif (j_code == NKF::SJIS)
-				'-xeS'
+				'-xwS'
 			elsif (j_code == NKF::UTF8)
-				'-xeW'
+				'-xwW'
 			elsif (j_code == NKF::UTF16)
-				'-xeW16'
+				'-xwW16'
 			else
-				'-xe'
+				'-xw'
 			end
 		msg = NKF.nkf(opt, msg)
 		msg = CGI.escapeHTML(msg)
@@ -180,7 +180,7 @@ class CWolf
 		msg.gsub!(/[\r\n]/, '<br>')
 		msg.gsub!(/&amp;(#\d{3,};)/) { '&' + $1 }
 		msg.gsub!(/&(#0*127;)/) { '&amp;' + $1 }
-		msg.gsub!(/^ +$/, '¡¡')
+		msg.gsub!(/^ +$/, 'ã€€')
 
 		num_char = 1
 
@@ -223,7 +223,7 @@ class CWolf
 			vil.add_player(player)
 
 			type = 'say'
-			s = announce("#{player.name} ¤¬½¸²ñ½ê¤òË¬¤ì¤Ş¤·¤¿¡£")
+			s = announce("#{player.name} ãŒé›†ä¼šæ‰€ã‚’è¨ªã‚Œã¾ã—ãŸã€‚")
 			vil.say_cnt[type] = vil.say_cnt[type] + 1
 			cnt = vil.say_cnt[type]
 			s += vil.say(type, cnt, player, msg, player.userid)
@@ -233,12 +233,12 @@ class CWolf
 
 	def print_head(title = nil)
 		@headered = true
-		print "Content-Type: text/html; charset=EUC-JP\n\n"
+		print "Content-Type: text/html; charset=UTF-8\n\n"
     	print(HEAD1)
 		if (title)
-			print "<title>AIÅ·¹ñ #{title}</title>"
+			print "<title>AIå¤©å›½ #{title}</title>"
 		else
-			print "<title>AIÅ·¹ñ</title>"
+			print "<title>AIå¤©å›½</title>"
 		end
 
 		if (@cgi['date'] == "0" || @cgi['cmd'] == 'mkvil')
@@ -291,9 +291,9 @@ class CWolf
 			return if (!player)
 			player.vote = v
 			if (v == -1)
-				str = "#{player.name} ¤¬ÅêÉ¼¤ò¼è¤ê¾Ã¤·¤Ş¤·¤¿¡£"
+				str = "#{player.name} ãŒæŠ•ç¥¨ã‚’å–ã‚Šæ¶ˆã—ã¾ã—ãŸã€‚"
 			else
-				str = "#{player.name} ¤¬ #{vil.player_p(v).name} ¤ËÅêÉ¼¤·¤Ş¤·¤¿¡£"
+				str = "#{player.name} ãŒ #{vil.player_p(v).name} ã«æŠ•ç¥¨ã—ã¾ã—ãŸã€‚"
 			end
 			vil.addlog(setvote(player.num_id, str))
 			if (!vil.pids.find { |p| p.vote == -1 })
@@ -322,11 +322,11 @@ class CWolf
 			if (player.sid == 12)
 				t2 = @cgi['target_id2'].to_i
 				if (t == t2 || t == -1 || t2 == -1)
-					str = "#{player.name} ¤ÏÌğ¤ò·â¤ÄÂĞ¾İÁªÂò¤ò¼è¤ê¾Ã¤·¤Ş¤¹¡£"
+					str = "#{player.name} ã¯çŸ¢ã‚’æ’ƒã¤å¯¾è±¡é¸æŠã‚’å–ã‚Šæ¶ˆã—ã¾ã™ã€‚"
 					player.target = -1
 					player.target2 = -1
 				elsif
-					str = "#{player.name} ¤Ï #{vil.player_p(t).name} ¤È #{vil.player_p(t2).name} ¤Ë°¦¤ÎÌğ¤ò·â¤Á¤Ş¤¹¡£"
+					str = "#{player.name} ã¯ #{vil.player_p(t).name} ã¨ #{vil.player_p(t2).name} ã«æ„›ã®çŸ¢ã‚’æ’ƒã¡ã¾ã™ã€‚"
 					player.target = t
 					player.target2 = t2
 				end
@@ -410,7 +410,7 @@ class CWolf
 			if (p.num_char < vil.num_char[p.pid])
 				vil.num_char[p.pid] = p.num_char
 			end
-			s = announce("#{p.name} ¤¬Â¼¤òµî¤ê¤Ş¤·¤¿¡£")
+			s = announce("#{p.name} ãŒæ‘ã‚’å»ã‚Šã¾ã—ãŸã€‚")
 			vil.addlog(s)
 			vil.players.delete(p.userid)
 
@@ -434,9 +434,9 @@ class CWolf
 			return if (!player)
 			player.commit = v
 			if (v == -1)
-				str = "#{player.name} ¤¬»ş´Ö¤ò¿Ê¤á¤ë¤ò¼è¤ê¾Ã¤·¤Ş¤·¤¿¡£"
+				str = "#{player.name} ãŒæ™‚é–“ã‚’é€²ã‚ã‚‹ã‚’å–ã‚Šæ¶ˆã—ã¾ã—ãŸã€‚"
 			else
-				str = "#{player.name} ¤¬»ş´Ö¤ò¿Ê¤á¤ë¤òÁªÂò¤·¤Ş¤·¤¿¡£"
+				str = "#{player.name} ãŒæ™‚é–“ã‚’é€²ã‚ã‚‹ã‚’é¸æŠã—ã¾ã—ãŸã€‚"
 			end
 			vil.addlog(setvote(player.num_id, str))
 
@@ -456,7 +456,7 @@ class CWolf
 			return if (vil.pids.find { |p| p.userid == MASTER})
 			return if (vil.composition == CUSTOM && vil.skill_nums[0] == 0)
 			return if (vil.players.size >= vil.entry_max)
-			return if (vil.composition == WIDE_CUSTOM && vil.wide_comps.any? { |w| w && /Â¼/ !~ w})
+			return if (vil.composition == WIDE_CUSTOM && vil.wide_comps.any? { |w| w && /æ‘/ !~ w})
 
 			vil.dummy = true
 
@@ -467,7 +467,7 @@ class CWolf
 			vil.say_cnt[type] = vil.say_cnt[type] + 1
 			cnt = vil.say_cnt[type]
 			player = vil.player_p(1)
-			s = announce("#{player.name} ¤¬½¸²ñ½ê¤òË¬¤ì¤Ş¤·¤¿¡£")
+			s = announce("#{player.name} ãŒé›†ä¼šæ‰€ã‚’è¨ªã‚Œã¾ã—ãŸã€‚")
 			s += vil.say(type, cnt, player, Charset.charsets[vil.char].dummy_message['middle'], player.userid)
 			vil.addlog(s)
 			vldb = PStore.new('db/vil.db')
@@ -497,9 +497,9 @@ class CWolf
 	def handle_pscomp
 		return if (!@login.login)
 		comp_text = @cgi['comp_text']
-		comp_text.gsub!(/Q/, '£Ñ')
-		comp_text.gsub!(/C/, '£Ã')
-		comp_text.gsub!(/¥À/, 'Â¼')
+		comp_text.gsub!(/Q/, 'ï¼±')
+		comp_text.gsub!(/C/, 'ï¼£')
+		comp_text.gsub!(/ãƒ€/, 'æ‘')
 		vals = comp_text.split(/\r\n|[\r\n]/)
 		po = Composition.compositions[POSTING]
 		pscompdb = PStore.new('db/pscomp.db')
@@ -558,10 +558,10 @@ class CWolf
 			player = vil.player(@login)
 			return if (vil.userid != @login.userid && @login.userid != MASTER && @login.userid != ADMIN)
 			if (t == 0)
-				str = "ÅÀ¸Æ¤¬³«»Ï¤µ¤ì¤Ş¤·¤¿¡£"
+				str = "ç‚¹å‘¼ãŒé–‹å§‹ã•ã‚Œã¾ã—ãŸã€‚"
 				vil.addlog(announce(str))
 			elsif(vil.tenko != -1)
-				str = "ÅÀ¸Æ¤¬Ãæ»ß¤µ¤ì¤Ş¤·¤¿¡£"
+				str = "ç‚¹å‘¼ãŒä¸­æ­¢ã•ã‚Œã¾ã—ãŸã€‚"
 				vil.addlog(announce(str))
 			end
 			vil.tenko = t
@@ -623,17 +623,17 @@ class CWolf
 		j_code = NKF.guess(j_data)
 		opt =
 			if (j_code == NKF::JIS)
-				'-xeJ'
+				'-xwJ'
 			elsif (j_code == NKF::EUC)
-				'-xeE'
+				'-xwE'
 			elsif (j_code == NKF::SJIS)
-				'-xeS'
+				'-xwS'
 			elsif (j_code == NKF::UTF8)
-				'-xeW'
+				'-xwW'
 			elsif (j_code == NKF::UTF16)
-				'-xeW16'
+				'-xwW16'
 			else
-				'-xe'
+				'-xw'
 			end
 		msg = NKF.nkf(opt, msg)
 		len = PRV_LEN
@@ -650,7 +650,7 @@ class CWolf
 		str.gsub!(/[\r\n]/, '<br>')
 		str.gsub!(/&amp;(#\d{3,};)/) { '&' + $1 }
 		str.gsub!(/&(#0*127;)/) { '&amp;' + $1 }
-		str.gsub!(/^ +$/, '¡¡')
+		str.gsub!(/^ +$/, 'ã€€')
 		if (@cgi['loud'] == 'on')
 			str = "<div class=\"loud\">#{str}</div>"
 		end
@@ -697,17 +697,17 @@ class CWolf
 		j_code = NKF.guess(j_data)
 		opt =
 			if (j_code == NKF::JIS)
-				'-xeJ'
+				'-xwJ'
 			elsif (j_code == NKF::EUC)
-				'-xeE'
+				'-xwE'
 			elsif (j_code == NKF::SJIS)
-				'-xeS'
+				'-xwS'
 			elsif (j_code == NKF::UTF8)
-				'-xeW'
+				'-xwW'
 			elsif (j_code == NKF::UTF16)
-				'-xeW16'
+				'-xwW16'
 			else
-				'-xe'
+				'-xw'
 			end
 		msg = NKF.nkf(opt, msg)
 		msg = msg.acut if (type == 'action')
@@ -716,8 +716,8 @@ class CWolf
 		msg.gsub!(/[\r\n]/, '<br>')
 		msg.gsub!(/&amp;(#\d{3,};)/) { '&' + $1 }
 		msg.gsub!(/&(#0*127;)/) { '&amp;' + $1 }
-		msg.gsub!(/^ +$/, '¡¡')
-		msg = "¡¡" if (msg == "")
+		msg.gsub!(/^ +$/, 'ã€€')
+		msg = "ã€€" if (msg == "")
 
 		@vildb.transaction do
 			vil = get_vil(@vid)
@@ -758,7 +758,7 @@ class CWolf
 						return if (vil.date != @cgi['set_date'].to_i)
 						return if (player.dead != 0 || vil.night)
 						postpos = POSTPOS[@cgi['postpos'].to_i]
-						postpos = "" if (postpos == "¡¡")
+						postpos = "" if (postpos == "ã€€")
 						if (@cgi['action_id'] != "")
 							p = vil.player_p(@cgi['action_id'].to_i)
 							return if(!p)
@@ -828,9 +828,9 @@ class CWolf
 
 		return if (!name || name == '')
 		name = CGI.escapeHTML(name)
-		name.gsub!(/^[ ¡¡]+$/, 'Â¼')
+		name.gsub!(/^[ ã€€]+$/, 'æ‘')
 		sname = CGI.escapeHTML(sname)
-		sname.gsub!(/^[ ¡¡]+$/, 'Â¼')
+		sname.gsub!(/^[ ã€€]+$/, 'æ‘')
 
 		skill_nums = Array.new
 
@@ -847,9 +847,9 @@ class CWolf
 			return if (dummy && skill_nums[0] < 1)
 		elsif (composition == WIDE_CUSTOM)
 			comp_text = @cgi['wide_comp']
-			comp_text.gsub!(/Q/, '£Ñ')
-			comp_text.gsub!(/C/, '£Ã')
-			comp_text.gsub!(/¥À/, 'Â¼')
+			comp_text.gsub!(/Q/, 'ï¼±')
+			comp_text.gsub!(/C/, 'ï¼£')
+			comp_text.gsub!(/ãƒ€/, 'æ‘')
 			vals = comp_text.split(/\r\n|[\r\n]/)
 			po = Composition.compositions[WIDE_CUSTOM]
 			wide_comps = Array.new
@@ -1004,7 +1004,7 @@ class CWolf
 				vil.say_cnt[type] = vil.say_cnt[type] + 1
 				cnt = vil.say_cnt[type]
 				player = vil.player_p(1)
-				s = announce("#{player.name} ¤¬½¸²ñ½ê¤òË¬¤ì¤Ş¤·¤¿¡£")
+				s = announce("#{player.name} ãŒé›†ä¼šæ‰€ã‚’è¨ªã‚Œã¾ã—ãŸã€‚")
 				s += vil.say(type, cnt, player, Charset.charsets[vil.char].dummy_message['entry'], player.userid)
 				vil.addlog(s)
 			end
@@ -1014,8 +1014,8 @@ class CWolf
 					vil.say_cnt[type] = vil.say_cnt[type] + 1
 					cnt = vil.say_cnt[type]
 					player = vil.player_p(i)
-					s = announce("#{player.name} ¤¬½¸²ñ½ê¤òË¬¤ì¤Ş¤·¤¿¡£")
-					s += vil.say(type, cnt, player, '¤Õ¤¡¡¼¤¢¡¢Ì²¤¤¤è¡Ä¥Ñ¥È¥é¥Ã¥·¥å¡Ä¡£', player.userid)
+					s = announce("#{player.name} ãŒé›†ä¼šæ‰€ã‚’è¨ªã‚Œã¾ã—ãŸã€‚")
+					s += vil.say(type, cnt, player, 'ãµããƒ¼ã‚ã€çœ ã„ã‚ˆâ€¦ãƒ‘ãƒˆãƒ©ãƒƒã‚·ãƒ¥â€¦ã€‚', player.userid)
 
 					vil.addlog(s)
 				end
@@ -1055,9 +1055,9 @@ class CWolf
 
 		return if (!name || name == '')
 		name = CGI.escapeHTML(name)
-		name.gsub!(/^ +$/, 'Â¼')
+		name.gsub!(/^ +$/, 'æ‘')
 		sname = CGI.escapeHTML(sname)
-		sname.gsub!(/^ +$/, 'Â¼')
+		sname.gsub!(/^ +$/, 'æ‘')
 
 		period = (period > 0) ? period : 1
 		if (card)
@@ -1088,9 +1088,9 @@ class CWolf
 				return if (vil.dummy && skill_nums[0] < 1)
 			elsif (composition == WIDE_CUSTOM)
 				comp_text = @cgi['wide_comp']
-				comp_text.gsub!(/Q/, '£Ñ')
-				comp_text.gsub!(/C/, '£Ã')
-				comp_text.gsub!(/¥À/, 'Â¼')
+				comp_text.gsub!(/Q/, 'ï¼±')
+				comp_text.gsub!(/C/, 'ï¼£')
+				comp_text.gsub!(/ãƒ€/, 'æ‘')
 				vals = comp_text.split(/\r\n|[\r\n]/)
 				po = Composition.compositions[WIDE_CUSTOM]
 				wide_comps = Array.new
@@ -1143,7 +1143,7 @@ class CWolf
 	end
 	def run
 		@headered = false
-		head = "Content-Type: text/html; charset=EUC-JP\n\n"
+		head = "Content-Type: text/html; charset=UTF-8\n\n"
 
 		begin
 		@login = Login.new(@cgi)

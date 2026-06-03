@@ -9,14 +9,14 @@
 <tr>
 	<td></td>
 	<td class="action_body">
-	������
+	襲う：
 	<select name="target_id">
 <%=
 s = ''
 if (@player.target == -1)
-	s += "<option value = -1>̤���� *"
+	s += "<option value = -1>未設定 *"
 else
-	s += "<option value = -1>����󥻥�"
+	s += "<option value = -1>キャンセル"
 end
 s += "\n"
 if (@vil.attack_dummy(@vil.date + 1))
@@ -43,7 +43,7 @@ end
 s 
 %>
 </select>
-<input type="submit" value="�ѹ�" class="submit">
+<input type="submit" value="変更" class="submit">
 	</td>
 	<td></td>
 </tr>
@@ -57,15 +57,15 @@ s
 	<td></td>
 	<td class="action_body">
 	<input type="hidden" name="whisper" value="on">
-	<input type="hidden" name="j_data" value="���ܸ�Υǡ���">
+	<input type="hidden" name="j_data" value="日本語のデータ">
 	<textarea name="message" rows="5" class="whisper_textarea"></textarea><br>
 	<input type="hidden" name="cmd" value="msg">
 	<input type="hidden" name="whisper" value="on">
 	<input type="hidden" name="vid" value="<%= @vid %>">
 	<input type="hidden" name="pid" value="<%= @player.pid %>">
-	<input value="��ϵ�Τ����䤭" type="submit" class="submit">
-	<input id="wis_th" name="think" value="on" type="checkbox"><label for="wis_th">�Ȥ��</label>
-	<input id="wis_lo" name="loud" value="on" type="checkbox"><label for="wis_lo">����</label>
+	<input value="人狼のささやき" type="submit" class="submit">
+	<input id="wis_th" name="think" value="on" type="checkbox"><label for="wis_th">独り言</label>
+	<input id="wis_lo" name="loud" value="on" type="checkbox"><label for="wis_lo">大声</label>
 	</td>
 	<td></td>
 </tr>

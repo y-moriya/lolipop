@@ -1,4 +1,4 @@
-# -*- coding: euc-jp -*-
+# -*- coding: utf-8 -*-
 class Login
 	attr_reader :userid, :pass, :cookie, :login
  
@@ -46,8 +46,8 @@ class Login
 
 		elsif(cmd == 'login')
 			userid = cgi['userid']
-			@userid = CGI.escapeHTML(Kconv.toeuc(userid))
-			@pass = Kconv.toeuc(cgi['pass'])
+			@userid = CGI.escapeHTML(Kconv.toutf8(userid))
+			@pass = Kconv.toutf8(cgi['pass'])
 			if(@userid == '' || @pass == '')
 				print "Status: 302 Found\n"
 	        	print "Location: index.cgi\n\n"

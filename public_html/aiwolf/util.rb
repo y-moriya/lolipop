@@ -1,4 +1,4 @@
-# -*- coding: euc-jp -*-
+# -*- coding: utf-8 -*-
 require 'erb'
 
 CUSTOM = 0
@@ -21,25 +21,25 @@ MASTER = "DUMMY"
 ADMIN = "euro"
 
 POSTPOS = [
-	"¤Ï¡¢",
-	"¤¬¡¢",
-	"¡¡"
+	"ã¯ã€",
+	"ãŒã€",
+	"ã€€"
 ]
 
-OPENING = "¿ÍÏµ¡¢¤½¤ì¤Ï¿Í¤Î¤Õ¤ê¤ò¤¹¤ë¤³¤È¤¬¤Ç¤­¤ëÅÁÀâ¤ÎÏµ¡£<br>¤½¤Î¿ÍÏµ¤¬¤³¤ÎÂ¼¤ËÊ¶¤ì¹ş¤ó¤Ç¤¤¤ë¤È¤¤¤¦±½¤¬¤É¤³¤«¤é¤È¤â¤Ê¤¯¹­¤¬¤ê¤Ş¤·¤¿¡£<br>Â¼¿ÍÃ£¤ÏÈ¾¿®È¾µ¿¤Ê¤¬¤é¤â¡¢½¸²ñ½ê¤Ë½¸¤Ş¤Ã¤ÆÏÃ¤·¹ç¤¤¤ò¤¹¤ë¤³¤È¤Ë¤·¤Ş¤·¤¿¡£"
-FOLK_WIN = "¤¹¤Ù¤Æ¤Î¿ÍÏµ¤òÂà¼£¤·¤Ş¤·¤¿¡£<br>Â¿¤¯¤Îµ¾À·¤Î¾å¤Ë¡¢¤Ä¤¤¤ËÂ¼¤ËÊ¿ÏÂ¤¬Ë¬¤ì¤Ş¤·¤¿¡£"
-WOLF_WIN = "¤â¤¦¿ÍÏµ¤ËÄñ¹³¤Ç¤­¤ë¤Û¤ÉÂ¼¿Í¤Ï»Ä¤Ã¤Æ¤¤¤Ş¤»¤ó¡£<br>¿ÍÏµ¤Ï»Ä¤Ã¤¿Â¼¿Í¤ò¤¹¤Ù¤Æ¶ô¤é¤¤¿Ô¤¯¤·¡¢¿·¤¿¤Ê³ÍÊª¤òµá¤á¤Æ¤³¤ÎÂ¼¤òµî¤Ã¤Æ¤¤¤­¤Ş¤·¤¿¡£"
-YOKO_WIN_F = "¤¹¤Ù¤Æ¤Î¿ÍÏµ¤òÂà¼£¤·¤Ş¤·¤¿¡£<br>Â¿¤¯¤Îµ¾À·¤ò½Å¤Í¡¢¤Ä¤¤¤ËÂ¼¤ËÊ¿ÏÂ¤¬Ë¬¤ì¤¿¤«¤Î¤è¤¦¤Ë¸«¤¨¤Ş¤·¤¿¡£<br>¤·¤«¤·¡¢Â¼¤Ë¤Ï¤Ş¤ÀÍÅËâ¤¬¤Ò¤Ã¤½¤ê¤ÈÀ¸¤­»Ä¤Ã¤Æ¤¤¤Ş¤·¤¿¡£"
-YOKO_WIN_W = "¤â¤¦¿ÍÏµ¤ËÄñ¹³¤Ç¤­¤ë¤Û¤ÉÂ¼¿Í¤Ï»Ä¤Ã¤Æ¤¤¤Ş¤»¤ó¡£<br>À¸¤­»Ä¤Ã¤¿Â¼¿Í¤â¤¹¤Ù¤Æ¿ÍÏµ¤Ë½±¤ï¤ì¤Æ¤·¤Ş¤¤¤Ş¤·¤¿¡£<br>¤·¤«¤·¡¢¤½¤Î¿ÍÏµ¤â¤Ş¤¿Â¼¤ËÀø¤ó¤Ç¤¤¤¿ÍÅËâ¤Ë¤è¤Ã¤ÆÌÇ¤Ü¤µ¤ì¤Ş¤·¤¿¡£"
-LOVE_WIN = "°¦¤ÎÁ°¤Ç¤Ï¤¹¤Ù¤Æ¤Î¤â¤Î¤¬ÌµÎÏ¤Ç¤·¤¿¡£"
+OPENING = "äººç‹¼ã€ãã‚Œã¯äººã®ãµã‚Šã‚’ã™ã‚‹ã“ã¨ãŒã§ãã‚‹ä¼èª¬ã®ç‹¼ã€‚<br>ãã®äººç‹¼ãŒã“ã®æ‘ã«ç´›ã‚Œè¾¼ã‚“ã§ã„ã‚‹ã¨ã„ã†å™‚ãŒã©ã“ã‹ã‚‰ã¨ã‚‚ãªãåºƒãŒã‚Šã¾ã—ãŸã€‚<br>æ‘äººé”ã¯åŠä¿¡åŠç–‘ãªãŒã‚‰ã‚‚ã€é›†ä¼šæ‰€ã«é›†ã¾ã£ã¦è©±ã—åˆã„ã‚’ã™ã‚‹ã“ã¨ã«ã—ã¾ã—ãŸã€‚"
+FOLK_WIN = "ã™ã¹ã¦ã®äººç‹¼ã‚’é€€æ²»ã—ã¾ã—ãŸã€‚<br>å¤šãã®çŠ ç‰²ã®ä¸Šã«ã€ã¤ã„ã«æ‘ã«å¹³å’ŒãŒè¨ªã‚Œã¾ã—ãŸã€‚"
+WOLF_WIN = "ã‚‚ã†äººç‹¼ã«æŠµæŠ—ã§ãã‚‹ã»ã©æ‘äººã¯æ®‹ã£ã¦ã„ã¾ã›ã‚“ã€‚<br>äººç‹¼ã¯æ®‹ã£ãŸæ‘äººã‚’ã™ã¹ã¦å–°ã‚‰ã„å°½ãã—ã€æ–°ãŸãªç²ç‰©ã‚’æ±‚ã‚ã¦ã“ã®æ‘ã‚’å»ã£ã¦ã„ãã¾ã—ãŸã€‚"
+YOKO_WIN_F = "ã™ã¹ã¦ã®äººç‹¼ã‚’é€€æ²»ã—ã¾ã—ãŸã€‚<br>å¤šãã®çŠ ç‰²ã‚’é‡ã­ã€ã¤ã„ã«æ‘ã«å¹³å’ŒãŒè¨ªã‚ŒãŸã‹ã®ã‚ˆã†ã«è¦‹ãˆã¾ã—ãŸã€‚<br>ã—ã‹ã—ã€æ‘ã«ã¯ã¾ã å¦–é­”ãŒã²ã£ãã‚Šã¨ç”Ÿãæ®‹ã£ã¦ã„ã¾ã—ãŸã€‚"
+YOKO_WIN_W = "ã‚‚ã†äººç‹¼ã«æŠµæŠ—ã§ãã‚‹ã»ã©æ‘äººã¯æ®‹ã£ã¦ã„ã¾ã›ã‚“ã€‚<br>ç”Ÿãæ®‹ã£ãŸæ‘äººã‚‚ã™ã¹ã¦äººç‹¼ã«è¥²ã‚ã‚Œã¦ã—ã¾ã„ã¾ã—ãŸã€‚<br>ã—ã‹ã—ã€ãã®äººç‹¼ã‚‚ã¾ãŸæ‘ã«æ½œã‚“ã§ã„ãŸå¦–é­”ã«ã‚ˆã£ã¦æ»…ã¼ã•ã‚Œã¾ã—ãŸã€‚"
+LOVE_WIN = "æ„›ã®å‰ã§ã¯ã™ã¹ã¦ã®ã‚‚ã®ãŒç„¡åŠ›ã§ã—ãŸã€‚"
 
-RANDOM_MSG = "¤É¤¦¤ä¤é¤³¤ÎÂ¼¤Ë¤Ï¡¢¿ÍÏµ¤ÈÀê¤¤»Õ¤¬ºÇÄã1¿Í¤º¤Ä¤¤¤ë¤è¤¦¤Ç¤¹¤¬¡¢Â¾¤Ï¤ï¤«¤ê¤Ş¤»¤ó¡£¥À¥ß¡¼¤ÎÌò¿¦¤â¥é¥ó¥À¥à¤Ç¤¹¡£"
+RANDOM_MSG = "ã©ã†ã‚„ã‚‰ã“ã®æ‘ã«ã¯ã€äººç‹¼ã¨å ã„å¸«ãŒæœ€ä½1äººãšã¤ã„ã‚‹ã‚ˆã†ã§ã™ãŒã€ä»–ã¯ã‚ã‹ã‚Šã¾ã›ã‚“ã€‚ãƒ€ãƒŸãƒ¼ã®å½¹è·ã‚‚ãƒ©ãƒ³ãƒ€ãƒ ã§ã™ã€‚"
 
 HEAD1 = <<END
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html lang="ja">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=EUC-JP">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta http-equiv="Content-Script-Type" content="text/javascript">
 <meta http-equiv="Content-Style-Type" content="text/css">
 <link rel="stylesheet" type="text/css" href="plugin/base.css">
@@ -72,7 +72,7 @@ SHOW_UPDATE_SCRIPT = %Q(
 <!--
 function showUpdateTimer() {
 	var resttimeSpan = document.getElementById("resttime");
-	if (!resttimeSpan.innerHTML.match(/([0-9]+)»ş´Ö ([0-9]+)Ê¬ ([0-9]+)ÉÃ/)) {
+	if (!resttimeSpan.innerHTML.match(/([0-9]+)æ™‚é–“ ([0-9]+)åˆ† ([0-9]+)ç§’/)) {
 		return;
 	}
 	hour = parseInt(RegExp.$1);
@@ -90,7 +90,7 @@ function showUpdateTimer() {
 			}
 		}
 	}
-	resttimeSpan.innerHTML = hour + '»ş´Ö ' + min + 'Ê¬ ' + sec + 'ÉÃ';
+	resttimeSpan.innerHTML = hour + 'æ™‚é–“ ' + min + 'åˆ† ' + sec + 'ç§’';
 	setTimeout('showUpdateTimer();', 1000);
 }
 setTimeout('showUpdateTimer();', 1000);
@@ -128,9 +128,9 @@ class String
 		}
 	end
 	def vil_url!
-		self.sub!(/\[(\d{1,5})Â¼?\]|http:\/\/(euroz.sakura.ne.jp\/wolf|euros.x0.com)\/index.rb\?vil_id=(\d{1,5})[0-9A-Za-z_=#(&amp;)]*/){
+		self.sub!(/\[(\d{1,5})æ‘?\]|http:\/\/(euroz.sakura.ne.jp\/wolf|euros.x0.com)\/index.rb\?vil_id=(\d{1,5})[0-9A-Za-z_=#(&amp;)]*/){
 			vil_id = ($1) ? $1 : $3
-			%Q(<a href="http://euroz.sakura.ne.jp/wolf/index.rb?vil_id=#{vil_id}#form" class="say" target="_blank">[¿ÍÏµ@¤æ¤È¤ê #{vil_id}Â¼]</a>)
+			%Q(<a href="http://euroz.sakura.ne.jp/wolf/index.rb?vil_id=#{vil_id}#form" class="say" target="_blank">[äººç‹¼@ã‚†ã¨ã‚Š #{vil_id}æ‘]</a>)
 		}
 	end
 end
@@ -206,11 +206,11 @@ def setvote(id, str)
 	%Q(<!--think#{id}--><div class="announce vote">#{str}</div>\n)
 end
 def howl_wolf(howl_filename)
-	%Q(<table class="message"><tr><td width="50" rowspan="2"><img src="img/#{howl_filename}.png"></td><td colspan="2" class="howl">Ïµ¤Î±óËÊ¤¨</td></tr><tr><td width="16"><img src="img/whisper00.jpg"></td><td width="464"><div class="mes_whisper_body0"><div class="mes_whisper_body1">¤ï¤ª¡¼¤ó</div></div></td></tr></table>\n)
+	%Q(<table class="message"><tr><td width="50" rowspan="2"><img src="img/#{howl_filename}.png"></td><td colspan="2" class="howl">ç‹¼ã®é å ãˆ</td></tr><tr><td width="16"><img src="img/whisper00.jpg"></td><td width="464"><div class="mes_whisper_body0"><div class="mes_whisper_body1">ã‚ãŠãƒ¼ã‚“</div></div></td></tr></table>\n)
 end
 
 def vil_list(v)
-	vilid = %Q(<a class="vid" href="?vid=#{v['vid']}&amp;date=0">#{v['vid']}Â¼</a>)
+	vilid = %Q(<a class="vid" href="?vid=#{v['vid']}&amp;date=0">#{v['vid']}æ‘</a>)
 	if (v['state'] > 2)
 		if (v['sname'].size > 20)
 			sname = %Q(<a href="?vid=#{v['vid']}&amp;date=1&amp;log=all" title="#{v['name']}">#{v['sname']}</a>)
@@ -227,32 +227,32 @@ def vil_list(v)
 
 	card = (v['card']) ? 'CARD' : 'BBS'
 	comp = Composition.compositions[v['composition']].name
-	dummy = (v['dummy']) ? '¥À¥ß¡¼¤¢¤ê' : '¥À¥ß¡¼¤Ê¤·'
+	dummy = (v['dummy']) ? 'ãƒ€ãƒŸãƒ¼ã‚ã‚Š' : 'ãƒ€ãƒŸãƒ¼ãªã—'
 	char = Charset.charsets[v['char']].name
-	open_id = (v['open_id']) ? 'ID¸ø³«' : ''
+	open_id = (v['open_id']) ? 'IDå…¬é–‹' : ''
 
 	start =
 	if (v['upstart_time'])
-		"#{v['start_hour']}»ş #{v['start_min']}Ê¬³«»Ï"
+		"#{v['start_hour']}æ™‚ #{v['start_min']}åˆ†é–‹å§‹"
 	else
-		"¼êÆ°³«»Ï"
+		"æ‰‹å‹•é–‹å§‹"
 	end
-	num = (v['state'] == 0) ? "#{v['player_num']}/#{v['entry_max']}¿Í" : "#{v['player_num']}¿Í"
+	num = (v['state'] == 0) ? "#{v['player_num']}/#{v['entry_max']}äºº" : "#{v['player_num']}äºº"
 
 	time =
 		if (v['period'] % 60 == 0)
-			"Ãë#{v['period'] / 60}»ş´Ö"
+			"æ˜¼#{v['period'] / 60}æ™‚é–“"
 		else
-			"Ãë#{v['period']}Ê¬"
+			"æ˜¼#{v['period']}åˆ†"
 		end
 	if (v['night_period'].to_i != 0)
 		night_period =
 			if (v['night_period'] % 60 == 0)
-				"Ìë#{v['night_period'] / 60}»ş´Ö"
+				"å¤œ#{v['night_period'] / 60}æ™‚é–“"
 			else
-				"Ìë#{v['night_period']}Ê¬"
+				"å¤œ#{v['night_period']}åˆ†"
 			end
-		night_period = "(#{night_period}+#{v['life_period']}ÉÃ*¿Í)" if (v['life_period'].to_i != 0)
+		night_period = "(#{night_period}+#{v['life_period']}ç§’*äºº)" if (v['life_period'].to_i != 0)
 		time += "/#{night_period}"
 	end
 	"<tr><td>#{vilid}</td><td>#{sname}</td><td>#{time}</td><td>#{card}</td><td>#{comp}</td><td>#{dummy}</td><td>#{char}</td><td>#{num}</td><td>#{start}</td><td>#{open_id}</td></tr>"
@@ -261,60 +261,60 @@ end
 def settarget(player, t_name = nil)
 	if(player.sid == 1)
 		if(t_name)
-			str = "#{player.name} ¤Ï #{t_name} ¤ò½±·â¤·¤Ş¤¹¡£"
+			str = "#{player.name} ã¯ #{t_name} ã‚’è¥²æ’ƒã—ã¾ã™ã€‚"
 		else
-			str = "#{player.name} ¤Ï½±·âÂĞ¾İÁªÂò¤ò¼è¤ê¾Ã¤·¤Ş¤¹¡£"
+			str = "#{player.name} ã¯è¥²æ’ƒå¯¾è±¡é¸æŠã‚’å–ã‚Šæ¶ˆã—ã¾ã™ã€‚"
 		end
 		%Q(<!--think#{player.num_id}--><div class="announce whisper">#{str}</div>\n)
 	elsif(player.sid == 2)
 		if(t_name)
-			str = "#{player.name} ¤Ï #{t_name} ¤òÀê¤¤¤Ş¤¹¡£"
+			str = "#{player.name} ã¯ #{t_name} ã‚’å ã„ã¾ã™ã€‚"
 		else
-			str = "#{player.name} ¤ÏÀê¤¤ÂĞ¾İÁªÂò¤ò¼è¤ê¾Ã¤·¤Ş¤¹¡£"
+			str = "#{player.name} ã¯å ã„å¯¾è±¡é¸æŠã‚’å–ã‚Šæ¶ˆã—ã¾ã™ã€‚"
 		end
 		fortune_announce(str, player.num_id)
   elsif(player.sid == 4)
 		if(t_name)
-			str = "#{player.name} ¤¬¥¹¥¦¥£¥Ã¥Á¤ò²¡¤·¤Ş¤·¤¿¡£"
+			str = "#{player.name} ãŒã‚¹ã‚¦ã‚£ãƒƒãƒã‚’æŠ¼ã—ã¾ã—ãŸã€‚"
 		else
-			str = "#{player.name} ¤¬¥¹¥¦¥£¥Ã¥Á¤ò°ú¤­¤Ş¤·¤¿¡£"
+			str = "#{player.name} ãŒã‚¹ã‚¦ã‚£ãƒƒãƒã‚’å¼•ãã¾ã—ãŸã€‚"
 		end
 		possessed_announce(str, player.num_id)
 	elsif(player.sid == 5 || player.sid == 16)
 		if(t_name)
-			str = "#{player.name} ¤Ï #{t_name} ¤ò¸î±Ò¤·¤Ş¤¹¡£"
+			str = "#{player.name} ã¯ #{t_name} ã‚’è­·è¡›ã—ã¾ã™ã€‚"
 		else
-			str = "#{player.name} ¤Ï¸î±ÒÂĞ¾İÁªÂò¤ò¼è¤ê¾Ã¤·¤Ş¤¹¡£"
+			str = "#{player.name} ã¯è­·è¡›å¯¾è±¡é¸æŠã‚’å–ã‚Šæ¶ˆã—ã¾ã™ã€‚"
 		end
 		guard_announce(str, player.num_id)
 	elsif(player.sid == 11)
 		if(t_name)
-			str = "#{player.name} ¤Ï #{t_name} ¤ÎÃæ¿È¤òÀê¤¤¤Ş¤¹¡£"
+			str = "#{player.name} ã¯ #{t_name} ã®ä¸­èº«ã‚’å ã„ã¾ã™ã€‚"
 		else
-			str = "#{player.name} ¤ÏÃæ¿ÈÀê¤¤ÂĞ¾İÁªÂò¤ò¼è¤ê¾Ã¤·¤Ş¤¹¡£"
+			str = "#{player.name} ã¯ä¸­èº«å ã„å¯¾è±¡é¸æŠã‚’å–ã‚Šæ¶ˆã—ã¾ã™ã€‚"
 		end
 		fortune_id_announce(str, player.num_id)
 	elsif(player.sid == 13)
 		if(t_name)
-			str = "#{player.name} ¤Ï #{t_name} ¤Ë°¦¤òµá¤á¤Ş¤¹¡£"
+			str = "#{player.name} ã¯ #{t_name} ã«æ„›ã‚’æ±‚ã‚ã¾ã™ã€‚"
 		else
-			str = "#{player.name} ¤Ïµá°¦ÂĞ¾İÁªÂò¤ò¼è¤ê¾Ã¤·¤Ş¤¹¡£"
+			str = "#{player.name} ã¯æ±‚æ„›å¯¾è±¡é¸æŠã‚’å–ã‚Šæ¶ˆã—ã¾ã™ã€‚"
 		end
 		cupid_announce(str, player.num_id)
 	elsif(player.sid == 14)
 		if(t_name)
-			str = "#{player.name} ¤Ï #{t_name} ¤Î¼ÙËâ¤ò¤·¤Ş¤¹¡£"
+			str = "#{player.name} ã¯ #{t_name} ã®é‚ªé­”ã‚’ã—ã¾ã™ã€‚"
 		else
-			str = "#{player.name} ¤Ï¼ÙËâÂĞ¾İÁªÂò¤ò¼è¤ê¾Ã¤·¤Ş¤¹¡£"
+			str = "#{player.name} ã¯é‚ªé­”å¯¾è±¡é¸æŠã‚’å–ã‚Šæ¶ˆã—ã¾ã™ã€‚"
 		end
 		gammer_announce(str, player.num_id)
 	end
 end
 
 def erbrun(file)
-	ERB.new(File.open(file, "r:euc-jp"){|f| f.read}).run(binding)
+	ERB.new(File.open(file, "r:utf-8"){|f| f.read}).run(binding)
 end
 
 def erbres(file)
-	ERB.new(File.open(file, "r:euc-jp"){|f| f.read}).result(binding)
+	ERB.new(File.open(file, "r:utf-8"){|f| f.read}).result(binding)
 end

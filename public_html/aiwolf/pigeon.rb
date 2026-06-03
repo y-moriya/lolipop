@@ -1,4 +1,4 @@
-# -*- coding: euc-jp -*-
+# -*- coding: utf-8 -*-
 # require 'jcode'
 # $KCODE='e'
 
@@ -46,8 +46,8 @@ class Pigeon
 		end
 		if (state > 2)
 			print_head("#{@vil.vid} #{@vil.name}")
-			s = "¤³¤ÎÂ¼¤Ï¤¹¤Ç¤Ë½ªÎ»¤·¤Æ¤¤¤Ş¤¹¡£<br>"
-			s += %Q(<a href="?userid=#{@esuserid}&pass=#{@pass}">Â¼°ìÍ÷</a>)
+			s = "ã“ã®æ‘ã¯ã™ã§ã«çµ‚äº†ã—ã¦ã„ã¾ã™ã€‚<br>"
+			s += %Q(<a href="?userid=#{@esuserid}&pass=#{@pass}">æ‘ä¸€è¦§</a>)
 			s += "</body></html>"
 			print Kconv.tosjis(s)
 			exit(0)
@@ -61,15 +61,15 @@ class Pigeon
 
 		if (!@vil || !File.exist?("db/log#{(@vid - 1) / 100}"))
 			print_head
-			s = "Â¸ºß¤·¤Ê¤¤Â¼¤Ç¤¹¡£<br>"
-			s += %Q(<a href="?userid=#{@esuserid}&pass=#{@pass}">Â¼°ìÍ÷</a>)
+			s = "å­˜åœ¨ã—ãªã„æ‘ã§ã™ã€‚<br>"
+			s += %Q(<a href="?userid=#{@esuserid}&pass=#{@pass}">æ‘ä¸€è¦§</a>)
 			s += "</body></html>"
 			print Kconv.tosjis(s)
 			exit(0)
 		end
 
 		if(@vil.death_defeat)
-			Skill.skills[1].name = "¿Í¶ô¤¤"
+			Skill.skills[1].name = "äººå–°ã„"
 		end
 
 		if (@vil.state < 3 && @vil.update_time && @vil.update_time < Time.now.to_i)
@@ -114,9 +114,9 @@ class Pigeon
 		for i in 0..@vil.date
 			datestr =
 			if (i == 0)
-				"¾ğÊó"
+				"æƒ…å ±"
 			else
-				"#{i}Æü"
+				"#{i}æ—¥"
 			end
 			if (i == date)
 				if (date != 0)
@@ -134,74 +134,74 @@ class Pigeon
 		end
 		@player = (@vil.players.key?(@userid)) ? @vil.players[@userid] : nil
 
-		s = %Q(<a name="u" href="#b" accesskey="4">²¼</a>|)
-		s += %Q(<a href="?userid=#{@esuserid}&pass=#{@pass}#{@am_str}" accesskey="2">Â¼°ìÍ÷</a><br>)
+		s = %Q(<a name="u" href="#b" accesskey="4">ä¸‹</a>|)
+		s += %Q(<a href="?userid=#{@esuserid}&pass=#{@pass}#{@am_str}" accesskey="2">æ‘ä¸€è¦§</a><br>)
 		s += "#{@vil.name}<hr>"
 		if (date == 0)
 			s += date_all + "<hr>"
-			s += "ºîÀ®¼Ô: #{@vil.userid}"
-			s+= "<hr>Ãë:"
+			s += "ä½œæˆè€…: #{@vil.userid}"
+			s+= "<hr>æ˜¼:"
 			if (@vil.period % 60 == 0)
-				s += "#{@vil.period / 60}»ş´Ö"
+				s += "#{@vil.period / 60}æ™‚é–“"
 	    	else
-				s += "#{@vil.period}Ê¬"
+				s += "#{@vil.period}åˆ†"
 			end
-			s += " Ìë:"
+			s += " å¤œ:"
 			np = @vil.night_period.to_i
 			if (np != 0)
 				if (np % 60 == 0)
-					s += "#{np / 60}»ş´Ö"
+					s += "#{np / 60}æ™‚é–“"
 				else
-					s += "#{np}Ê¬"
+					s += "#{np}åˆ†"
 				end
 				if (@vil.life_period)
-					s += "<br>À¸Â¸¼Ô1¿Í¤´¤È¤Ë#{@vil.life_period}ÉÃÄÉ²Ã"
+					s += "<br>ç”Ÿå­˜è€…1äººã”ã¨ã«#{@vil.life_period}ç§’è¿½åŠ "
 				end
 			else
-			 s += "ÌëÌµ¤·"
+			 s += "å¤œç„¡ã—"
 			end
 
-			s += "<hr>¥À¥ß¡¼"
+			s += "<hr>ãƒ€ãƒŸãƒ¼"
 			if (@vil.dummy)
-				s += '¤¢¤ê'
+				s += 'ã‚ã‚Š'
 			else
-				s += '¤Ê¤·'
-				s += (@vil.first_guard) ? '¡Ê½éÆü¸î±Ò²ÄÇ½¡Ë' : '¡Ê½éÆü¸î±ÒÉÔ²ÄÇ½¡Ë'
+				s += 'ãªã—'
+				s += (@vil.first_guard) ? 'ï¼ˆåˆæ—¥è­·è¡›å¯èƒ½ï¼‰' : 'ï¼ˆåˆæ—¥è­·è¡›ä¸å¯èƒ½ï¼‰'
 			end
 			s += "<br>"
 			if (@vil.card)
-				s += '¥«¡¼¥É¿ÍÏµ·Á¼°'
+				s += 'ã‚«ãƒ¼ãƒ‰äººç‹¼å½¢å¼'
 			else
-				s += '£Â£Â£Ó·Á¼°'
+				s += 'ï¼¢ï¼¢ï¼³å½¢å¼'
 			end
-			s += "<br>Ìò¿¦´õË¾"
+			s += "<br>å½¹è·å¸Œæœ›"
 			if (@vil.hope_skill)
-				s += 'Í­¸ú'
+				s += 'æœ‰åŠ¹'
 			else
-				s += 'Ìµ¸ú'
+				s += 'ç„¡åŠ¹'
 			end
-			s += "<br>Ìë¥³¥ß¥Ã¥È"
+			s += "<br>å¤œã‚³ãƒŸãƒƒãƒˆ"
 			if (@vil.night_commit)
-				s += 'Í­¤ê'
+				s += 'æœ‰ã‚Š'
 			else
-				s += 'Ìµ¤·'
+				s += 'ç„¡ã—'
 			end
-			s += "<br>ID¸ø³«"
+			s += "<br>IDå…¬é–‹"
 			if (@vil.open_id)
-				s += 'Í­¤ê'
+				s += 'æœ‰ã‚Š'
 			else
-				s += 'Ìµ¤·'
+				s += 'ç„¡ã—'
 			end
-			s += "<br>Êè²¼¸ø³«"
+			s += "<br>å¢“ä¸‹å…¬é–‹"
 			if (@vil.open_skill)
-				s += 'Í­¤ê'
+				s += 'æœ‰ã‚Š'
 			else
-				s += 'Ìµ¤·'
+				s += 'ç„¡ã—'
 			end
 
-			s += "<hr>ÊÔÀ®: #{Composition.compositions[@vil.composition].name }<br>"
+			s += "<hr>ç·¨æˆ: #{Composition.compositions[@vil.composition].name }<br>"
 			s += @vil.display_skill if (@vil.state != 0) && !(@vil.composition == RANDOM && @vil.state < 2)
-			s += "<hr>À¸Â¸ #{@vil.survivors.size}¿Í<hr>"
+			s += "<hr>ç”Ÿå­˜ #{@vil.survivors.size}äºº<hr>"
 			@vil.survivors.each do |p|
 				s += %Q(<a href="?vid=#{@vid}&userid=#{@esuserid}&pass=#{@pass}&id=#{p.num_id}#{@am_str}">#{p.name}</a>)
 				if (@vil.state > 1 || @vil.open_id || (@vil.open_skill && @player && @player.dead != 0))
@@ -214,21 +214,21 @@ class Pigeon
 					s += %Q(#{p.say_remain}/#{SAY_FULL_NUM})
 				end
 				if (@vil.tenko != -1 && p.tenko && p.tenko != -1)
-					s += %Q(<br>ÅÀ¸Æ#{p.tenko})
+					s += %Q(<br>ç‚¹å‘¼#{p.tenko})
 				end
 				if(@vil.state == 1)
 					if (!@vil.card && @vil.date == 2 && p.commit == 0)
-						s += %Q(<br>¥³¥ß¥Ã¥ÈºÑ)
+						s += %Q(<br>ã‚³ãƒŸãƒƒãƒˆæ¸ˆ)
 					else
 						if (p.vote != -1)
-							s += %Q(<br>ÅêÉ¼ºÑ)
+							s += %Q(<br>æŠ•ç¥¨æ¸ˆ)
 						end
 					end
 				end
 				if (@vil.state > 1 || (@vil.open_skill && @player && @player.dead != 0))
 					s += %Q(<br>#{Skill.skills[p.sid].name})
 					if (p.lovers.size != 0)
-						s += %Q(<font color="fuchsia">(Îø¿Í)</font>)
+						s += %Q(<font color="fuchsia">(æ‹äºº)</font>)
 					end
 				elsif (@vil.state == 1)
 					if (@player)
@@ -236,9 +236,9 @@ class Pigeon
 							if(p.fortune_t.key?(@player))
 								d = p.fortune_t[@player]
 								if (p.sid == 1)
-									s += %Q(<br><font color="red">#{d}ÆüÌÜ¡§#{Skill.skills[1].name}</font>)
+									s += %Q(<br><font color="red">#{d}æ—¥ç›®ï¼š#{Skill.skills[1].name}</font>)
 								else
-									s += %Q(<br><font color="aqua">#{d}ÆüÌÜ¡§¿Í´Ö</font>)
+									s += %Q(<br><font color="aqua">#{d}æ—¥ç›®ï¼šäººé–“</font>)
 								end
 							end
 						elsif (@player.sid == 11)
@@ -249,14 +249,14 @@ class Pigeon
 							end
 						elsif (@player.sid == 16)
 							if (p.guard_t.key?(@player))
-								s += %Q(<br><font color="green">¸î±Ò½ªÎ»</font>)
+								s += %Q(<br><font color="green">è­·è¡›çµ‚äº†</font>)
 							end
 						end
 					end
 				end
 				s += "<hr>"
 			end
-			s += "µ¾À· #{@vil.victims.size}¿Í<hr>"
+			s += "çŠ ç‰² #{@vil.victims.size}äºº<hr>"
 			@vil.victims.each do |p|
 				s += %Q(<a href="?vid=#{@vid}&userid=#{@esuserid}&pass=#{@pass}&id=#{p.num_id}#{@am_str}">#{p.name}</a>)
 				if (@vil.state > 1 || @vil.open_id || (@vil.open_skill && @player && @player.dead != 0))
@@ -266,16 +266,16 @@ class Pigeon
 				if (@vil.state > 1 || (@vil.open_skill && @player && @player.dead != 0))
 					s += %Q(<br>#{Skill.skills[p.sid].name})
 					if (p.lovers.size != 0)
-						s += %Q(<font color="fuchsia">(Îø¿Í)</font>)
+						s += %Q(<font color="fuchsia">(æ‹äºº)</font>)
 					end
 				elsif (@vil.state == 1 && @player)
 					if (@player.sid == 2)
 						if(p.fortune_t.key?(@player))
 							d = p.fortune_t[@player]
 							if (p.sid == 1)
-								s += %Q(<br><font color="red">#{d}ÆüÌÜ¡§#{Skill.skills[1].name}</font>)
+								s += %Q(<br><font color="red">#{d}æ—¥ç›®ï¼š#{Skill.skills[1].name}</font>)
 							else
-								s += %Q(<br><font color="aqua">#{d}ÆüÌÜ¡§¿Í´Ö</font>)
+								s += %Q(<br><font color="aqua">#{d}æ—¥ç›®ï¼šäººé–“</font>)
 							end
 						end
 					elsif (@player.sid == 11)
@@ -288,7 +288,7 @@ class Pigeon
 				end
 				s += "<hr>"
 			end
-			s += "½è·º #{@vil.executions.size}¿Í<hr>"
+			s += "å‡¦åˆ‘ #{@vil.executions.size}äºº<hr>"
 			@vil.executions.each do |p|
 				s += %Q(<a href="?vid=#{@vid}&userid=#{@esuserid}&pass=#{@pass}&id=#{p.num_id}#{@am_str}">#{p.name}</a>)
 				if (@vil.state > 1 || @vil.open_id || (@vil.open_skill && @player && @player.dead != 0))
@@ -298,16 +298,16 @@ class Pigeon
 				if (@vil.state > 1 || (@vil.open_skill && @player && @player.dead != 0))
 					s += %Q(<br>#{Skill.skills[p.sid].name})
 					if (p.lovers.size != 0)
-						s += %Q(<font color="fuchsia">(Îø¿Í)</font>)
+						s += %Q(<font color="fuchsia">(æ‹äºº)</font>)
 					end
 				elsif (@vil.state == 1 && @player)
 					if (@player.sid == 2)
 						if(p.fortune_t.key?(@player))
 							d = p.fortune_t[@player]
 							if (p.sid == 1)
-								s += %Q(<br><font color="red">#{d}ÆüÌÜ¡§#{Skill.skills[1].name}</font>)
+								s += %Q(<br><font color="red">#{d}æ—¥ç›®ï¼š#{Skill.skills[1].name}</font>)
 							else
-								s += %Q(<br><font color="aqua">#{d}ÆüÌÜ¡§¿Í´Ö</font>)
+								s += %Q(<br><font color="aqua">#{d}æ—¥ç›®ï¼šäººé–“</font>)
 							end
 						end
 					elsif (@player.sid == 11)
@@ -320,23 +320,23 @@ class Pigeon
 						if (p.sid == 1)
 							s += %Q(<br><font color="red">#{Skill.skills[1].name}</font>)
 						else
-							s += %Q(<br><font color="aqua">¿Í´Ö</font>)
+							s += %Q(<br><font color="aqua">äººé–“</font>)
 						end
 					end
 				end
 				s += "<hr>"
 			end
 			s += date_all.sub(/ accesskey="3"/, '') + "<hr>"
-			s += %Q(<a name="b" href="#u" accesskey="1">¾å</a>|)
-			s += %Q(<a href="?vid=#{@vid}&userid=#{@esuserid}&pass=#{@pass}#{@am_str}#b" accesskey="9">¿·</a>|)
-			s += %Q(<a href="?vid=#{@vid}&userid=#{@esuserid}&pass=#{@pass}#{@am_str}&act=o" accesskey="0">¹ÔÆ°</a>)
+			s += %Q(<a name="b" href="#u" accesskey="1">ä¸Š</a>|)
+			s += %Q(<a href="?vid=#{@vid}&userid=#{@esuserid}&pass=#{@pass}#{@am_str}#b" accesskey="9">æ–°</a>|)
+			s += %Q(<a href="?vid=#{@vid}&userid=#{@esuserid}&pass=#{@pass}#{@am_str}&act=o" accesskey="0">è¡Œå‹•</a>)
 		else
 			s_log = Array.new
 			reg = /<a href="#([a-z]+)(\d+)">[*+-]?\d+<\/a> <a href="\?[^"]+" target="_blank">([^<]+)<\/a> <span class="time">([^<]+)<\/span><\/td><\/tr><tr><td><div class="mes_[^_]+"><\/div><\/td><td width="464"><div class="mes_[^_]+_body0"><div class="mes_[^_]+_body1">(.*)$/
 			regsys = /^<!--([a-z]+)\d*--><div class="announce[^"]*">(.*)$/
 			regvote = /^<!--[a-z]+\d*--><div class="announce"><table class="vote_t">(.*)$/
 			date = @vil.date if (date > @vil.date)
-			File.open("db/log#{(@vid - 1) / 100}/#{@vid}_#{date}.html", "r:euc-jp") do |ifile|
+			File.open("db/log#{(@vid - 1) / 100}/#{@vid}_#{date}.html", "r:utf-8") do |ifile|
 				lines = ifile.readlines
 				(lines.size - 1).downto(0) do |i|
 					line = lines[i]
@@ -353,7 +353,7 @@ class Pigeon
 								next if(@vil.state == 0)
 								if (@player == nil || (!@player.can_whisper && (!@vil.open_skill || @player.dead == 0)))
 									line = nil
-									msg = %Q(<font color="red">Ïµ¤Î±óËÊ¤¨<br>¤ï¤ª¡¼¤ó<hr></font>)
+									msg = %Q(<font color="red">ç‹¼ã®é å ãˆ<br>ã‚ãŠãƒ¼ã‚“<hr></font>)
 								end
 							elsif ($1 == 'whisper')
 								next if(@vil.state == 0)
@@ -386,9 +386,9 @@ class Pigeon
 						rm.gsub!(/<a class="say" [^>]+>([^<]+)<\/a>/) do
 							"#{$1}"
 						end
-						#rm.gsub!(/<div class="loud">/, "(ÂçÀ¼)<br>")
+						#rm.gsub!(/<div class="loud">/, "(å¤§å£°)<br>")
 						rm.gsub!(/<div class="loud">([^<]+)<\/div>/) do
-							 "(ÂçÀ¼)<br><b>#{$1}</b>"
+							 "(å¤§å£°)<br><b>#{$1}</b>"
 						end
 						rm.gsub!(/<\/div>/, '')
 						rm.gsub!(/<\/td>/, '')
@@ -458,25 +458,25 @@ class Pigeon
 					if (t > 0)
 						dt = Time.at(t)
 						hour = dt.to_i / 3600
-						s_time += %Q(<font color="red">#{hour}»ş´Ö #{dt.min}Ê¬ #{dt.sec}ÉÃ)
+						s_time += %Q(<font color="red">#{hour}æ™‚é–“ #{dt.min}åˆ† #{dt.sec}ç§’)
 						if (@vil.night_commit && @vil.night)
-							s_time += "¸å¡¢¤Ş¤¿¤ÏÇ½ÎÏ¼ÔÁ´°÷¤¬¹ÔÆ°¤ò·èÄê¤¹¤ì¤Ğ¹¹¿·¤µ¤ì¤Ş¤¹¡£</font>"
+							s_time += "å¾Œã€ã¾ãŸã¯èƒ½åŠ›è€…å…¨å“¡ãŒè¡Œå‹•ã‚’æ±ºå®šã™ã‚Œã°æ›´æ–°ã•ã‚Œã¾ã™ã€‚</font>"
 						else
-							s_time += "¸å¤Ë¹¹¿·¤µ¤ì¤Ş¤¹¡£</font>"
+							s_time += "å¾Œã«æ›´æ–°ã•ã‚Œã¾ã™ã€‚</font>"
 						end
 					else
-						s_time += %Q(<font color="red">¹¹¿·»ş´Ö¤ò¤¹¤Ç¤Ë²á¤®¤Æ¤¤¤Ş¤¹¡£</font>)
+						s_time += %Q(<font color="red">æ›´æ–°æ™‚é–“ã‚’ã™ã§ã«éãã¦ã„ã¾ã™ã€‚</font>)
 					end
 				else
 					ts = Time.at(@vil.update_time)
-					s_time += %Q(<font color="red">¤³¤ÎÂ¼¤Ï¡¢#{ts.mon}·î #{ts.day}Æü #{ts.hour}»ş #{ts.min}Ê¬¤Ë¹¹¿·¤µ¤ì¤Ş¤¹¡£</font>)
+					s_time += %Q(<font color="red">ã“ã®æ‘ã¯ã€#{ts.mon}æœˆ #{ts.day}æ—¥ #{ts.hour}æ™‚ #{ts.min}åˆ†ã«æ›´æ–°ã•ã‚Œã¾ã™ã€‚</font>)
 				end
 			elsif (@vil.upstart_time && @vil.state == 0)
 				ts = Time.at(@vil.upstart_time)
-				s_time += %Q(<font color="red">¤³¤ÎÂ¼¤Ï¡¢#{ts.mon}·î #{ts.day}Æü #{ts.hour}»ş #{ts.min}Ê¬¤Ë #{@vil.entry_min}¿Í°Ê¾å¤¤¤ì¤Ğ³«»Ï¤µ¤ì¤Ş¤¹¡£</font>)
+				s_time += %Q(<font color="red">ã“ã®æ‘ã¯ã€#{ts.mon}æœˆ #{ts.day}æ—¥ #{ts.hour}æ™‚ #{ts.min}åˆ†ã« #{@vil.entry_min}äººä»¥ä¸Šã„ã‚Œã°é–‹å§‹ã•ã‚Œã¾ã™ã€‚</font>)
 			elsif (@vil.date == date && @vil.update_time && @vil.state == 2)
 				ts = Time.at(@vil.update_time)
-				s_time += %Q(<font color="red">¤³¤ÎÂ¼¤Ï¡¢#{ts.mon}·î #{ts.day}Æü #{ts.hour}»ş #{ts.min}Ê¬¤Ë½ªÎ»¤·¤Ş¤¹¡£</font>)
+				s_time += %Q(<font color="red">ã“ã®æ‘ã¯ã€#{ts.mon}æœˆ #{ts.day}æ—¥ #{ts.hour}æ™‚ #{ts.min}åˆ†ã«çµ‚äº†ã—ã¾ã™ã€‚</font>)
 			end
 
 			info_str = ""
@@ -487,26 +487,26 @@ class Pigeon
 					sn = @player.sid
 				end
 				if (sn == -1)
-					s_str = "¤ª¤Ş¤«¤»"
+					s_str = "ãŠã¾ã‹ã›"
 				elsif (sn == -2)
-					s_str = "¥é¥ó¥À¥à"
+					s_str = "ãƒ©ãƒ³ãƒ€ãƒ "
 				else
 					s_str = Skill.skills[sn].name
 				end
 				if (@vil.state == 0)
-					s_str += "¤ò´õË¾"
+					s_str += "ã‚’å¸Œæœ›"
 				end
 				info_str += "#{@player.name}(#{s_str})"
-				info_str += " ´õË¾¤ÏÌµ¸ú¤Ç¤¹¡£" if (!@vil.hope_skill && @vil.state == 0)
+				info_str += " å¸Œæœ›ã¯ç„¡åŠ¹ã§ã™ã€‚" if (!@vil.hope_skill && @vil.state == 0)
 				if (@vil.state > 1)
 					if (@player.win == 0)
-						info_str += %Q(<br><font color="red">¤¢¤Ê¤¿¤Ï¾¡Íø¤·¤Ş¤·¤¿¡£</font>)
+						info_str += %Q(<br><font color="red">ã‚ãªãŸã¯å‹åˆ©ã—ã¾ã—ãŸã€‚</font>)
 					else
-						info_str += %Q(<br><font color="blue">¤¢¤Ê¤¿¤ÏÇÔËÌ¤·¤Ş¤·¤¿¡£</font>)
+						info_str += %Q(<br><font color="blue">ã‚ãªãŸã¯æ•—åŒ—ã—ã¾ã—ãŸã€‚</font>)
 					end
 				elsif (@player.lovers.size > 0)
 					@player.lovers.each do |p|
-						info_str += %Q(<br><font color="fuchsia">¤¢¤Ê¤¿¤Ï #{p.name} ¤È°¦¤·¹ç¤Ã¤Æ¤¤¤Ş¤¹¡£</font>)
+						info_str += %Q(<br><font color="fuchsia">ã‚ãªãŸã¯ #{p.name} ã¨æ„›ã—åˆã£ã¦ã„ã¾ã™ã€‚</font>)
 					end
 				end
 			end
@@ -516,14 +516,14 @@ class Pigeon
 			s += s_time + "<hr>" if (s_time != '')
 			s += date_all.sub(/ accesskey="3"/, '') + "<hr>"
 			s += info_str + "<br>"
-			s += %Q(<a name="b" href="#u" accesskey="1">¾å</a>|)
-			s += %Q(<a href="?vid=#{@vid}&userid=#{@esuserid}&pass=#{@pass}&date=#{date}&log=#{ba}#{@am_str}#{id_str}" accesskey="5">Á°</a>|)
-			s += %Q(<a href="?vid=#{@vid}&userid=#{@esuserid}&pass=#{@pass}&date=#{date}&log=#{ne}#{@am_str}#{id_str}" accesskey="6">¼¡</a>|)
-			s += %Q(<a href="?vid=#{@vid}&userid=#{@esuserid}&pass=#{@pass}&date=#{date}&log=s#{@am_str}#{id_str}" accesskey="7">»Ï</a>|)
-			s += %Q(<a href="?vid=#{@vid}&userid=#{@esuserid}&pass=#{@pass}&date=#{date}#{@am_str}#{id_str}#b" accesskey="8">½ª</a>|)
-			s += %Q(<a href="?vid=#{@vid}&userid=#{@esuserid}&pass=#{@pass}#{@am_str}#b" accesskey="9">¿·</a>|)
-			s += %Q(<a href="?vid=#{@vid}&userid=#{@esuserid}&pass=#{@pass}#{@am_str}&act=o" accesskey="0">¹ÔÆ°</a>|)
-			s += %Q(<a href="?vid=#{@vid}&userid=#{@esuserid}&pass=#{@pass}#{@am_str}&con=o" accesskey="*">Àß</a>)
+			s += %Q(<a name="b" href="#u" accesskey="1">ä¸Š</a>|)
+			s += %Q(<a href="?vid=#{@vid}&userid=#{@esuserid}&pass=#{@pass}&date=#{date}&log=#{ba}#{@am_str}#{id_str}" accesskey="5">å‰</a>|)
+			s += %Q(<a href="?vid=#{@vid}&userid=#{@esuserid}&pass=#{@pass}&date=#{date}&log=#{ne}#{@am_str}#{id_str}" accesskey="6">æ¬¡</a>|)
+			s += %Q(<a href="?vid=#{@vid}&userid=#{@esuserid}&pass=#{@pass}&date=#{date}&log=s#{@am_str}#{id_str}" accesskey="7">å§‹</a>|)
+			s += %Q(<a href="?vid=#{@vid}&userid=#{@esuserid}&pass=#{@pass}&date=#{date}#{@am_str}#{id_str}#b" accesskey="8">çµ‚</a>|)
+			s += %Q(<a href="?vid=#{@vid}&userid=#{@esuserid}&pass=#{@pass}#{@am_str}#b" accesskey="9">æ–°</a>|)
+			s += %Q(<a href="?vid=#{@vid}&userid=#{@esuserid}&pass=#{@pass}#{@am_str}&act=o" accesskey="0">è¡Œå‹•</a>|)
+			s += %Q(<a href="?vid=#{@vid}&userid=#{@esuserid}&pass=#{@pass}#{@am_str}&con=o" accesskey="*">è¨­</a>)
 		end
 
 		print NKF.nkf('-xsE', s)
@@ -538,11 +538,11 @@ class Pigeon
 		return if (!@login)
 		return if (!msg || msg == '')
 
-		msg = Kconv.toeuc(msg)
+		msg = Kconv.toutf8(msg)
 		msg = CGI.escapeHTML(msg)
 		msg.gsub!(/\r\n/, '<br>')
 		msg.gsub!(/[\r\n]/, '<br>')
-		msg.gsub!(/^ +$/, '¡¡')
+		msg.gsub!(/^ +$/, 'ã€€')
 
 		num_char = 1
 
@@ -585,7 +585,7 @@ class Pigeon
 			vil.add_player(player)
 
 			type = 'say'
-			s = announce("#{player.name} ¤¬½¸²ñ½ê¤òË¬¤ì¤Ş¤·¤¿¡£")
+			s = announce("#{player.name} ãŒé›†ä¼šæ‰€ã‚’è¨ªã‚Œã¾ã—ãŸã€‚")
 			vil.say_cnt[type] = vil.say_cnt[type] + 1
 			cnt = vil.say_cnt[type]
 			s += vil.say(type, cnt, player, msg, player.userid)
@@ -600,9 +600,9 @@ class Pigeon
 
 		head = %Q(<html><head><meta http-equiv="pragma" content="no-cache"><meta http-equiv="cache-control" content="no-cache">)
 		if (title)
-			head += "<title>¾ûÁ°Å·¹ñ #{title}</title>"
+			head += "<title>éŒ å‰å¤©å›½ #{title}</title>"
 		else
-			head += "<title>¾ûÁ°Å·¹ñ</title>"
+			head += "<title>éŒ å‰å¤©å›½</title>"
 		end
 		head += "</head><body>"
 		print Kconv.tosjis(head)
@@ -648,18 +648,18 @@ class Pigeon
 				vild = vldb["root#{i}"]
 				next if (vild['state'] > 2)
 				if (vild['state'] == 2)
-					showdown.push(%Q(#{i}Â¼ <a href="?userid=#{@esuserid}&pass=#{@pass}&vid=#{i}#{@am_str}#b">#{vild['sname']}</a><br>))
+					showdown.push(%Q(#{i}æ‘ <a href="?userid=#{@esuserid}&pass=#{@pass}&vid=#{i}#{@am_str}#b">#{vild['sname']}</a><br>))
 				elsif (vild['state'] == 1)
-					progress.push(%Q(#{i}Â¼ <a href="?userid=#{@esuserid}&pass=#{@pass}&vid=#{i}#{@am_str}#b">#{vild['sname']}</a><br>))
+					progress.push(%Q(#{i}æ‘ <a href="?userid=#{@esuserid}&pass=#{@pass}&vid=#{i}#{@am_str}#b">#{vild['sname']}</a><br>))
 				else
-					preinitiation.push(%Q(#{i}Â¼ <a href="?userid=#{@esuserid}&pass=#{@pass}&vid=#{i}#{@am_str}#b">#{vild['sname']}</a><br>))
+					preinitiation.push(%Q(#{i}æ‘ <a href="?userid=#{@esuserid}&pass=#{@pass}&vid=#{i}#{@am_str}#b">#{vild['sname']}</a><br>))
 				end
 			end
 		end
 
 		s = ''
 		vlist = Array.new
-		vlist = preinitiation.unshift("¡û Êç½¸Ãæ<br>") + progress.unshift("¡û ¿Ê¹ÔÃæ<br>") + showdown.unshift("¡û ·èÃå<br>")
+		vlist = preinitiation.unshift("â—‹ å‹Ÿé›†ä¸­<br>") + progress.unshift("â—‹ é€²è¡Œä¸­<br>") + showdown.unshift("â—‹ æ±ºç€<br>")
 		first = @cgi['first'].to_i
 		last = (first + VIL_NUM > vlist.size) ? vlist.size : first + VIL_NUM
 		for i in first...last do
@@ -667,10 +667,10 @@ class Pigeon
 		end
 		if (first != 0)
 			f = (first - VIL_NUM < 0) ? 0 : first - VIL_NUM
-			s += %Q(<a href="?userid=#{@esuserid}&pass=#{@pass}&first=#{f}" accesskey="1">Á°¤Ø</a> )
+			s += %Q(<a href="?userid=#{@esuserid}&pass=#{@pass}&first=#{f}" accesskey="1">å‰ã¸</a> )
 		end
 		if (last != vlist.size)
-			s += %Q(<a href="?userid=#{@esuserid}&pass=#{@pass}&first=#{first + VIL_NUM}" accesskey="2">¼¡¤Ø</a>)
+			s += %Q(<a href="?userid=#{@esuserid}&pass=#{@pass}&first=#{first + VIL_NUM}" accesskey="2">æ¬¡ã¸</a>)
 		end
 		print Kconv.tosjis(s)
 	end
@@ -689,9 +689,9 @@ class Pigeon
 			return if (!player)
 			player.vote = v
 			if (v == -1)
-				str = "#{player.name} ¤¬ÅêÉ¼¤ò¼è¤ê¾Ã¤·¤Ş¤·¤¿¡£"
+				str = "#{player.name} ãŒæŠ•ç¥¨ã‚’å–ã‚Šæ¶ˆã—ã¾ã—ãŸã€‚"
 			else
-				str = "#{player.name} ¤¬ #{vil.player_p(v).name} ¤ËÅêÉ¼¤·¤Ş¤·¤¿¡£"
+				str = "#{player.name} ãŒ #{vil.player_p(v).name} ã«æŠ•ç¥¨ã—ã¾ã—ãŸã€‚"
 			end
 			vil.addlog(setvote(player.num_id, str))
 			if (!vil.pids.find { |p| p.vote == -1 })
@@ -721,11 +721,11 @@ class Pigeon
 			if (player.sid == 12)
 				t2 = @cgi['target_id2'].to_i
 				if (t == t2 || t == -1 || t2 == -1)
-					str = "#{player.name} ¤ÏÌğ¤ò·â¤ÄÂĞ¾İÁªÂò¤ò¼è¤ê¾Ã¤·¤Ş¤¹¡£"
+					str = "#{player.name} ã¯çŸ¢ã‚’æ’ƒã¤å¯¾è±¡é¸æŠã‚’å–ã‚Šæ¶ˆã—ã¾ã™ã€‚"
 					player.target = -1
 					player.target2 = -1
 				elsif
-					str = "#{player.name} ¤Ï #{vil.player_p(t).name} ¤È #{vil.player_p(t2).name} ¤Ë°¦¤ÎÌğ¤ò·â¤Á¤Ş¤¹¡£"
+					str = "#{player.name} ã¯ #{vil.player_p(t).name} ã¨ #{vil.player_p(t2).name} ã«æ„›ã®çŸ¢ã‚’æ’ƒã¡ã¾ã™ã€‚"
 					player.target = t
 					player.target2 = t2
 				end
@@ -773,7 +773,7 @@ class Pigeon
 			if (p.num_char < vil.num_char[p.pid])
 				vil.num_char[p.pid] = p.num_char
 			end
-			s = announce("#{p.name} ¤¬Â¼¤òµî¤ê¤Ş¤·¤¿¡£")
+			s = announce("#{p.name} ãŒæ‘ã‚’å»ã‚Šã¾ã—ãŸã€‚")
 			vil.addlog(s)
 			vil.players.delete(p.userid)
 
@@ -798,9 +798,9 @@ class Pigeon
 			return if(!player)
 			player.commit = v
 			if (v == -1)
-				str = "#{player.name} ¤¬»ş´Ö¤ò¿Ê¤á¤ë¤ò¼è¤ê¾Ã¤·¤Ş¤·¤¿¡£"
+				str = "#{player.name} ãŒæ™‚é–“ã‚’é€²ã‚ã‚‹ã‚’å–ã‚Šæ¶ˆã—ã¾ã—ãŸã€‚"
 			else
-				str = "#{player.name} ¤¬»ş´Ö¤ò¿Ê¤á¤ë¤òÁªÂò¤·¤Ş¤·¤¿¡£"
+				str = "#{player.name} ãŒæ™‚é–“ã‚’é€²ã‚ã‚‹ã‚’é¸æŠã—ã¾ã—ãŸã€‚"
 			end
 			vil.addlog(setvote(player.num_id, str))
 
@@ -850,23 +850,23 @@ class Pigeon
 		j_code = NKF.guess(j_data)
 		opt =
 			if (j_code == NKF::JIS)
-				'-xeJ'
+				'-xwJ'
 			elsif (j_code == NKF::EUC)
-				'-xeE'
+				'-xwE'
 			elsif (j_code == NKF::SJIS)
-				'-xeS'
+				'-xwS'
 			elsif (j_code == NKF::UTF8)
-				'-xeW'
+				'-xwW'
 			elsif (j_code == NKF::UTF16)
-				'-xeW16'
+				'-xwW16'
 			else
-				'-xe'
+				'-xw'
 			end
 		msg = NKF.nkf(opt, msg)
 		len = PRV_LEN
 		@val_msg = msg[0..len]
 		if (@val_msg == "")
-			@val_msg = "¡¡"
+			@val_msg = "ã€€"
 			cut = ""
 		else
 		    if (/.\z/ !~ @val_msg)
@@ -880,10 +880,10 @@ class Pigeon
 		@val_msg = CGI.escape(@val_msg)
 		str.gsub!(/\r\n/, '<br>')
 		str.gsub!(/[\r\n]/, '<br>')
-		str.gsub!(/^ +$/, '¡¡')
-		str = "¡¡" if (str == "")
+		str.gsub!(/^ +$/, 'ã€€')
+		str = "ã€€" if (str == "")
 		if (@cgi['loud'] == 'on')
-			str = "(ÂçÀ¼)<br>#{str}"
+			str = "(å¤§å£°)<br>#{str}"
 		end
 		if (cut)
 			cut = CGI.escapeHTML(cut)
@@ -931,17 +931,17 @@ class Pigeon
 		j_code = NKF.guess(j_data)
 		opt =
 			if (j_code == NKF::JIS)
-				'-xeJ'
+				'-xwJ'
 			elsif (j_code == NKF::EUC)
-				'-xeE'
+				'-xwE'
 			elsif (j_code == NKF::SJIS)
-				'-xeS'
+				'-xwS'
 			elsif (j_code == NKF::UTF8)
-				'-xeW'
+				'-xwW'
 			elsif (j_code == NKF::UTF16)
-				'-xeW16'
+				'-xwW16'
 			else
-				'-xe'
+				'-xw'
 			end
 		msg = NKF.nkf(opt, msg)
 		msg = CGI.unescape(msg) if (@cgi['prv'] == 'on')
@@ -949,8 +949,8 @@ class Pigeon
 		msg = CGI.escapeHTML(msg)
 		msg.gsub!(/\r\n/, '<br>')
 		msg.gsub!(/[\r\n]/, '<br>')
-		msg.gsub!(/^ +$/, '¡¡')
-		msg = "¡¡" if (msg == "")
+		msg.gsub!(/^ +$/, 'ã€€')
+		msg = "ã€€" if (msg == "")
 
 		@vildb.transaction do
 			vil = get_vil(@vid)
@@ -991,7 +991,7 @@ class Pigeon
 						return if (vil.date != @cgi['set_date'].to_i)
 						return if (player.dead != 0 || vil.night)
 						postpos = POSTPOS[@cgi['postpos'].to_i]
-						postpos = "" if (postpos == "¡¡")
+						postpos = "" if (postpos == "ã€€")
 						if (@cgi['action_id'] != "")
 							p = vil.player_p(@cgi['action_id'].to_i)
 							return if(!p)
@@ -1028,10 +1028,10 @@ class Pigeon
 	end
 
 	def form_conf
-		s = %Q(#{@vid}Â¼ #{@vil.name}<hr>°ìÅÙ¤ËÉ½¼¨¤¹¤ë¥í¥°¤Î¿ô<br><form method="get" action="pigeon.cgi">)
+		s = %Q(#{@vid}æ‘ #{@vil.name}<hr>ä¸€åº¦ã«è¡¨ç¤ºã™ã‚‹ãƒ­ã‚°ã®æ•°<br><form method="get" action="pigeon.cgi">)
 		s += %Q(<input type="hidden" name="userid" value="#{@userid}"><input type="hidden" name="pass" value="#{@pass}"><input type="hidden" name="vid" value="#{@vid}">)
 		s += %Q(<input name="am" value="#{@am}" istyle="4" size="3" type="text"><br>)
-		s += %Q{<input type="submit" value="ÀßÄê"></form><br>¡ÊºÇÂç#{MAX_AM})}
+		s += %Q{<input type="submit" value="è¨­å®š"></form><br>ï¼ˆæœ€å¤§#{MAX_AM})}
 		print Kconv.tosjis(s)
 	end
 
@@ -1039,30 +1039,30 @@ class Pigeon
 		s = ''
 		print_head
 		s += %Q(<form method="get" action="pigeon.cgi">)
-		s += "¾ûÁ°Å·¹ñ<hr>"
+		s += "éŒ å‰å¤©å›½<hr>"
 		s += %Q(ID:<br><input type="text" name="userid" size="10" istyle="3"><br>)
-		s += %Q(PASS:<br><input type="text" name="pass" size="10" istyle="3"><br><input type="submit" value="¥í¥°¥¤¥ó"></form>)
+		s += %Q(PASS:<br><input type="text" name="pass" size="10" istyle="3"><br><input type="submit" value="ãƒ­ã‚°ã‚¤ãƒ³"></form>)
 		s += "</body></html>"
 		print Kconv.tosjis(s)
 	end
 
   def form_link
     url = CGI.unescape(@cgi['url'])
-    s = %Q(¥¸¥ã¥ó¥×<hr>³°Éô¥µ¥¤¥È¡Ê#{url}¡Ë¤Ø°ÜÆ°¤·¤Ş¤¹<br>¤ª»È¤¤¤Î·ÈÂÓÃ¼Ëö¤Ç¤ÏÉ½¼¨¤¬Êø¤ì¤¿¤ê¡¢ºÇ¸å¤Ş¤ÇÉ½¼¨¤µ¤ì¤Ê¤«¤Ã¤¿¤ê¤·¤Ş¤¹<br>Google Mobile Proxy¤ò»È¤¦¤³¤È¤Ç¡¢¥µ¥¤¥È¤ò·ÈÂÓ¸ş¤±¤ËÊÑ´¹¤¹¤ë¤³¤È¤¬¤Ç¤­¤Ş¤¹<br>¤è¤í¤·¤±¤ì¤Ğ¡¢²¼¤Î¥ê¥ó¥¯¤ò²¡¤·¤Æ¤¯¤À¤µ¤¤<hr>¢¢<a href=\"#{url}\">¤½¤Î¤Ş¤Ş¥¸¥ã¥ó¥×</a><br>¢¢<a href=\"http://www.google.co.jp/gwt/n?u=#{CGI.escape(url)}\">Google Mobile Proxy</a><HR>)
+    s = %Q(ã‚¸ãƒ£ãƒ³ãƒ—<hr>å¤–éƒ¨ã‚µã‚¤ãƒˆï¼ˆ#{url}ï¼‰ã¸ç§»å‹•ã—ã¾ã™<br>ãŠä½¿ã„ã®æºå¸¯ç«¯æœ«ã§ã¯è¡¨ç¤ºãŒå´©ã‚ŒãŸã‚Šã€æœ€å¾Œã¾ã§è¡¨ç¤ºã•ã‚Œãªã‹ã£ãŸã‚Šã—ã¾ã™<br>Google Mobile Proxyã‚’ä½¿ã†ã“ã¨ã§ã€ã‚µã‚¤ãƒˆã‚’æºå¸¯å‘ã‘ã«å¤‰æ›ã™ã‚‹ã“ã¨ãŒã§ãã¾ã™<br>ã‚ˆã‚ã—ã‘ã‚Œã°ã€ä¸‹ã®ãƒªãƒ³ã‚¯ã‚’æŠ¼ã—ã¦ãã ã•ã„<hr>â–¡<a href=\"#{url}\">ãã®ã¾ã¾ã‚¸ãƒ£ãƒ³ãƒ—</a><br>â–¡<a href=\"http://www.google.co.jp/gwt/n?u=#{CGI.escape(url)}\">Google Mobile Proxy</a><HR>)
 		print Kconv.tosjis(s)
   end
 
 	def form_act
-		s = %Q(#{@vid}Â¼ #{@vil.name}<hr>)
+		s = %Q(#{@vid}æ‘ #{@vil.name}<hr>)
 		str_post = %Q(<form method="post" action="pigeon.cgi"><input type="hidden" name="userid" value="#{@userid}"><input type="hidden" name="pass" value="#{@pass}"><input type="hidden" name="vid" value="#{@vid}">#{@am_inp})
 		skill_post = str_post + %Q(<input type="hidden" name="set_date" value="#{@vil.date}"><input type="hidden" name="cmd" value="skill">)
-		str_post += %Q(<input type="hidden" name="j_data" value="ÆüËÜ¸ì">)
+		str_post += %Q(<input type="hidden" name="j_data" value="æ—¥æœ¬èª">)
 		@player = (@vil.players.key?(@userid)) ? @vil.players[@userid] : nil
 		if (!@player)
 			if (@vil.state == 0)
 				s += str_post
 				s += %Q(<input type="hidden" name="cmd" value="entry">)
-				s += %Q(¥­¥ã¥é¥¯¥¿¡¼¡§<select name="pid">)
+				s += %Q(ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ï¼š<select name="pid">)
 				c_names = Charset.charsets[@vil.char].char_names
 				if (@userid != MASTER)
 					for i in 1...c_names.size do
@@ -1076,10 +1076,10 @@ class Pigeon
 					s += "\n"
 				end
 				s += "</select><br>"
-				s += %Q(´õË¾Ìò¿¦¡§<select name="skill">)
+				s += %Q(å¸Œæœ›å½¹è·ï¼š<select name="skill">)
 				if (@userid != MASTER)
-					s += "<option value = -1>¤ª¤Ş¤«¤»"
-					s += "<option value = -2>¥é¥ó¥À¥à"
+					s += "<option value = -1>ãŠã¾ã‹ã›"
+					s += "<option value = -2>ãƒ©ãƒ³ãƒ€ãƒ "
 					for i in 0...Skill.skills.size
 						s += %Q(<option value="#{i}">#{Skill.skills[i].name}\n)
 						s += "\n"
@@ -1089,9 +1089,9 @@ class Pigeon
 					s += "\n"
 				end
 				s += "</select><br>"
-        s += %Q(¥Ñ¥¹¥ï¡¼¥É¡§<input name="v_pass" size="10"><br>)
+        s += %Q(ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ï¼š<input name="v_pass" size="10"><br>)
 				s += %Q(<textarea rows=3 cols=30 name="message"></textarea><br>)
-				s += %Q(<input type="submit" value="¥¨¥ó¥È¥ê¡¼">)
+				s += %Q(<input type="submit" value="ã‚¨ãƒ³ãƒˆãƒªãƒ¼">)
 				s += "</form>"
 			end
 		else
@@ -1101,29 +1101,29 @@ class Pigeon
 				sn = @player.sid
 			end
 			if (sn == -1)
-				s_str = "¤ª¤Ş¤«¤»"
+				s_str = "ãŠã¾ã‹ã›"
 			elsif (sn == -2)
-				s_str = "¥é¥ó¥À¥à"
+				s_str = "ãƒ©ãƒ³ãƒ€ãƒ "
 			else
 				s_str = Skill.skills[sn].name
 			end
 			if (@vil.state == 0)
-				s_str += "¤ò´õË¾"
+				s_str += "ã‚’å¸Œæœ›"
 			end
 			s += "#{@player.name}(#{s_str})"
-			s += " ´õË¾¤ÏÌµ¸ú¤Ç¤¹¡£" if (!@vil.hope_skill && @vil.state == 0)
+			s += " å¸Œæœ›ã¯ç„¡åŠ¹ã§ã™ã€‚" if (!@vil.hope_skill && @vil.state == 0)
 
 			if(@vil.state == 1 && @vil.night == false && @player.dead == 0)
 				s += str_post
 				if (!(!@vil.card && @vil.date == 2))
 					s += %Q(<input type="hidden" name="cmd" value="vote">)
 					s += %Q(<input type="hidden" name="set_date" value="#{@vil.date}">)
-					s += "ÅêÉ¼¡§"
+					s += "æŠ•ç¥¨ï¼š"
 					s += %Q(<select name="vote_id">)
 					if (@player.vote == -1)
-						s += "<option value = -1>Ì¤ÀßÄê *"
+						s += "<option value = -1>æœªè¨­å®š *"
 					else
-						s += "<option value = -1>¥­¥ã¥ó¥»¥ë"
+						s += "<option value = -1>ã‚­ãƒ£ãƒ³ã‚»ãƒ«"
 					end
 					@vil.pids.each do |p|
 						next if (p == @player)
@@ -1135,19 +1135,19 @@ class Pigeon
 						end
 						s += "\n"
 					end
-					s += %Q(</select><input type="submit" value="ÊÑ¹¹">)
+					s += %Q(</select><input type="submit" value="å¤‰æ›´">)
 				else
 					s += %Q(<input type="hidden" name="cmd" value="commit">)
-					s += "¥³¥ß¥Ã¥È¡§"
+					s += "ã‚³ãƒŸãƒƒãƒˆï¼š"
 					s += %Q(<select name="commit_value">)
 					if (@player.commit == -1)
-						s += "<option value = -1>Ì¤ÀßÄê *"
-						s += "<option value = 0>»ş´Ö¤ò¿Ê¤á¤ë"
+						s += "<option value = -1>æœªè¨­å®š *"
+						s += "<option value = 0>æ™‚é–“ã‚’é€²ã‚ã‚‹"
 					else
-						s += "<option value = 0>»ş´Ö¤ò¿Ê¤á¤ë *"
-						s += "<option value = -1>¥­¥ã¥ó¥»¥ë"
+						s += "<option value = 0>æ™‚é–“ã‚’é€²ã‚ã‚‹ *"
+						s += "<option value = -1>ã‚­ãƒ£ãƒ³ã‚»ãƒ«"
 					end
-					s += %Q(</select><input type="submit" value="ÊÑ¹¹">)
+					s += %Q(</select><input type="submit" value="å¤‰æ›´">)
 				end
 				s += "</form>"
 			end
@@ -1161,17 +1161,17 @@ class Pigeon
 				end
 				s += %Q(<textarea rows=3 cols=30 name="message"></textarea><br>)
 				if (@player.dead != 0)
-					s += %Q(<input type="hidden" name="groan" value="on"><input type="submit" value="¤¦¤á¤­"><input name="think" value="on" type="checkbox">ÆÈ)
+					s += %Q(<input type="hidden" name="groan" value="on"><input type="submit" value="ã†ã‚ã"><input name="think" value="on" type="checkbox">ç‹¬)
 				elsif (@vil.night && @vil.state == 1)
-					s += %Q(<input type="hidden" name="think" value="on"><input type="submit" value="ÆÈ¤ê¸À">)
+					s += %Q(<input type="hidden" name="think" value="on"><input type="submit" value="ç‹¬ã‚Šè¨€">)
 				else
-					s += %Q(<input type="submit" value="È¯¸À">)
+					s += %Q(<input type="submit" value="ç™ºè¨€">)
 					if (@vil.period >= LONG && @vil.state == 1)
 						s += %Q(#{@player.say_remain}/#{@vil.sayfull})
 					end
-					s += %Q(<input name="think" value="on" type="checkbox">ÆÈ)
+					s += %Q(<input name="think" value="on" type="checkbox">ç‹¬)
 				end
-				s += %Q(<input name="loud" value="on" type="checkbox">Âç)
+				s += %Q(<input name="loud" value="on" type="checkbox">å¤§)
 				s += "</form>"
 			end
 			if (@player.dead == 0 && !@vil.night)
@@ -1187,7 +1187,7 @@ class Pigeon
 				end
 				s += "</select>"
 				s += %Q(<select name="action_id">)
-				s += %Q(<option value = "" selected>¡¡)
+				s += %Q(<option value = "" selected>ã€€)
 				@vil.pids.each do |p|
 					next if (p == @player)
 					i = p.num_id
@@ -1195,7 +1195,7 @@ class Pigeon
 					s += "\n"
 				end
 				s += "</select><br>"
-				s += %Q(<input type="text" name="message" maxlength="50"><input type="submit" value="¥¢¥¯¥·¥ç¥ó">)
+				s += %Q(<input type="text" name="message" maxlength="50"><input type="submit" value="ã‚¢ã‚¯ã‚·ãƒ§ãƒ³">)
 				if (@vil.period >= LONG && @vil.state == 1)
 					s += %Q(#{@player.action_remain}/#{@vil.actfull})
 				end
@@ -1207,12 +1207,12 @@ class Pigeon
 				if (@player.sid == 1)
 					if (@vil.night || !@vil.card)
 						s += skill_post
-						s += "½±¤¦¡§"
+						s += "è¥²ã†ï¼š"
 						s += %Q(<select name="target_id">)
 						if (@player.target == -1)
-							s += "<option value = -1>Ì¤ÀßÄê *"
+							s += "<option value = -1>æœªè¨­å®š *"
 						else
-							s += "<option value = -1>¥­¥ã¥ó¥»¥ë"
+							s += "<option value = -1>ã‚­ãƒ£ãƒ³ã‚»ãƒ«"
 						end
 
 						if (@vil.attack_dummy(@vil.date + 1))
@@ -1236,24 +1236,24 @@ class Pigeon
 								s += "\n"
 							end
 						end
-						s += %Q(</select><input type="submit" value="ÊÑ¹¹">)
+						s += %Q(</select><input type="submit" value="å¤‰æ›´">)
 						s += "</form>"
 						s += str_post
 						s += %Q(<input type="hidden" name="cmd" value="msg">)
 						s += %Q(<input type="hidden" name="whisper" value="on">)
 						s += %Q(<textarea rows=3 cols=30 name="message"></textarea><br>)
-						s += %Q(<input type="submit" value="¤µ¤µ¤ä¤­"><input name="think" value="on" type="checkbox">ÆÈ)
-						s += %Q(<input name="loud" value="on" type="checkbox">Âç)
+						s += %Q(<input type="submit" value="ã•ã•ã‚„ã"><input name="think" value="on" type="checkbox">ç‹¬)
+						s += %Q(<input name="loud" value="on" type="checkbox">å¤§)
 						s += "</form>"
 					end
 				elsif (@player.sid == 2)
 					s += skill_post
-					s += "Àê¤¦¡§"
+					s += "å ã†ï¼š"
 					s += %Q(<select name="target_id">)
 					if (@player.target == -1)
-						s += "<option value = -1>Ì¤ÀßÄê *"
+						s += "<option value = -1>æœªè¨­å®š *"
 					else
-						s += "<option value = -1>¥­¥ã¥ó¥»¥ë"
+						s += "<option value = -1>ã‚­ãƒ£ãƒ³ã‚»ãƒ«"
 					end
 					@vil.pids.each do |p|
 						next if (p == @player)
@@ -1265,34 +1265,34 @@ class Pigeon
 						end
 						s += "\n"
 					end
-					s += %Q(</select><input type="submit" value="ÊÑ¹¹">)
+					s += %Q(</select><input type="submit" value="å¤‰æ›´">)
 					s += "</form>"
         elsif (@player.sid == 4 && @vil.possessed)
 					s += skill_post
-          s += "¥¹¥¦¥£¥Ã¥Á¡§"
+          s += "ã‚¹ã‚¦ã‚£ãƒƒãƒï¼š"
           s += %Q(<select name="target_id">)
           if (@player.target == -1)
-            s += "<option value = -1>Ì¤ÀßÄê *"
+            s += "<option value = -1>æœªè¨­å®š *"
           else
-            s += "<option value = -1>°ú¤¯"
+            s += "<option value = -1>å¼•ã"
           end
           if (@player.target == 0)
-            s += %Q(<option value = "0" selected>²¡¤¹ *)
+            s += %Q(<option value = "0" selected>æŠ¼ã™ *)
           else
-            s += %Q(<option value = "0">²¡¤¹)
+            s += %Q(<option value = "0">æŠ¼ã™)
           end
           s += "\n"
-          s += %Q(</select><input type="submit" value="ÊÑ¹¹">)
+          s += %Q(</select><input type="submit" value="å¤‰æ›´">)
           s += "</form>"
 				elsif (@player.sid == 5 || @player.sid == 16)
 					if (@vil.can_guard(@vil.date + 1))
 						s += skill_post
-						s += "¸î±Ò¡§"
+						s += "è­·è¡›ï¼š"
 						s += %Q(<select name="target_id">)
 						if (@player.target == -1)
-							s += "<option value = -1>Ì¤ÀßÄê *"
+							s += "<option value = -1>æœªè¨­å®š *"
 						else
-							s += "<option value = -1>¥­¥ã¥ó¥»¥ë"
+							s += "<option value = -1>ã‚­ãƒ£ãƒ³ã‚»ãƒ«"
 						end
 						@vil.pids.each do |p|
 							next if (p == @player)
@@ -1304,7 +1304,7 @@ class Pigeon
 							end
 							s += "\n"
 						end
-						s += %Q(</select><input type="submit" value="ÊÑ¹¹">)
+						s += %Q(</select><input type="submit" value="å¤‰æ›´">)
 						s += "</form>"
 					end
 				elsif (@player.sid == 8)
@@ -1313,18 +1313,18 @@ class Pigeon
 						s += %Q(<input type="hidden" name="cmd" value="msg">)
 						s += %Q(<input type="hidden" name="whisper" value="on">)
 						s += %Q(<textarea rows=3 cols=30 name="message"></textarea><br>)
-						s += %Q(<input type="submit" value="¤µ¤µ¤ä¤­"><input name="think" value="on" type="checkbox">ÆÈ)
-						s += %Q(<input name="loud" value="on" type="checkbox">Âç)
+						s += %Q(<input type="submit" value="ã•ã•ã‚„ã"><input name="think" value="on" type="checkbox">ç‹¬)
+						s += %Q(<input name="loud" value="on" type="checkbox">å¤§)
 						s += "</form>"
 					end
 				elsif (@player.sid == 11)
 					s += skill_post
-					s += "Ãæ¿È¤òÀê¤¦:"
+					s += "ä¸­èº«ã‚’å ã†:"
 					s += %Q(<select name="target_id">)
 					if (@player.target == -1)
-						s += "<option value = -1>Ì¤ÀßÄê *"
+						s += "<option value = -1>æœªè¨­å®š *"
 					else
-						s += "<option value = -1>¥­¥ã¥ó¥»¥ë"
+						s += "<option value = -1>ã‚­ãƒ£ãƒ³ã‚»ãƒ«"
 					end
 					@vil.pids.each do |p|
 						next if (p == @player)
@@ -1336,17 +1336,17 @@ class Pigeon
 						end
 						s += "\n"
 					end
-					s += %Q(</select><input type="submit" value="ÊÑ¹¹">)
+					s += %Q(</select><input type="submit" value="å¤‰æ›´">)
 					s += "</form>"
 				elsif (@player.sid == 12)
 					if (@vil.can_cupid(@vil.date + 1))
 						s += skill_post
-						s += "°¦¤ÎÌğ¤ò·â¤Ä¡§<br>"
+						s += "æ„›ã®çŸ¢ã‚’æ’ƒã¤ï¼š<br>"
 						s += %Q(<select name="target_id">)
 						if (@player.target == -1)
-							s += "<option value = -1>Ì¤ÀßÄê *"
+							s += "<option value = -1>æœªè¨­å®š *"
 						else
-							s += "<option value = -1>¥­¥ã¥ó¥»¥ë"
+							s += "<option value = -1>ã‚­ãƒ£ãƒ³ã‚»ãƒ«"
 						end
 						@vil.pids.each do |p|
 							i = p.num_id
@@ -1359,9 +1359,9 @@ class Pigeon
 						end
 						s += %Q(</select><select name="target_id2">)
 						if (@player.target2 == -1)
-							s += "<option value = -1>Ì¤ÀßÄê *"
+							s += "<option value = -1>æœªè¨­å®š *"
 						else
-							s += "<option value = -1>¥­¥ã¥ó¥»¥ë"
+							s += "<option value = -1>ã‚­ãƒ£ãƒ³ã‚»ãƒ«"
 						end
 						@vil.pids.each do |p|
 							i = p.num_id
@@ -1372,18 +1372,18 @@ class Pigeon
 							end
 							s += "\n"
 						end
-						s += %Q(</select><input type="submit" value="ÊÑ¹¹">)
+						s += %Q(</select><input type="submit" value="å¤‰æ›´">)
 						s += "</form>"
 					end
 				elsif (@player.sid == 13)
 					if (@vil.can_cupid(@vil.date + 1))
 					s += skill_post
-					s += "°¦¤òµá¤á¤ë¡§"
+					s += "æ„›ã‚’æ±‚ã‚ã‚‹ï¼š"
 					s += %Q(<select name="target_id">)
 					if (@player.target == -1)
-						s += "<option value = -1>Ì¤ÀßÄê *"
+						s += "<option value = -1>æœªè¨­å®š *"
 					else
-						s += "<option value = -1>¥­¥ã¥ó¥»¥ë"
+						s += "<option value = -1>ã‚­ãƒ£ãƒ³ã‚»ãƒ«"
 					end
 					@vil.pids.each do |p|
 						next if (p == @player)
@@ -1395,17 +1395,17 @@ class Pigeon
 						end
 						s += "\n"
 					end
-					s += %Q(</select><input type="submit" value="ÊÑ¹¹">)
+					s += %Q(</select><input type="submit" value="å¤‰æ›´">)
 					s += "</form>"
 					end
 				elsif (@player.sid == 14)
 					s += skill_post
-					s += "¼ÙËâ¤¹¤ë¡§"
+					s += "é‚ªé­”ã™ã‚‹ï¼š"
 					s += %Q(<select name="target_id">)
 					if (@player.target == -1)
-						s += "<option value = -1>Ì¤ÀßÄê *"
+						s += "<option value = -1>æœªè¨­å®š *"
 					else
-						s += "<option value = -1>¥­¥ã¥ó¥»¥ë"
+						s += "<option value = -1>ã‚­ãƒ£ãƒ³ã‚»ãƒ«"
 					end
 					@vil.pids.each do |p|
 						next if (p == @player)
@@ -1417,14 +1417,14 @@ class Pigeon
 						end
 						s += "\n"
 					end
-					s += %Q(</select><input type="submit" value="ÊÑ¹¹">)
+					s += %Q(</select><input type="submit" value="å¤‰æ›´">)
 					s += "</form>"
 				end
 			end
 			if (@vil.state == 0)
 				s += str_post
 				s += %Q(<input type="hidden" name="cmd" value="exit"><input type="hidden" name="exit_id" value="#{@player.num_id}">)
-				s += %Q(<input type="submit" value="Â¼¤ò½Ğ¤ë">)
+				s += %Q(<input type="submit" value="æ‘ã‚’å‡ºã‚‹">)
 				s += "</form>"
 			end
 		end
@@ -1434,8 +1434,8 @@ class Pigeon
 			s += %Q(<input type="hidden" name="cmd" value="msg" ><input type="hidden" name="guest" value="on">)
 			s += "#{@userid}<br>"
 			s += %Q(<textarea rows=3 cols=30 name="message"></textarea><br>)
-			s += %Q(<input type="submit" value="È¯¸À"><input name="think" value="on" type="checkbox">ÆÈ)
-			s += %Q(<input name="loud" value="on" type="checkbox">Âç)
+			s += %Q(<input type="submit" value="ç™ºè¨€"><input name="think" value="on" type="checkbox">ç‹¬)
+			s += %Q(<input name="loud" value="on" type="checkbox">å¤§)
 			s += "</form>"
 		end
 		print Kconv.tosjis(s)
@@ -1446,8 +1446,8 @@ class Pigeon
 		userid = @cgi['userid']
 		return if (userid == '')
 		userid = CGI.unescape(userid) if (ENV['REQUEST_METHOD'] == 'GET')
-		@userid = CGI.escapeHTML(Kconv.toeuc(CGI.unescape(userid)))
-		@pass = Kconv.toeuc(@cgi['pass'])
+		@userid = CGI.escapeHTML(Kconv.toutf8(CGI.unescape(userid)))
+		@pass = Kconv.toutf8(@cgi['pass'])
 		return if (@pass == '')
 
 		userdb = PStore.new('db/user.db')
@@ -1464,8 +1464,8 @@ class Pigeon
 	def form_prv
 		s = ""
 		if (@player.say_remain == 0)
-			s += "È¯¸À²ó¿ô¥ª¡¼¥Ğ¡¼¤Ç¤¹¡£<hr>"
-			s += %Q(<a href="?vid=#{@vid}&userid=#{@esuserid}&pass=#{@pass}#{@am_str}#b">Ìá¤ë</a> )
+			s += "ç™ºè¨€å›æ•°ã‚ªãƒ¼ãƒãƒ¼ã§ã™ã€‚<hr>"
+			s += %Q(<a href="?vid=#{@vid}&userid=#{@esuserid}&pass=#{@pass}#{@am_str}#b">æˆ»ã‚‹</a> )
 		else
 			s += @prv_str
 			s += %Q(<form action="pigeon.cgi" method="post">)
@@ -1473,15 +1473,15 @@ class Pigeon
 			s += @am_inp
 			s += %Q(<input type="hidden" name="cmd" value="msg">)
 			s += %Q(<input type="hidden" name="prv" value="on"><input type="hidden" name="message" value="#{@val_msg}">)
-			s += %Q(<input type="hidden" name="j_data" value="ÆüËÜ¸ì">)
+			s += %Q(<input type="hidden" name="j_data" value="æ—¥æœ¬èª">)
 			s += %Q(<input type="hidden" name="loud" value="on">) if (@cgi['loud'] == 'on')
-			s += %Q(<input type="submit" value="È¯¸À">)
+			s += %Q(<input type="submit" value="ç™ºè¨€">)
 			s += "</form>"
 			s += %Q(<form action="pigeon.cgi" method="post">)
 			s += %Q(<input type="hidden" name="cmd" value="cancel">)
 			s += %Q(<input type="hidden" name="userid" value="#{@userid}"><input type="hidden" name="pass" value="#{@pass}"><input type="hidden" name="vid" value="#{@vid}">)
 			s += @am_inp
-			s += %Q(<input type="submit" value="¥­¥ã¥ó¥»¥ë">)
+			s += %Q(<input type="submit" value="ã‚­ãƒ£ãƒ³ã‚»ãƒ«">)
 			s += "</form>"
 		end
 		print NKF.nkf('-xsE', s)
@@ -1490,9 +1490,9 @@ class Pigeon
 	def form_successful
 		s = ''
 		print_head
-		s += "¹ÔÆ°¤Î´°Î»<hr>"
-		s += %Q(<font color="red">¹ÔÆ°¤Ï¼ºÇÔ¤·¤Ş¤·¤¿) if (@f_success == false)
-		s += %Q(<a href="?vid=#{@vid}&userid=#{@esuserid}&pass=#{@pass}#{@am_str}#b">Â¼¤ØÌá¤ë¡£</a>)
+		s += "è¡Œå‹•ã®å®Œäº†<hr>"
+		s += %Q(<font color="red">è¡Œå‹•ã¯å¤±æ•—ã—ã¾ã—ãŸ) if (@f_success == false)
+		s += %Q(<a href="?vid=#{@vid}&userid=#{@esuserid}&pass=#{@pass}#{@am_str}#b">æ‘ã¸æˆ»ã‚‹ã€‚</a>)
 		s += "</body></html>"
 		print Kconv.tosjis(s)
 	end

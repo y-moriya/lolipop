@@ -27,17 +27,17 @@ else
 	sn = @player.sid
 end
 if (sn == -1)
-	s_str = "���ޤ���"
+	s_str = "おまかせ"
 elsif (sn == -2)
-	s_str = "������"
+	s_str = "ランダム"
 else
 	s_str = Skill.skills[sn].name
 end
 if (@vil.state == 0)
-	s_str += "���˾"
+	s_str += "を希望"
 end
 %>
-<%= @player.name %> (<%= s_str %>)<%= " ��˾��̵���Ǥ���" if (!@vil.hope_skill && @vil.state == 0) %>
+<%= @player.name %> (<%= s_str %>)<%= " 希望は無効です。" if (!@vil.hope_skill && @vil.state == 0) %>
 
 <% if(@vil.state == 1 && @vil.night == false && @player.dead == 0) %>
 				</td>
@@ -47,14 +47,14 @@ end
 				<td></td>
 				<td class="action_body">
 	<% if !(!@vil.card && @vil.date == 2) %>
-		��ɼ��
+		投票：
 		<select name="vote_id">
 		<%=
 		s = ''
 		if (@player.vote == -1)
-			s += "<option value = -1>̤���� *"
+			s += "<option value = -1>未設定 *"
 		else
-			s += "<option value = -1>����󥻥�"
+			s += "<option value = -1>キャンセル"
 		end
 		s += "\n"
 		@vil.pids.each do |p|
@@ -70,26 +70,26 @@ end
 		s
 		%>
 		</select>
-		<input type="submit" value="�ѹ�" class="submit">
+		<input type="submit" value="変更" class="submit">
 	<% else %>
-		���ߥå�:
+		コミット:
 		<select name="commit_value">
 		<%=
 		s = ''
 		if (@player.commit == -1)
-			s += "<option value = -1>̤���� *"
+			s += "<option value = -1>未設定 *"
 			s += "\n"
-			s += "<option value = 0>���֤�ʤ��"
+			s += "<option value = 0>時間を進める"
 		else
-			s += "<option value = 0>���֤�ʤ�� *"
+			s += "<option value = 0>時間を進める *"
 			s += "\n"
-			s += "<option value = -1>����󥻥�"
+			s += "<option value = -1>キャンセル"
 		end
 		s += "\n"
 		s
 		%>
 		</select>
-		<input type="submit" value="�ѹ�" class="submit">
+		<input type="submit" value="変更" class="submit">
 	<% end %>
 <% end %>
 					</td>
@@ -108,7 +108,7 @@ end
 				<input type="hidden" name="cmd" value="msg">
 			<% end %>
 			<input type="hidden" name="vid" value="<%= @vid %>">
-			<input type="hidden" name="j_data" value="���ܸ�Υǡ���">
+			<input type="hidden" name="j_data" value="日本語のデータ">
 			<tr>
 				<td></td>
 				<td class="action_body">
@@ -120,26 +120,26 @@ end
 
 	<% if (@player.dead != 0) %>
 				<input type="hidden" name="groan" value="on">
-				<input type="submit" value="��ԤΤ��᤭" class="submit">
-				<input id="msg_th" name="think" value="on" type="checkbox"><label for="msg_th">�Ȥ��</label>
+				<input type="submit" value="死者のうめき" class="submit">
+				<input id="msg_th" name="think" value="on" type="checkbox"><label for="msg_th">独り言</label>
 	<% elsif (@vil.night && @vil.state == 1) %>
 				<input type="hidden" name="think" value="on">
-				<input type="submit" value="�Ȥ��" class="submit">
+				<input type="submit" value="独り言" class="submit">
 	<% else %>
-				<input type="submit" value="ȯ��" class="submit">
+				<input type="submit" value="発言" class="submit">
 				<%=
 					if (@vil.period >= LONG && @vil.state == 1)
 						"(#{@player.say_remain}/#{@vil.sayfull})"
 					end
 				%>
-				<input id="msg_th" name="think" value="on" type="checkbox"><label for="msg_th">�Ȥ��</label>
+				<input id="msg_th" name="think" value="on" type="checkbox"><label for="msg_th">独り言</label>
 	<% end %>
-				<input id="msg_lo" name="loud" value="on" type="checkbox"><label for="msg_lo">����</label>
+				<input id="msg_lo" name="loud" value="on" type="checkbox"><label for="msg_lo">大声</label>
 	<% if (SMALL_VOICE) %>
 				<input id="msg_sm" name="small_voice" value="on" type="checkbox"><label for="msg_sm"><%= SMALL_VOICE %></label>
 	<% end %>
 	<% if (@player.dead == 0 && !@vil.night) %>
-				<span id="act_tog" class="act_toggle" onclick="actToggle('box_act', 'act_tog');">��</span>
+				<span id="act_tog" class="act_toggle" onclick="actToggle('box_act', 'act_tog');">▼</span>
 	<% end %>
 				</td>
 				<td></td>
@@ -151,7 +151,7 @@ end
 			<input type="hidden" name="vid" value="<%= @vid %>">
 			<input type="hidden" name="set_date" value="<%= @vil.date %>">
 			<input type="hidden" name="action" value="on">
-			<input type="hidden" name="j_data" value="���ܸ�Υǡ���">
+			<input type="hidden" name="j_data" value="日本語のデータ">
 			<tr>
 				<td></td>
 				<td class="action_body"><span id="box_act" style="display: none;"><br>
@@ -181,7 +181,7 @@ end
 		%>
 					</select>
 					<input type="text" name="message" class="action_text" maxlength="50" autocomplete="off">
-					<input type="submit" value="���������" class="submit">
+					<input type="submit" value="アクション" class="submit">
 					<%=
 						if (@vil.period >= LONG && @vil.state == 1)
 							"(#{@player.action_remain}/#{@vil.actfull})"
@@ -209,13 +209,13 @@ end
 s = ''
 if (@vil.state > 1)
 	if (@player.win == 0)
-		s += %Q(<br><span class="win_res">���ʤ��Ͼ������ޤ�����</span>)
+		s += %Q(<br><span class="win_res">あなたは勝利しました。</span>)
 	else
-		s += %Q(<br><span class="lose_res">���ʤ������̤��ޤ�����</span>)
+		s += %Q(<br><span class="lose_res">あなたは敗北しました。</span>)
 	end
 elsif (@player.lovers.size > 0)
 	@player.lovers.each do |p|
-		s += %Q(<br><span class="love">���ʤ��� #{p.name} �Ȱ�����äƤ��ޤ���</span>)
+		s += %Q(<br><span class="love">あなたは #{p.name} と愛し合っています。</span>)
 	end
 end
 s
@@ -237,6 +237,6 @@ s
 <input type="hidden" name="cmd" value="exit">
 <input type="hidden" name="vid" value="<%= @vid %>">
 <input type="hidden" name="exit_id" value="<%= @player.num_id %>">
-<div align="right"><input type="submit" value="¼��Ф�" class="submit"></div>
+<div align="right"><input type="submit" value="村を出る" class="submit"></div>
 </form>
 <% end %>

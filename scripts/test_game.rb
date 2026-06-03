@@ -22,8 +22,7 @@ PORT = 8063
 # 文字コード変換用ヘルパー (EUC-JP -> UTF-8)
 def to_utf8(str)
   return "" if !str
-  # バイナリとして扱い、EUC-JPからUTF-8に安全に強制変換する
-  str.dup.force_encoding('EUC-JP').encode('UTF-8', invalid: :replace, undef: :replace)
+  str.to_s.dup.force_encoding('UTF-8')
 end
 
 class PlayerSession

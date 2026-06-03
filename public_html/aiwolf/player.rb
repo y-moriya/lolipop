@@ -1,4 +1,4 @@
-# -*- coding: euc-jp -*-
+# -*- coding: utf-8 -*-
 class Player
 	attr_reader :pid, :userid, :num_id, :name, :num_char
 	attr_accessor :dead

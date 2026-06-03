@@ -2,49 +2,49 @@
 <input type="hidden" name="cmd" value="edvil">
 <input type="hidden" name="vid" value="<%= @vid %>">
 <br>
-<h2>¼���Խ�</h2>
+<h2>村の編集</h2>
 <table>
-<tr><td>¼��̾��: <input name="name" size="40" value="<%= @vil.name %>"></td></tr>
-<tr><td>�ѥ���ɡ�¼�����Ԥˤ��������ޤ���ˡ�<%= @vil.pass %></td></tr>
+<tr><td>村の名前: <input name="name" size="40" value="<%= @vil.name %>"></td></tr>
+<tr><td>パスワード（村作成者にしか見えません）：<%= @vil.pass %></td></tr>
 <tr><td>
 	<table>
-		<tr><td>���Ĺ��: <input name="time" size="2" value="<%= @vil.period %>">ʬ</td></tr>
-		<tr><td width="140">���Ĺ��: <input name="night_time" size="2" value="<%= @vil.night_period %>">ʬ</td><td>��¸��1�ͤ��Ȥ�<input name="life_time" size="2" value="<%= @vil.life_period %>">���ɲ�</td></tr>
+		<tr><td>昼の長さ: <input name="time" size="2" value="<%= @vil.period %>">分</td></tr>
+		<tr><td width="140">夜の長さ: <input name="night_time" size="2" value="<%= @vil.night_period %>">分</td><td>生存者1人ごとに<input name="life_time" size="2" value="<%= @vil.life_period %>">秒追加</td></tr>
 	</table>
 </td></tr>
-<tr><td>���ϻ���: <input name="start_hour" size="2" value="<%= @vil.start_hour %>">����<input name="start_min" size="2" value="<%= @vil.start_min %>">ʬ</td></tr>
-<tr><td>���㳫�ϲ�ǽ�Ϳ�: <input name="entry_min" size="2" value="<%= @vil.entry_min %>">��</td></tr>
-<tr><td>���绲�ò�ǽ�Ϳ�: <input name="entry_max" size="2"  value="<%= @vil.entry_max %>">��</td></tr>
-<tr><td>�̾�ȯ�������: <input name="sayfull" size="2" value="<%= @vil.sayfull %>">ȯ����Ĺ���Τ�ȿ�ǡ�</td></tr>
-<tr><td>�������������: <input name="actfull" size="2" value="<%= @vil.actfull %>">����������Ĺ���Τ�ȿ�ǡ�</td></tr>
-<tr><td>ȯ���������褵����: <input type="checkbox" name="remainflag" value="on" <%= if (@vil.remainflag) then 'checked' end %>>��Ĺ���Τ�ȿ�ǡ�</td></tr>
+<tr><td>開始時間: <input name="start_hour" size="2" value="<%= @vil.start_hour %>">時　<input name="start_min" size="2" value="<%= @vil.start_min %>">分</td></tr>
+<tr><td>最低開始可能人数: <input name="entry_min" size="2" value="<%= @vil.entry_min %>">人</td></tr>
+<tr><td>最大参加可能人数: <input name="entry_max" size="2"  value="<%= @vil.entry_max %>">人</td></tr>
+<tr><td>通常発言数上限: <input name="sayfull" size="2" value="<%= @vil.sayfull %>">発言（長期のみ反映）</td></tr>
+<tr><td>アクション数上限: <input name="actfull" size="2" value="<%= @vil.actfull %>">アクション（長期のみ反映）</td></tr>
+<tr><td>発言数を復活させる: <input type="checkbox" name="remainflag" value="on" <%= if (@vil.remainflag) then 'checked' end %>>（長期のみ反映）</td></tr>
 <tr><td><br></td></tr>
 <tr><td>
 	<table>
 	<tr>
-		<td width="160"><input type="checkbox" name="first_guard" value="on" <%= if (@vil.first_guard) then 'checked' end %>>:������Ҳ�ǽ</td>
+		<td width="160"><input type="checkbox" name="first_guard" value="on" <%= if (@vil.first_guard) then 'checked' end %>>:初日護衛可能</td>
 		<td></td>
 	</tr>
 	<tr>
-		<td><input type="checkbox" name="card" value="on" <%= if (@vil.card) then 'checked' end %>>:�����ɿ�ϵ</td>
-		<td><input type="checkbox" name="open_vote" value="on" <%= if (@vil.open_vote) then 'checked' end %>>:��̾��ɼ</td>
+		<td><input type="checkbox" name="card" value="on" <%= if (@vil.card) then 'checked' end %>>:カード人狼</td>
+		<td><input type="checkbox" name="open_vote" value="on" <%= if (@vil.open_vote) then 'checked' end %>>:記名投票</td>
 	</tr>
 	<tr>
-		<td><input type="checkbox" name="hope_skill" value="on" <%= if (@vil.hope_skill) then 'checked' end %>>:�򿦴�˾ͭ��</td>
-		<td><input type="checkbox" name="night_commit" value="on" <%= if (@vil.night_commit) then 'checked' end %>>:�륳�ߥå�</td>
+		<td><input type="checkbox" name="hope_skill" value="on" <%= if (@vil.hope_skill) then 'checked' end %>>:役職希望有効</td>
+		<td><input type="checkbox" name="night_commit" value="on" <%= if (@vil.night_commit) then 'checked' end %>>:夜コミット</td>
 	</tr>
 	<tr>
-		<td><input type="checkbox" name="open_id" value="on" <%= if (@vil.open_id) then 'checked' end %>>:ID����</td>
-		<td><input type="checkbox" name="open_skill" value="on" <%= if (@vil.open_skill) then 'checked' end %>>:�貼����</td>
+		<td><input type="checkbox" name="open_id" value="on" <%= if (@vil.open_id) then 'checked' end %>>:ID公開</td>
+		<td><input type="checkbox" name="open_skill" value="on" <%= if (@vil.open_skill) then 'checked' end %>>:墓下公開</td>
 	</tr>
 	<tr>
-		<td><input type="checkbox" name="possessed" value="on" <%= if (@vil.possessed) then 'checked' end %>>:���ͥ������å�</td>
-		<td><input type="checkbox" name="death_defeat" value="on" <%= if (@vil.death_defeat) then 'checked' end %>>:�������餱</td>
+		<td><input type="checkbox" name="possessed" value="on" <%= if (@vil.possessed) then 'checked' end %>>:狂人スウィッチ</td>
+		<td><input type="checkbox" name="death_defeat" value="on" <%= if (@vil.death_defeat) then 'checked' end %>>:死んだら負け</td>
 	</tr>
 	</table>
 </td></tr>
 <tr><td><br></td></tr>
-<tr><td>����: <select name="composition" class="edit" onChange="compChange()">
+<tr><td>編成: <select name="composition" class="edit" onChange="compChange()">
 <%=
 	s = ''
 	for i in 0...Composition.compositions.size
@@ -59,7 +59,7 @@
 </select></td>
 </tr>
 <tr><td>
-<div id="comp0"><br>�����ǥ�����������򤷤����ϳ��򿦤οͿ������ꤷ�Ƥ���������
+<div id="comp0"><br>編成でカスタムを選択した場合は各役職の人数を設定してください。
 	<table>
 <%=
 	s = ''
@@ -68,7 +68,7 @@
 		sid = i*2
 		sk = Skill.skills[sid]
 		n = (@vil.composition == CUSTOM) ? @vil.skill_nums[sid] : Skill.skills[sid].default_num
-		s += %Q(<td>#{sk.name}: </td><td><input name="skill_num#{sid}" size="2" value="#{n}">��</td>)
+		s += %Q(<td>#{sk.name}: </td><td><input name="skill_num#{sid}" size="2" value="#{n}">人</td>)
 		sid += 1
 		s += %Q(<td width="50"></td>)
 		if (sid == Skill.skills.size)
@@ -76,7 +76,7 @@
 		else
 			sk = Skill.skills[sid]
 			n = (@vil.composition == CUSTOM) ? @vil.skill_nums[sid] : Skill.skills[sid].default_num
-			s += %Q(<td>#{sk.name}: </td><td><input name="skill_num#{sid}" size="2" value="#{n}">��</td>)
+			s += %Q(<td>#{sk.name}: </td><td><input name="skill_num#{sid}" size="2" value="#{n}">人</td>)
 		end
 		s += "</tr>"
 	end
@@ -97,9 +97,9 @@
 	<%= Composition.display(4) %>
 </div>
 <div id="comp5" style="display: none;"><br>
-	��������Ƥ��줿��Τ��椫�����������Ф�ޤ�
+	編成は投稿されたものの中からランダムで選ばれます
 </div>
-<div id="comp6"><br>�����ǥ磻�ɥ�����������򤷤����ϰʲ������������Ϥ��Ƥ���������
+<div id="comp6"><br>編成でワイドカスタムを選択した場合は以下に編成を入力してください。
 
 <%
 	s = ''
@@ -110,12 +110,12 @@
 <textarea name="wide_comp" rows="12" class="action_textarea"><%= s %></textarea>
 </div>
 </td></tr>
-<tr><td><br><input type="submit" value="¼�Խ�" class="submit"></td></tr>
+<tr><td><br><input type="submit" value="村編集" class="submit"></td></tr>
 </table>
 </form>
 
 <br>
-<h2>����¼</h2>
+<h2>入退村</h2>
 <br>
 <br>
 <table>
@@ -123,7 +123,7 @@
 <form action="index.cgi" method="post">
 <input type="hidden" name="cmd" value="dummy_in">
 <input type="hidden" name="vid" value="<%= @vid %>">
-	<td width="200"><input type="submit" value="���ߡ���¼" class="submit"></td>
+	<td width="200"><input type="submit" value="ダミー入村" class="submit"></td>
 </form>
 <form action="index.cgi" method="post">
 <input type="hidden" name="cmd" value="exit">
@@ -139,7 +139,7 @@
 	s
 %>
 		</select>
-		<input type="submit" value="������¼" class="submit">
+		<input type="submit" value="強制退村" class="submit">
 	</td>
 </form>
 </tr>
@@ -149,14 +149,14 @@
 <br>
 <br>
 <br>
-<h2>¼�γ���</h2>
+<h2>村の開始</h2>
 <br>
 <br>
 <% if (@vil.state == 0) %>
-<form action="index.cgi" method="post" onSubmit="return confirm('¼�򳫻Ϥ��ޤ�����')">
+<form action="index.cgi" method="post" onSubmit="return confirm('村を開始しますか？')">
 <input type="hidden" name="cmd" value="upstart">
 <input type="hidden" name="vid" value="<%= @vil.vid %>">
-<input type="submit" value="¼����" class="submit">
+<input type="submit" value="村開始" class="submit">
 </form>
 <% end %>
 <br>

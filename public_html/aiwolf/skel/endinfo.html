@@ -1,82 +1,82 @@
 <table>
 <tr><td>
 	<table>
-	<tr><td width="100">Â¼¤ÎÌ¾Á°:</td><td><%= @name %></td></tr>
-	<tr><td>Â¼ºîÀ®¼Ô:</td><td><%= @userid %></td></tr>
-	<tr><td>¥­¥ã¥é¥»¥Ã¥È:</td><td><%= Charset.charsets[@char].name %></td></tr>	
+	<tr><td width="100">æ‘ã®åå‰:</td><td><%= @name %></td></tr>
+	<tr><td>æ‘ä½œæˆè€…:</td><td><%= @userid %></td></tr>
+	<tr><td>ã‚­ãƒ£ãƒ©ã‚»ãƒƒãƒˆ:</td><td><%= Charset.charsets[@char].name %></td></tr>	
 	</table>
 </td></tr>		
 <tr><td><br></td></tr>				
 <tr><td>
 <table>
 <tr>
-	<td width="130">Ãë¤ÎÄ¹¤µ: 
+	<td width="130">æ˜¼ã®é•·ã•: 
 	    <% if (@period % 60 == 0) %>
-	    	<%= @period / 60 %>»ş´Ö
+	    	<%= @period / 60 %>æ™‚é–“
 	    <% else %>
-	    	<%= @period %>Ê¬
+	    	<%= @period %>åˆ†
 	    <% end %>
 	</td>
 </tr>
 <tr>
-	<td>Ìë¤ÎÄ¹¤µ: 
+	<td>å¤œã®é•·ã•: 
 	    <%
 	    np = @night_period.to_i
 		if (np != 0)
 	    	if (np % 60 == 0)
 	    %>
-	    		<%= np / 60 %>»ş´Ö
+	    		<%= np / 60 %>æ™‚é–“
 	    	<% else %>
-	    		<%= np %>Ê¬
+	    		<%= np %>åˆ†
 	    	<% end %>
 			<% if (@life_period && @life_period != 0) %>
-				<td>À¸Â¸¼Ô1¿Í¤´¤È¤Ë <%= @life_period %>ÉÃÄÉ²Ã</td>
+				<td>ç”Ÿå­˜è€…1äººã”ã¨ã« <%= @life_period %>ç§’è¿½åŠ </td>
 			<% end %>
 		<% else %>
-			ÌëÌµ¤·
+			å¤œç„¡ã—
 		<% end %>
 	</td>
 </tr>
 </table>
-<tr><td>³«»ÏÊıË¡: <%= if (@upstart_time) then "#{@start_hour}»ş #{@start_min}Ê¬¤Ë¼«Æ°³«»Ï" else "¼êÆ°³«»Ï" end %></td></tr>
-<tr><td>ºÇÄã³«»Ï²ÄÇ½¿Í¿ô: <%= @entry_min %>¿Í</td></tr>
-<tr><td>ºÇÂç»²²Ã²ÄÇ½¿Í¿ô: <%= @entry_max %>¿Í</td></tr>
+<tr><td>é–‹å§‹æ–¹æ³•: <%= if (@upstart_time) then "#{@start_hour}æ™‚ #{@start_min}åˆ†ã«è‡ªå‹•é–‹å§‹" else "æ‰‹å‹•é–‹å§‹" end %></td></tr>
+<tr><td>æœ€ä½é–‹å§‹å¯èƒ½äººæ•°: <%= @entry_min %>äºº</td></tr>
+<tr><td>æœ€å¤§å‚åŠ å¯èƒ½äººæ•°: <%= @entry_max %>äºº</td></tr>
 <tr><td><br></td></tr>
 <tr><td>
 <table>
 <tr>
 	<td  colspan="2">
 <%= 
-	s = '¥À¥ß¡¼'
+	s = 'ãƒ€ãƒŸãƒ¼'
 	if (@dummy)
-		s += '¤¢¤ê' 
+		s += 'ã‚ã‚Š' 
 	else 
-		s += '¤Ê¤·'
-		s += (@first_guard) ? '¡Ê½éÆü¸î±Ò²ÄÇ½¡Ë' : '¡Ê½éÆü¸î±ÒÉÔ²ÄÇ½¡Ë'
+		s += 'ãªã—'
+		s += (@first_guard) ? 'ï¼ˆåˆæ—¥è­·è¡›å¯èƒ½ï¼‰' : 'ï¼ˆåˆæ—¥è­·è¡›ä¸å¯èƒ½ï¼‰'
 	end
 	s
 %>
 </td></tr>
 <tr>
-	<td width="180"><%= if (@card) then '¥«¡¼¥É¿ÍÏµ·Á¼°' else '£Â£Â£Ó·Á¼°' end %></td>
-	<td><%= if (@open_vote) then 'µ­Ì¾ÅêÉ¼' else 'Ìµµ­Ì¾ÅêÉ¼' end %></td>
+	<td width="180"><%= if (@card) then 'ã‚«ãƒ¼ãƒ‰äººç‹¼å½¢å¼' else 'ï¼¢ï¼¢ï¼³å½¢å¼' end %></td>
+	<td><%= if (@open_vote) then 'è¨˜åæŠ•ç¥¨' else 'ç„¡è¨˜åæŠ•ç¥¨' end %></td>
 </tr>
 <tr>
-	<td>Ìò¿¦´õË¾<%= if (@hope_skill) then 'Í­¸ú' else 'Ìµ¸ú' end %></td>
-	<td>Ìë¥³¥ß¥Ã¥È<%= if (@night_commit) then 'Í­¤ê' else 'Ìµ¤·' end %></td>
+	<td>å½¹è·å¸Œæœ›<%= if (@hope_skill) then 'æœ‰åŠ¹' else 'ç„¡åŠ¹' end %></td>
+	<td>å¤œã‚³ãƒŸãƒƒãƒˆ<%= if (@night_commit) then 'æœ‰ã‚Š' else 'ç„¡ã—' end %></td>
 </tr>
 <tr>
-	<td>ID¸ø³«<%= if (@open_id) then 'Í­¤ê' else 'Ìµ¤·' end %></td>
-	<td>Êè²¼¸ø³«<%= if (@open_skill) then 'Í­¤ê' else 'Ìµ¤·' end %></td>
+	<td>IDå…¬é–‹<%= if (@open_id) then 'æœ‰ã‚Š' else 'ç„¡ã—' end %></td>
+	<td>å¢“ä¸‹å…¬é–‹<%= if (@open_skill) then 'æœ‰ã‚Š' else 'ç„¡ã—' end %></td>
 </tr>
 <tr>
-	<td><%= if (@death_defeat) then '»à¤ó¤À¤éÉé¤±' else 'ÉáÄÌ¤Ë¿Ø±Ä¤¬¾¡¤Æ¤Ğ¤¤¤¤¤è' end %></td>
+	<td><%= if (@death_defeat) then 'æ­»ã‚“ã ã‚‰è² ã‘' else 'æ™®é€šã«é™£å–¶ãŒå‹ã¦ã°ã„ã„ã‚ˆ' end %></td>
 	<td></td>
 </tr>
 </table>
 </td></tr>
 <tr><td><br></td></tr>
-<tr><td>ÊÔÀ®: <%= Composition.compositions[@composition].name %></td></tr>
+<tr><td>ç·¨æˆ: <%= Composition.compositions[@composition].name %></td></tr>
 
 	<tr><td class="monospace"><%= display_skill %></td></tr>
 	<tr><td><table>
@@ -86,14 +86,14 @@
 			s += "<tr>"
 			sid = i*2
 			sk = Skill.skills[sid]
-			s += "<td>#{sk.name}: </td><td>#{@skill_nums[sid]}¿Í</td>"
+			s += "<td>#{sk.name}: </td><td>#{@skill_nums[sid]}äºº</td>"
 			sid += 1
 			s += %Q(<td width="50"></td>)
 			if (sid == @skill_nums.size)
 			s += "<td></td><td></td>"
 			else
 			sk = Skill.skills[sid]
-			s += "<td>#{sk.name}: </td><td>#{@skill_nums[sid]}¿Í</td>"
+			s += "<td>#{sk.name}: </td><td>#{@skill_nums[sid]}äºº</td>"
 			end
 			s += "</tr>"
 		end
