@@ -8,8 +8,8 @@ DB_DIR = File.expand_path('../public_html/aiwolf/db', __dir__)
 
 puts "--- データベースとログの初期化を開始します ---"
 
-# 1. グローバルDBとユーザーDBの削除
-['user.db', 'vil.db'].each do |db_file|
+# 1. 各種データベースファイルの削除
+['user.db', 'vil.db', 'record.db', 'profile.db', 'conf.db'].each do |db_file|
   path = File.join(DB_DIR, db_file)
   if File.exist?(path)
     File.delete(path)
