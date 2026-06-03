@@ -24,6 +24,8 @@ class Api
       handle_players
     when 'log'
       handle_log
+    when 'vil', 'info'
+      handle_vil
     else
       print "Content-Type: application/json; charset=UTF-8\nStatus: 400 Bad Request\n\n"
       print JSON.generate({ 'error' => 'Invalid or missing cmd parameter' })
@@ -36,6 +38,88 @@ class Api
   end
 
   private
+
+  # 0. 個別の村の情報を JSON で取得
+  def handle_vil
+    if @vid <= 0
+      print "Content-Type: application/json; charset=UTF-8\nStatus: 400 Bad Request\n\n"
+      print JSON.generate({ 'error' => 'Invalid or missing vid parameter' })
+      return
+    end
+
+    vild = nil
+    vldb = PStore.new('db/vil.db')
+    vldb.transaction(true) do
+      if vldb.root?("root#{@vid}")
+        vild = vldb["root#{@vid}"]
+      end
+    end
+
+    if !vild
+      print "Content-Type: application/json; charset=UTF-8\nStatus: 404 Not Found\n\n"
+      print JSON.generate({ 'error' => 'Village not found' })
+      return
+    end
+
+    # 詳細DBから現在の進行情報を取得
+    detail_data = {}
+    detail_db_path = "db/vil#{(@vid - 1) / 100}/#{@vid}.db"
+    if File.exist?(detail_db_path)
+      begin
+        detail_db = PStore.new(detail_db_path)
+        detail_db.transaction(true) do
+          vil_obj = detail_db['root']
+          if vil_obj
+            detail_data = {
+              'date' => vil_obj.date,
+              'night' => vil_obj.night,
+              'entry_max' => vil_obj.entry_max,
+              'entry_min' => vil_obj.entry_min,
+              'night_commit' => vil_obj.night_commit,
+              'open_skill' => vil_obj.open_skill,
+              'death_defeat' => vil_obj.death_defeat,
+              'update_time' => vil_obj.update_time,
+              'survivors' => vil_obj.players.values.count { |p| p.dead == 0 }
+            }
+          end
+        end
+      rescue
+        # 読み込み失敗時は無視
+      end
+    end
+
+    vil_info = {
+      'vid' => vild['vid'],
+      'name' => vild['name'],
+      'sname' => vild['sname'],
+      'state' => vild['state'],
+      'player_num' => vild['player_num'],
+      'composition' => vild['composition'],
+      'dummy' => vild['dummy'],
+      'open_id' => vild['open_id'],
+      'card' => vild['card'],
+      'char' => vild['char'],
+      'start_hour' => vild['start_hour'],
+      'start_min' => vild['start_min'],
+      'period' => vild['period'],
+      'night_period' => vild['night_period'],
+      'life_period' => vild['life_period'],
+      
+      # 詳細情報
+      'date' => detail_data['date'] || 0,
+      'night' => detail_data['night'] || false,
+      'entry_max' => detail_data['entry_max'] || vild['player_num'],
+      'entry_min' => detail_data['entry_min'] || vild['player_num'],
+      'night_commit' => detail_data['night_commit'] || false,
+      'open_skill' => detail_data['open_skill'] || false,
+      'death_defeat' => detail_data['death_defeat'] || false,
+      'update_time' => detail_data['update_time'] || 0,
+      'survivors' => detail_data['survivors'] || 0
+    }
+
+    print "Content-Type: application/json; charset=UTF-8\n\n"
+    print JSON.generate(vil_info)
+  end
 
   # 1. 村一覧を JSON で取得
   def handle_vils
