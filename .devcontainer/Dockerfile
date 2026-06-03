@@ -20,6 +20,10 @@ RUN chown -R www-data:www-data /var/run/apache2 /var/lock/apache2 /var/log/apach
 # ロリポップのRubyパス /usr/local/bin/ruby3.4 に対応するためのシンボリックリンクを作成
 RUN ln -s /usr/local/bin/ruby /usr/local/bin/ruby3.4
 
+# Gem.ruby や RbConfig.ruby が /usr/local/bin/ruby3.4 を返すように設定
+RUN mkdir -p /usr/local/lib/ruby/site_ruby/rubygems/defaults && \
+    echo "RbConfig::CONFIG['ruby_install_name'] = 'ruby3.4'" > /usr/local/lib/ruby/site_ruby/rubygems/defaults/operating_system.rb
+
 # Apacheの設定ファイルを配置
 COPY lolipop-cgi.conf /etc/apache2/sites-available/000-default.conf
 
