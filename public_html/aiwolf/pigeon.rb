@@ -21,7 +21,7 @@ class Pigeon
 	def initialize
 		@cgi = CGI.new()
 		@vid = @cgi['vid'].to_i
-		if (@vid > 0 && File.exists?("db/vil#{(@vid - 1) / 100}"))
+		if (@vid > 0 && File.exist?("db/vil#{(@vid - 1) / 100}"))
 			@vildb = PStore.new("db/vil#{(@vid - 1) / 100}/#{@vid}.db")
 		end
 	end
@@ -59,7 +59,7 @@ class Pigeon
 
 		@vil = get_vil_lock(@vid)
 
-		if (!@vil || !File.exists?("db/log#{(@vid - 1) / 100}"))
+		if (!@vil || !File.exist?("db/log#{(@vid - 1) / 100}"))
 			print_head
 			s = "存在しない村です。<br>"
 			s += %Q(<a href="?userid=#{@esuserid}&pass=#{@pass}">村一覧</a>)
@@ -336,7 +336,7 @@ class Pigeon
 			regsys = /^<!--([a-z]+)\d*--><div class="announce[^"]*">(.*)$/
 			regvote = /^<!--[a-z]+\d*--><div class="announce"><table class="vote_t">(.*)$/
 			date = @vil.date if (date > @vil.date)
-			File.open("db/log#{(@vid - 1) / 100}/#{@vid}_#{date}.html") do |ifile|
+			File.open("db/log#{(@vid - 1) / 100}/#{@vid}_#{date}.html", "r:euc-jp") do |ifile|
 				lines = ifile.readlines
 				(lines.size - 1).downto(0) do |i|
 					line = lines[i]
@@ -624,7 +624,7 @@ class Pigeon
 				for i in 1..vldb['recent_vid']
 					return if (!vldb.root?("root#{i}"))
 					vild = vldb["root#{i}"]
-					if (vild['state'] == 2 && File.exists?("db/vil#{(i - 1) / 100}/#{i}.db"))
+					if (vild['state'] == 2 && File.exist?("db/vil#{(i - 1) / 100}/#{i}.db"))
 						show.push(i)
 					end
 				end

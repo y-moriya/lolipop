@@ -196,7 +196,7 @@ end
 <%=
 if (@player.dead == 0 && @vil.state == 1)
   if (@player.sid != 4 || @vil.possessed)
-    if ( File.exists?("skel/skill#{two(@player.sid)}.html"))
+    if ( File.exist?("skel/skill#{two(@player.sid)}.html"))
       erbres("skel/skill#{two(@player.sid)}.html")
     end
   end

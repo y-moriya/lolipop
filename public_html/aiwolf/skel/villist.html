@@ -18,7 +18,7 @@ vldb.transaction do
 
 	page_vid = (pages+1)*100 - (page * 100)
 	page_vid = 100 if (page_vid < 100)
-	while (!File.exists?("db/vil#{fid}"))
+	while (!File.exist?("db/vil#{fid}"))
 		fid = fid + 1
 	end
 
@@ -27,7 +27,7 @@ vldb.transaction do
 			vild = vldb["root#{i}"]
 			next if (!vild)
 			if (vild['state'] > 2)
-				if (File.exists?("db/vil#{(i - 1) / 100}/#{i}.db"))
+				if (File.exist?("db/vil#{(i - 1) / 100}/#{i}.db"))
 					completion.push(vil_list(vild))
 				end
 			elsif (vild['state'] == 2)
@@ -43,7 +43,7 @@ vldb.transaction do
 			vild = vldb["root#{i}"]
 			next if (!vild)
 			if (vild['state'] > 2)
-				if ((completion.size < 101) && File.exists?("db/vil#{(i - 1) / 100}/#{i}.db"))
+				if ((completion.size < 101) && File.exist?("db/vil#{(i - 1) / 100}/#{i}.db"))
 					completion.push(vil_list(vild))
 				end
 				if (i == pages*100- page*100 + 1)

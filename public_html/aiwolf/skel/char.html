@@ -26,7 +26,7 @@
 		end
 	end
 	s += '</td></tr>'
-	cs = Charset.charsets.find { |c| c.file_name == set }
+	cs = Charset.charsets.find { |c| c.file_name == set } || Charset.charsets[0]
 	s += %Q(<tr><td><table class="char">)
 	for i in 0...cs.char_names.size
 		pid = "#{cs.file_name}#{two(i)}"

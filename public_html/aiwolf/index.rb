@@ -19,7 +19,7 @@ class CWolf
 	def initialize
 		@cgi = CGI.new()
 		@vid = @cgi['vid'].to_i
-		if (@vid > 0 && File.exists?("db/vil#{(@vid - 1) / 100}"))
+		if (@vid > 0 && File.exist?("db/vil#{(@vid - 1) / 100}"))
 			@vildb = PStore.new("db/vil#{(@vid - 1) / 100}/#{@vid}.db")
 		end
 	end
@@ -51,7 +51,7 @@ class CWolf
 
   def handle_remake_villist
     for vid in 2407..10000
-      if (vid > 0 && File.exists?("db/vil#{(vid-1)/100}/#{vid}.db"))
+      if (vid > 0 && File.exist?("db/vil#{(vid-1)/100}/#{vid}.db"))
         vildb = PStore.new("db/vil#{(vid-1)/100}/#{vid}.db")
       else
         return
@@ -93,7 +93,7 @@ class CWolf
 
 		@vil = get_vil_lock(@vid)
 
-		if (!@vil || !File.exists?("db/log#{(@vid - 1) / 100}"))
+		if (!@vil || !File.exist?("db/log#{(@vid - 1) / 100}"))
 			print "Status: 302 Found\n"
 			print "Location: index.cgi\n\n"
 			exit(0)
@@ -256,14 +256,14 @@ class CWolf
 		vldb.transaction do
 			if (vldb.root?('recent_vid'))
 				fid = 0
-				while (!File.exists?("db/vil#{fid}"))
+				while (!File.exist?("db/vil#{fid}"))
 					fid = fid + 1
 				end
 				for i in (fid * 100 + 1)..vldb['recent_vid']
 					return if (!vldb.root?("root#{i}"))
 
 					vild = vldb["root#{i}"]
-					if (vild['state'] == 2 && File.exists?("db/vil#{(i - 1) / 100}/#{i}.db"))
+					if (vild['state'] == 2 && File.exist?("db/vil#{(i - 1) / 100}/#{i}.db"))
 						show.push(i)
 					end
 				end
@@ -932,10 +932,10 @@ class CWolf
 
 			vldb["root#{vid}"] = vild
 
-			if (!File.exists?("db/vil#{(vid - 1) / 100}"))
+			if (!File.exist?("db/vil#{(vid - 1) / 100}"))
 				Dir::mkdir("db/vil#{(vid - 1) / 100}", 0700)
 			end
-			if (!File.exists?("db/log#{(vid - 1) / 100}"))
+			if (!File.exist?("db/log#{(vid - 1) / 100}"))
 				Dir::mkdir("db/log#{(vid - 1) / 100}", 0700)
 			end
 

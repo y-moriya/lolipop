@@ -212,13 +212,13 @@ end
 def vil_list(v)
 	vilid = %Q(<a class="vid" href="?vid=#{v['vid']}&amp;date=0">#{v['vid']}¼</a>)
 	if (v['state'] > 2)
-		if (v['sname'].jsize > 20)
+		if (v['sname'].size > 20)
 			sname = %Q(<a href="?vid=#{v['vid']}&amp;date=1&amp;log=all" title="#{v['name']}">#{v['sname']}</a>)
 		else
 			sname = %Q(<a href="?vid=#{v['vid']}&amp;date=1&amp;log=all">#{v['sname']}</a>)
 		end
 	else
-		if (v['sname'].jsize > 20)
+		if (v['sname'].size > 20)
 			sname = %Q(<a href="?vid=#{v['vid']}#form" title="#{v['name']}">#{v['sname']}</a>)
 		else
 			sname = %Q(<a href="?vid=#{v['vid']}#form">#{v['sname']}</a>)

@@ -37,7 +37,7 @@
 				rec = recorddb[userid]
 				(rec.size - 1).downto(0) do |i|
 					v = rec[i]
-					kako = (File.exists?("db/vil#{(v['vid'] - 1) / 100}/#{v['vid']}.db")) ? "" : "http://www7.atpages.jp/buta/"
+					kako = (File.exist?("db/vil#{(v['vid'] - 1) / 100}/#{v['vid']}.db")) ? "" : "http://www7.atpages.jp/buta/"
 					s += %Q(<tr><td><a class="vid" href="?vid=#{v['vid']}&amp;date=0">#{v['vid']}Â¼</a></td><td><a href="#{kako}?vid=#{v['vid']}&amp;date=1&amp;log=all">#{v['sname']}</a></td><td>#{v['num']}¿Í</td><td>#{Composition.compositions[v['composition']].name}</td><td>#{v['p_name']}</td></tr>)
 				end
 				s += "</table></td></tr>"

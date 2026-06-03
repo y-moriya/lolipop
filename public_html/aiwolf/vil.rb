@@ -307,7 +307,7 @@ class Vil
 		logfile = "db/log#{(@vid - 1) / 100}/#{@vid}_#{dt}.html"
 		if (@state == 2 || t == 'say' || (t == 'groan' && my_type == 'groan') || (t == 'whisper' && my_type == 'whisper'))
 			if (FileTest.exist?(logfile))
-				File.open(logfile) do |ifile|
+				File.open(logfile, "r:euc-jp") do |ifile|
 					reg = /<img src="(img\/[^\.]+).png"><\/td><td colspan="2"><a name="#{t}#{nm}"><\/a><a href="##{t}#{nm}">[*+-]?#{nm}<\/a> <a href="\?[^"]+" target="_blank">([^<]*)<\/a> <span class="time">([^<]+)<\/span><\/td><\/tr><tr><td><div class="mes_[^_]+"><\/div><\/td><td width="464"><div class="mes_[^_]+_body0"><div class="mes_[^_]+_body1">(.*)$/
 					ifile.each do |line|
 						if (reg =~ line)
@@ -1263,7 +1263,7 @@ class Vil
 				log[date][type] = Array.new
 			end
 			log_fname = "db/vil/#{@vid}_#{date}.html"
-			File.open(log_fname) do |ifile|
+			File.open(log_fname, "r:euc-jp") do |ifile|
 				ifile.each do |line|
 					line.gsub!(/src="img/, %Q(src="../img))
 					line.gsub!(/"popup\('img/, %Q["popup('../img])
