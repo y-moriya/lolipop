@@ -3,6 +3,7 @@ require 'cgi'
 require 'json'
 require 'pstore'
 require 'util'
+require 'login'
 require 'player'
 require 'vil'
 require 'skill'
@@ -14,6 +15,7 @@ class Api
     @cgi = CGI.new(accept_charset: "UTF-8")
     @cmd = @cgi['cmd']
     @vid = @cgi['vid'].to_i
+    @login = Login.new(@cgi)
   end
 
   def run
@@ -202,12 +204,16 @@ class Api
             role_name = Skill.skills[player.sid].name
           end
 
+          # 投票済みフラグ（生存者のみ）
+          voted = player.dead == 0 ? (player.vote != -1) : nil
+
           players_list << {
             'userid' => userid,
             'name' => player.name,
             'dead' => player.dead, # 0=生存, 1=死亡, 2=無残, 3=処刑
             'role' => role_name,   # 進行中は null
-            'num_id' => player.num_id
+            'num_id' => player.num_id,
+            'voted' => voted
           }
         end
       end
@@ -232,6 +238,28 @@ class Api
       print "Content-Type: text/plain; charset=UTF-8\nStatus: 404 Not Found\n\n"
       print "Error: Village logs not found"
       return
+    end
+
+    # 村の進行状態とログインプレイヤー情報を取得
+    vil_state = 0
+    open_skill = false
+    current_player = nil
+    db_path = "db/vil#{(@vid - 1) / 100}/#{@vid}.db"
+    if File.exist?(db_path)
+      begin
+        db = PStore.new(db_path)
+        db.transaction(true) do
+          vil = db['root']
+          if vil
+            vil_state = vil.state
+            open_skill = vil.open_skill
+            if @login.login
+              current_player = vil.player(@login)
+            end
+          end
+        end
+      rescue
+      end
     end
 
     log_files = []
@@ -263,8 +291,48 @@ class Api
           line.strip!
           next if line.empty?
 
+          # コメントタグ（type_code と target_id）の判定
+          if line =~ /^<!--([a-z]+)(\d*)-->/
+            type_code = $1
+            target_id = $2.to_i
+
+            # ゲーム進行中のフィルタリング（終了後は全て見せる）
+            if vil_state < 2
+              case type_code
+              when 'think'
+                next if current_player.nil?
+                next if current_player.num_id != target_id
+              when 'whisperhowl'
+                next if vil_state == 0
+                # ささやきが見えないプレイヤーは「わおーん」に置き換える
+                if current_player.nil? || (!current_player.can_whisper && (!open_skill || current_player.dead == 0))
+                  # タイムスタンプの抽出を試みる
+                  time_str = line =~ /<span class="time">(.*?)<\/span>/ ? $1 : ""
+                  print "[#{time_str}] [システム] 狼の遠吠え: わおーん\n"
+                  next
+                end
+              when 'whisper'
+                next if vil_state == 0
+                next if current_player.nil?
+                next if !current_player.can_whisper && (!open_skill || current_player.dead == 0)
+              when 'groan'
+                next if vil_state == 0
+                next if current_player.nil?
+                next if current_player.dead == 0
+              when 'sprit' # 霊能者の霊界メッセージ (pigeon.rbでは 'sprit')
+                next if vil_state == 0
+                next if current_player.nil?
+                next if current_player.sid != 3
+              when 'fanatic' # 狂信者メッセージ
+                next if vil_state == 0
+                next if current_player.nil?
+                next if !current_player.can_whisper && current_player.sid != 9
+              end
+            end
+          end
+
           # 1. 通常発言、独り言、ささやき、うめき等のテーブル形式
-          if line =~ /^<!--(say|think|whisper|groan|fanatic|spirit)\d*-->\s*<table class="message">.*?target="_blank">(.*?)<\/a>.*?<span class="time">(.*?)<\/span>.*?<div class="mes_(say|think|whisper|groan|fanatic|spirit)_body1">(.*?)<\/div>.*?<\/table>/
+          if line =~ /^<!--(say|think|whisper|groan|fanatic|spirit|whisperhowl)\d*-->\s*<table class="message">.*?target="_blank">(.*?)<\/a>.*?<span class="time">(.*?)<\/span>.*?<div class="mes_(say|think|whisper|groan|fanatic|spirit|whisperhowl)_body1">(.*?)<\/div>.*?<\/table>/
             type_code = $1
             speaker = $2
             time_str = $3
@@ -275,7 +343,7 @@ class Api
 
             type_label = case type_code
                          when 'think' then ' (独り言)'
-                         when 'whisper' then ' (ささやき)'
+                         when 'whisper', 'whisperhowl' then ' (ささやき)'
                          when 'groan' then ' (うめき)'
                          when 'fanatic' then ' (狂信ささやき)'
                          when 'spirit' then ' (死者ささやき)'
@@ -284,20 +352,21 @@ class Api
 
             print "[#{time_str}] #{speaker}#{type_label}: #{text_content}\n"
 
-          # 1b. 狼の遠吠え
+          # 1b. 狼の遠吠え (直接書き出されている場合)
           elsif line =~ /<table class="message">.*?<td colspan="2" class="howl">狼の遠吠え<\/td>.*?<div class="mes_whisper_body1">(.*?)<\/div>.*?<\/table>/
             content = $1
             print "[システム] 狼の遠吠え: #{content}\n"
 
           # 2. アナウンス（システムメッセージ）
-          elsif line =~ /^<!--(?:say|think|whisper|groan|fanatic|spirit)?\d*-->\s*<div class="announce.*?">(.*?)<\/div>/
+          elsif line =~ /^<!--(?:say|think|whisper|groan|fanatic|spirit|whisperhowl)?\d*-->\s*<div class="announce.*?">(.*?)<\/div>/
             content_html = $1
             text_content = content_html.gsub(/<br\s*\/?>/i, "\n").gsub(/<[^>]+>/, '')
             text_content = text_content.gsub(/&lt;/, '<').gsub(/&gt;/, '>').gsub(/&amp;/, '&').gsub(/&quot;/, '"')
             print "[システム]: #{text_content}\n"
+          end
 
           # 3. 時間アナウンスや進行ブロック
-          elsif line =~ /<(?:div|span) class="(?:time_announce|alllog_announce)">(.*?)<\/(?:div|span)>/
+          if line =~ /<(?:div|span) class="(?:time_announce|alllog_announce)">(.*?)<\/(?:div|span)>/
             content_html = $1
             text_content = content_html.gsub(/<[^>]+>/, '').strip
             print "[進行]: #{text_content}\n"
