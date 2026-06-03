@@ -1,0 +1,32 @@
+<tr><td></td><td><br></td><td></td></tr>
+<form action="index.cgi" method="post">
+<input type="hidden" name="vid" value="<%= @vid %>">
+<input type="hidden" name="set_date" value="<%= @vil.date %>">
+<input type="hidden" name="cmd" value="skill">
+<tr>
+	<td></td>
+	<td class="action_body">
+スウィッチ：
+	<select name="target_id">
+<%=
+s = ''
+if (@player.target == -1)
+	s += "<option value = -1>未設定 *"
+else
+	s += "<option value = -1>引く"
+end
+s += "\n"	
+if (@player.target == 0)
+  s += %Q(<option value = "0" selected>押す *)
+else
+  s += %Q(<option value = "0">押す)
+end
+s += "\n"
+s 
+%>
+	</select>
+	<input type="submit" value="変更" class="submit">
+	</td>
+	<td></td>
+</tr>
+</form>

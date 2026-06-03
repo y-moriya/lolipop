@@ -1,0 +1,51 @@
+<form action="index.cgi" method="post">
+<input type="hidden" name="cmd" value="mkvil">
+<table border=0 width="100%">
+<tr>
+	<td align="center">
+		<table class="main" border=0>
+		<tr>
+			<td align="left" valign="top">
+				<table class="vil_main">
+				<tr><td width="<%= LIST_WIDTH %>"><a href="index.cgi">トップページ</a></td><td></td></tr>
+				<tr>
+					<td></td>
+					<td>
+						<table>
+						<tr><td><h2>キャラ一覧</h2></td></tr>
+<%=
+	set = @cgi['set']
+	s = ""
+	s += '<tr><td>'
+	for i in 0...Charset.charsets.size
+		cset = Charset.charsets[i]
+		if (set == cset.file_name)
+			s += %Q(<span class="today">#{cset.name}</span> )
+		else
+			s += %Q(<a href="index.cgi?cmd=char&amp;set=#{cset.file_name}">#{cset.name}</a> )
+		end
+	end
+	s += '</td></tr>'
+	cs = Charset.charsets.find { |c| c.file_name == set }
+	s += %Q(<tr><td><table class="char">)
+	for i in 0...cs.char_names.size
+		pid = "#{cs.file_name}#{two(i)}"
+		s += %Q(<tr><td><img src="img/#{pid}.png"></td><td>#{cs.char_names[i]}</td></tr>)
+	end
+	s
+%>
+							</table>
+						</td>
+						</tr>
+						</table>
+					</td>
+				</tr>
+				<tr><td width="<%= LIST_WIDTH %>"><a href="index.cgi">トップページ</a></td><td></td></tr>
+				</table>
+			</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+</table>
+</form>

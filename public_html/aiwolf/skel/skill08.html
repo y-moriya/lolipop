@@ -1,0 +1,27 @@
+<% if(@vil.night || !@vil.card) %>
+<% if(!@vil.card && !@vil.night) %>
+	<tr><td></td><td><br></td><td></td></tr>
+<% end %>
+<% if (@conf.focus == 1 && @vil.night) %>
+	<form name="focus_form" action="index.cgi" method="post">
+<% else %>
+	<form action="index.cgi" method="post">
+<% end %>
+<tr>
+	<td></td>
+	<td class="action_body">
+	<input type="hidden" name="whisper" value="on">
+	<input type="hidden" name="j_data" value="日本語のデータ">
+	<textarea name="message" rows="5" class="whisper_textarea"></textarea><br>
+	<input type="hidden" name="cmd" value="msg">
+	<input type="hidden" name="whisper" value="on">
+	<input type="hidden" name="vid" value="<%= @vid %>">
+	<input type="hidden" name="pid" value="<%= @player.pid %>">
+	<input value="人狼のささやき" type="submit" class="submit">
+	<input id="wis_th" name="think" value="on" type="checkbox"><label for="wis_th">独り言</label>
+	<input id="wis_lo" name="loud" value="on" type="checkbox"><label for="wis_lo">大声</label>
+	</td>
+	<td></td>
+</tr>
+</form>
+<% end %>

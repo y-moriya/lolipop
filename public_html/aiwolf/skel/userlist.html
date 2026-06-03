@@ -1,0 +1,60 @@
+<form action="index.cgi" method="post">
+<input type="hidden" name="cmd" value="mkvil">
+<table border=0 width="100%">
+<tr>
+	<td align="center">
+		<table class="main" border=0>
+		<tr>
+			<td align="left" valign="top">
+				<table class="vil_main">
+				<tr><td width="<%= LIST_WIDTH %>"><a href="index.cgi">トップページ</a></td><td></td></tr>
+				<tr>
+					<td></td>
+					<td>
+						<table>
+						<tr><td><h2>ユーザ一覧</h2></td></tr>
+						<tr>
+						<td>
+							<table class="vil_index">
+							<tr><td width="110" class="space"></td><td width="110" class="space"></td><td width="110" class="space"></td></tr>
+<%=
+	recorddb = PStore.new('db/record.db')
+	rec = recorddb.transaction do
+		recorddb.roots.sort{ |a, b| a <=> b }
+	end
+	s = ""
+	for i in 0...(rec.size+2)/3
+		s += "<tr>"
+		n = i*3
+			s += %Q(<td><a href="?cmd=user&amp;uid=#{CGI.escape(rec[n])}">#{rec[n]}</a></td>)
+		n += 1
+		if (n >= rec.size)
+			s += "<td></td>"
+		else
+			s += %Q(<td><a href="?cmd=user&amp;uid=#{CGI.escape(rec[n])}">#{rec[n]}</a></td>)
+		end
+		n += 1
+		if (n >= rec.size)
+			s += "<td></td>"
+		else
+			s += %Q(<td><a href="?cmd=user&amp;uid=#{CGI.escape(rec[n])}">#{rec[n]}</a></td>)
+		end
+		s += "</tr>"
+	end
+	s
+%>
+							</table>
+						</td>
+						</tr>
+						</table>
+					</td>
+				</tr>
+				<tr><td><a href="index.cgi">トップページ</a></td><td></td></tr>
+				</table>
+			</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+</table>
+</form>

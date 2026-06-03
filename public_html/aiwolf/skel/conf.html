@@ -1,0 +1,64 @@
+<table border=0 width="100%">
+<tr>
+	<td align="center">
+		<table class="main" border=0>
+		<tr>
+			<td align="left" valign="top">
+				<table class="vil_main">
+				<tr><td width="<%= LIST_WIDTH %>"><a href="index.cgi">トップページ</a></td><td></td></tr>
+				<tr>
+					<td></td>
+					<td>
+						<table border=0 width="478">
+						<tr><td><h2>設定</h2></td></tr>
+						<tr><td><br></td></tr>
+
+<% if (@login.login) 
+	conf = Conf.new(@login.userid)
+%>
+						<tr><td>
+						<table>
+						<form action="index.cgi" method="post">
+							<input type="hidden" name="cmd" value="conf">
+							<input type="hidden" name="up2down" value="<%= if (conf.up2down == 0) then 1 else 0 end %>">
+
+						<tr>
+							<td width="250">表示方法: </td><td width="80"><%= if (conf.up2down == 0) then '上から下' else '<span class="conf">下から上</span>' end %></td>
+							<td><input type="submit" value="変更" class="submit"></td>
+						</tr>
+						</form>
+						<form action="index.cgi" method="post">
+							<input type="hidden" name="cmd" value="conf">
+							<input type="hidden" name="win_id" value="<%= if (conf.win_id == 0) then 1 else 0 end %>">
+						<tr><td><br></td></tr>
+						<tr>
+							<td>エントリー後のID発言窓: </td><td><%= if (conf.win_id == 0) then '表示する' else '<span class="conf">表示しない</span>' end %></td>
+							<td><input type="submit" value="変更" class="submit"></td>
+						</tr>
+						</form>
+						<form action="index.cgi" method="post">
+							<input type="hidden" name="cmd" value="conf">
+							<input type="hidden" name="focus" value="<%= if (conf.focus == 0) then 1 else 0 end %>">
+						<tr><td><br></td></tr>
+						<tr>
+							<td>発言エリアへのオートフォーカス: </td><td><%= if (conf.focus == 0) then '無効' else '<span class="conf">有効</span>' end %></td>
+							<td><input type="submit" value="変更" class="submit"></td>
+						</tr>
+						</form>
+						</table>
+						</td></tr>
+<% else %>
+						<tr><td>ログインしてください。</td></tr>
+<% end %> 
+
+						</table>
+					</td>
+				</tr>
+				<tr><td><a href="index.cgi">トップページ</a></td><td></td></tr>
+				</table>
+			</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+</table>

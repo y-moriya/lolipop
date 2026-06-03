@@ -1,0 +1,77 @@
+<% if (@vil.players.size < @vil.entry_max) %>
+<form action="index.cgi" method="post" name="entryForm">
+<input type="hidden" name="vid" value="<%= @vid %>">
+<input type="hidden" name="j_data" value="日本語のデータ">
+<input type="hidden" name="cmd" value="entry">
+<table border=0 cellpadding=0 cellspacing=0 class="action_box">
+	<tr>
+		<td width="50"><img src="img/black.png" name="charaImg"></td>
+		<td width="16"><img src="img/say00b.jpg"></td>
+		<td>
+			<table border=0 cellpadding=0 cellspacing=0 class="action_balloon">
+			<tr>
+				<td width="8"><img src="img/say01.jpg"></td>
+				<td></td>
+				<td width="8"><img src="img/say02.jpg"></td>
+			</tr>
+			<tr>
+				<td></td>
+
+				<td class="action_body">
+				キャラクター選択：
+				<select name="pid" onFocus="imgChange('<%= Charset.charsets[@vil.char].file_name %>')" onChange="imgChange('<%= Charset.charsets[@vil.char].file_name %>')">
+<%=
+	s = ''
+	c_names = Charset.charsets[@vil.char].char_names
+	if (@login.userid != MASTER)
+		for i in 1...c_names.size do
+			n = (@vil.num_char[i].to_i < 2) ? c_names[i] : (c_names[i] + @vil.num_char[i].to_s)
+			cut = (@vil.num_char[i].to_i < 2) ? '' : %Q(class="cut")
+			s += %Q(<option #{cut} value="#{i}">#{n}</option>)
+			s += "\n"
+		end
+	else
+		n = (@vil.num_char[0].to_i < 2) ? c_names[0] : (c_names[0] + @vil.num_char[0].to_s)
+		s += %Q(<option value="#{0}">#{n}</option>)
+		s += "\n"
+	end
+	s
+%>
+				</select>
+				<br>
+				希望役職：
+				<select name="skill">
+<%=
+	s = ''
+	if (@login.userid != MASTER)
+		s += "<option value = -1>おまかせ"
+		s += "<option value = -2>ランダム"
+		for i in 0...Skill.skills.size
+			s += %Q(<option value="#{i}">#{Skill.skills[i].name}\n)
+			s += "\n"
+		end
+	else
+		s += %Q(<option value="#{0}">#{Skill.skills[0].name}</option>)
+		s += "\n"
+	end
+	s
+%>
+				</select>
+        <br>
+        パスワード：<input name="pass" size="10">
+				<textarea name="message" rows="5" class="action_textarea"></textarea><br>
+				<input type="submit" value="エントリー" class="submit">
+				</td>
+				<td></td>
+			</tr>
+			<tr>
+				<td><img src="img/say03.jpg"></td>
+				<td></td>
+				<td><img src="img/say04.jpg"></td>
+			</tr>
+			</table>
+		</td>
+	</tr>
+</table>
+</form>
+<% end %>

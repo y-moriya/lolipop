@@ -1,0 +1,265 @@
+<form action="index.cgi" method="post" name="mkvilForm">
+    <input type="hidden" name="cmd" value="mkvil">
+    <table border=0 width="100%">
+        <tr>
+            <td align="center">
+                <table class="main" border=0>
+                    <tr>
+                        <td align="left" valign="top">
+                            <table class="vil_main">
+                                <tr>
+                                    <td width="<%= LIST_WIDTH %>">
+                                        <a href="index.cgi">トップページ</a>
+                                    </td>
+                                    <td>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                    </td>
+                                    <td>
+                                        <table>
+                                            <tr>
+                                                <td>
+                                                    <h2>村の作成</h2>
+                                                </td>
+                                            </tr>
+                                            <%                                            s = '['
+                                            for i in 0...Charset.charsets.size
+                                            s += ', ' if(i != 0)
+                                            s += "'#{Charset.charsets[i].file_name}'"
+                                            end
+                                            s += ']'
+                                            s2 = ''
+                                            for i in 0...Charset.charsets.size
+                                            s2 += %Q(<option value="#{i}">#{Charset.charsets[i].name}</option>)
+                                            end
+                                            s2 %>
+                                            <tr>
+                                                <td>
+                                                    <table>
+                                                        <tr>
+                                                            <td>
+                                                                村の名前: <input name="name" size="40" value="村">
+                                                            </td>
+                                                            <td align="right" width="100" rowspan="3">
+                                                                <img src="img/black.png" name="dummyImg">
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                パスワード: <input name="pass" size="10">
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                キャラセット:
+                                                                <select name="char" class="edit" onFocus="dummyChange(<%= s %>)" onChange="dummyChange(<%= s %>)">
+                                                                    <%= s2 %>
+                                                                </select>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <table>
+                                                        <tr>
+                                                            <td>
+                                                                昼の長さ: <input name="time" size="2" value="10">分
+                                                            </td>
+                                                            <td>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td width="140">
+                                                                夜の長さ: <input name="night_time" size="2" value="5">分
+                                                            </td>
+                                                            <td>
+                                                                生存者1人ごとに<input name="life_time" size="2">秒追加
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    開始時間: <input name="start_hour" size="2">時　<input name="start_min" size="2">分
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    最低開始可能人数: <input name="entry_min" size="2">人
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    最大参加可能人数: <input name="entry_max" size="2">人
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    通常発言数上限: <input name="sayfull" size="2" value="<%= SAY_FULL_NUM %>">発言（長期のみ反映）
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    アクション数上限: <input name="actfull" size="2" value="<%= ACTION_FULL_NUM %>">アクション（長期のみ反映）
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    発言数を復活させる: <input type="checkbox" name="remainflag" value="on" checked>（長期のみ反映）
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <br>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <table>
+                                                        <tr>
+                                                            <td width="160">
+                                                                <input type="checkbox" name="dummy" value="on" checked>:ダミー
+                                                            </td>
+                                                            <td>
+                                                                <input type="checkbox" name="first_guard" value="on" checked>:初日護衛
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                <input type="checkbox" name="card" value="on" checked>:カード人狼
+                                                            </td>
+                                                            <td width="150">
+                                                                <input type="checkbox" name="open_vote" value="on" checked>:記名投票
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                <input type="checkbox" name="hope_skill" value="on" checked>:役職希望
+                                                            </td>
+                                                            <td>
+                                                                <input type="checkbox" name="night_commit" value="on" checked>:夜コミット
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                <input type="checkbox" name="open_id" value="on">:ID公開
+                                                            </td>
+                                                            <td>
+                                                                <input type="checkbox" name="open_skill" value="on" checked>:墓下公開
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                <input type="checkbox" name="possessed" value="on" checked>:狂人スウィッチ
+                                                            </td>
+                                                            <td>
+                                                                <input type="checkbox" name="death_defeat" value="on">:死んだら負け
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <br>
+                                                    編成:
+                                                    <select name="composition" class="edit" onChange="compChange()">
+                                                        <%=                                                        s = ''
+                                                        t = ' selected'
+														u = '牛村'
+														u = 'ランダム' if DEBUG
+                                                        for i in 0...Composition.compositions.size
+                                                        s += %Q(<option value="#{i}"#{t if Composition.compositions[i].name == u}>#{Composition.compositions[i].name}</option>)
+                                                        end
+                                                        s %>
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div id="comp0">
+                                                        <br>
+                                                        編成でカスタムを選択した場合は各役職の人数を設定してください。
+                                                        <table>
+                                                            <%=                                                            s = ""
+                                                            for i in 0...(Skill.skills.size+1)/2
+                                                            s += "<tr>"
+                                                            sid = i*2
+                                                            sk = Skill.skills[sid]
+                                                            s += %Q(<td>#{sk.name}: </td><td><input name="skill_num#{sid}" size="2" value="#{sk.default_num}">人</td>)
+                                                            sid += 1
+                                                            s += %Q(<td width="50"></td>)
+                                                            if (sid == Skill.skills.size)
+                                                            s += "<td></td><td></td><td></td>"
+                                                            else
+                                                            sk = Skill.skills[sid]
+                                                            s += %Q(<td>#{sk.name}: </td><td><input name="skill_num#{sid}" size="2" value="#{sk.default_num}">人</td>)
+                                                            end
+                                                            s += "</tr>"
+                                                            end
+                                                            s %>
+                                                        </table>
+                                                    </div>
+                                                    <div id="comp1" class="monospace" style="display: none;">
+                                                        <br>
+                                                        <%= Composition.display(1) %>
+                                                    </div>
+                                                    <div id="comp2" class="monospace" style="display: none;">
+                                                        <br>
+                                                        <%= Composition.display(2) %>
+                                                    </div>
+                                                    <div id="comp3" class="monospace" style="display: none;">
+                                                        <br>
+                                                        <%= Composition.display(3) %>
+                                                    </div>
+                                                    <div id="comp4" class="monospace" style="display: none;">
+                                                        <br>
+                                                        <%= Composition.display(4) %>
+                                                    </div>
+                                                    <div id="comp5" style="display: none;">
+                                                        <br>
+                                                        編成は投稿されたものの中からランダムで選ばれます
+                                                    </div>
+                                                    <div id="comp6">
+                                                        <br>
+                                                        編成でワイドカスタムを選択した場合は以下に編成を入力してください。
+                                                        <textarea name="wide_comp" rows="12" class="action_textarea">
+                                                        </textarea>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <% if (DEBUG) %>
+                                            <tr>
+                                                <td>
+                                                    ダミー人数: <input name="dummy_num" size="2" value="3">
+                                                </td>
+                                            </tr><% end %>
+                                            <tr>
+                                                <td>
+                                                    <br>
+                                                    <input type="submit" value="村作成" class="submit">
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <a href="index.cgi">トップページ</a>
+                                    </td>
+                                    <td>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</form>

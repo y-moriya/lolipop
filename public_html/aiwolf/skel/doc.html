@@ -1,0 +1,2536 @@
+<table border=0 width="100%">
+<tr>
+	<td align="center">
+		<table class="main" border=0>
+		<tr>
+			<td align="left" valign="top">
+				<table class="vil_main">
+				<tr><td width="<%= LIST_WIDTH %>"><a href="index.cgi">トップページ</a></td><td></td></tr>
+				<tr>
+					<td></td>
+					<td>
+						<table>
+						<tr><td><h2>説明書など</h2></td></tr>
+						<tr><td>仕様もここの文章も気分でころころ変わってますが、システムメッセージとか中心にいろいろ。
+								<br>下から上表示にしたい場合は<a href="?cmd=conf">ユーザ設定</a>で切り替えて下さい。</td></tr>
+						<tr><td><br><strong>役職</strong></td></tr>
+						<tr><td><table>
+<%=
+	s = ""
+	for i in 0...(Skill.skills.size+1)/2
+		s += "<tr>"
+		sid = i*2
+		sk = Skill.skills[sid]
+		s += %Q(<td><a href="##{sid}">#{sk.name}</a></td>)
+		sid += 1
+		s += %Q(<td width="50"></td>)
+		if (sid == Skill.skills.size)
+			s += "<td></td>"
+		else
+			sk = Skill.skills[sid]
+			s += %Q(<td><a href="##{sid}">#{sk.name}</a></td>)
+		end
+		s += "</tr>"
+	end
+	s
+%>
+						</table></td></tr>
+						<tr><td><br><strong>その他</strong></td></tr>
+						<tr><td><a href="#a0">恋人</a></td></tr>
+						<tr><td><a href="#a1">遠吠え</a></td></tr>
+						<tr><td><a href="#a2">ダミー</a></td></tr>
+						<tr><td><a href="#a3">本家天国との違い</a></td></tr>
+						<tr><td><a href="#a4">編成</a></td></tr>
+						<tr><td><a href="#a5">ランダム編成</a></td></tr>
+						<tr><td><a href="#a6">いろいろ</a></td></tr>
+						</table>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<br><a name="0" class="large_doc">村人</a><br>ただの人です。
+<table cellpadding=0 class="action_box">
+<tr>
+<td width="50"><img src="img/plain00.png"></td>
+<td width="16"><img src="img/say00b.jpg"></td>
+<td>
+<table cellpadding=0 cellspacing=0 class="action_balloon">
+<tr>
+<td width="8"><img src="img/say01.jpg"></td>
+<td></td>
+<td width="8"><img src="img/say02.jpg"></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+学者 ダニエル (村人)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+コミット:
+<select name="commit_value">
+<option value = -1>未設定 *<option value = 0>時間を進める
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+<textarea name="message" rows="5" class="action_textarea"></textarea><br>
+<input type="submit" value="発言" class="submit">
+(30/30)
+<input name="think" value="on" type="checkbox">独り言
+<input name="loud" value="on" type="checkbox">大声
+<span class="act_toggle">▲</span>
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body"><br>
+学者 ダニエル
+<select name="postpos" class="postpos">
+<option value = "0">は、
+<option value = "1">が、
+<option value = "2">　
+</select>
+<select name="action_id">
+<option value = "" selected>
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="text" name="message" class="action_text" maxlength="50" autocomplete="off">
+<input type="submit" value="アクション" class="submit">
+(30/30)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><img src="img/say03.jpg"></td>
+<td></td>
+<td><img src="img/say04.jpg"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<br>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<br><a name="1" class="large_doc">人狼</a><br>ただの狼です。
+<table cellpadding=0 class="action_box">
+<tr>
+<td width="50"><img src="img/plain01.png"></td>
+<td width="16"><img src="img/say00b.jpg"></td>
+<td>
+<table cellpadding=0 cellspacing=0 class="action_balloon">
+<tr>
+<td width="8"><img src="img/say01.jpg"></td>
+<td></td>
+<td width="8"><img src="img/say02.jpg"></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+画家 アガサ (人狼)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+投票：
+<select name="vote_id">
+<option value = -1>未設定 *
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+<textarea name="message" rows="5" class="action_textarea"></textarea><br>
+<input type="submit" value="発言" class="submit">
+(30/30)
+<input name="think" value="on" type="checkbox">独り言
+<input name="loud" value="on" type="checkbox">大声
+<span class="act_toggle">▲</span>
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body"><br>
+画家 アガサ
+<select name="postpos" class="postpos">
+<option value = "0">は、
+<option value = "1">が、
+<option value = "2">　
+</select>
+<select name="action_id">
+<option value = "" selected>
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="text" name="message" class="action_text" maxlength="50" autocomplete="off">
+<input type="submit" value="アクション" class="submit">
+(30/30)
+</td>
+<td></td>
+</tr>
+<tr><td></td><td><br></td><td></td></tr>
+<tr>
+<td></td>
+<td class="action_body">
+襲う：
+<select name="target_id">
+<option value = -1>未設定 *
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+<textarea name="message" rows="5" class="whisper_textarea"></textarea><br>
+<input value="人狼のささやき" type="submit" class="submit">
+<input name="think" value="on" type="checkbox">独り言
+<input name="loud" value="on" type="checkbox">大声
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><img src="img/say03.jpg"></td>
+<td></td>
+<td><img src="img/say04.jpg"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+セットメッセージ
+<div class="announce whisper">画家 アガサ は 学者 ダニエル を襲撃します。</div>
+<div class="announce whisper">画家 アガサ は襲撃対象選択を取り消します。</div>
+<br>
+開始時の編成公開メッセージ直後
+<div class="announce whisper">この村に潜む人狼は、画家 アガサ、船乗り ガイ、医師 パスカル です。</div>
+<br>
+能力発動メッセージ
+<div class="announce whisper">画家 アガサ 達は、時計職人 プリシラ を襲撃します。</div>
+<div class="announce whisper">人狼達は、時計職人 プリシラ を襲撃します。(ランダム)</div>
+<div class="announce whisper">画家 アガサ は、時計職人 プリシラ を襲撃します。</div>
+<div class="announce whisper">画家 アガサ は、時計職人 プリシラ を襲撃します。(ランダム)</div>
+<br>
+					</td>
+				</tr>
+				<tr>
+					<td>
+<table class="list">
+<tr>
+<th colspan="2">
+生存 3人
+</th>
+</tr>
+<tr><td width="38" height="49"><img src="img/plain_s01.png"></td><td>画家 アガサ<br>&lt; 0 &gt;30/30<br><span class="human">2日目：人間</span></td></tr><tr><td width="38" height="49"><img src="img/plain_s03.png"></td><td>雑貨屋 サラ<br>&lt; 0 &gt;30/30<br><span class="wolf">3日目：人狼</span></td></tr><tr><td width="38" height="49"><img src="img/plain_s02.png"></td><td>時計職人 プリシラ<br>&lt; 0 &gt;30/30</td></tr>
+<tr>
+<th colspan="2">
+犠牲 0人
+</th>
+</tr>
+<tr>
+<th colspan="2">
+処刑 0人
+</th>
+</tr>
+</table>
+					</td>
+					<td>
+						<br><a name="2" class="large_doc">占い師</a><br>占いとかできます。
+<table cellpadding=0 class="action_box">
+<tr>
+<td width="50"><img src="img/plain02.png"></td>
+<td width="16"><img src="img/say00b.jpg"></td>
+<td>
+<table cellpadding=0 cellspacing=0 class="action_balloon">
+<tr>
+<td width="8"><img src="img/say01.jpg"></td>
+<td></td>
+<td width="8"><img src="img/say02.jpg"></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+時計職人 プリシラ (占い師)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+投票：
+<select name="vote_id">
+<option value = -1>未設定 *
+<option value = "2">画家 アガサ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+<textarea name="message" rows="5" class="action_textarea"></textarea><br>
+<input type="submit" value="発言" class="submit">
+(30/30)
+<input name="think" value="on" type="checkbox">独り言
+<input name="loud" value="on" type="checkbox">大声
+<span class="act_toggle">▲</span>
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body"><br>
+時計職人 プリシラ
+<select name="postpos" class="postpos">
+<option value = "0">は、
+<option value = "1">が、
+<option value = "2">　
+</select>
+<select name="action_id">
+<option value = "" selected>
+<option value = "2">画家 アガサ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="text" name="message" class="action_text" maxlength="50" autocomplete="off">
+<input type="submit" value="アクション" class="submit">
+(30/30)
+</td>
+<td></td>
+</tr>
+<tr><td></td><td><br></td><td></td></tr>
+<tr>
+<td></td>
+<td class="action_body">
+占う：
+<select name="target_id">
+<option value = -1>未設定 *
+<option value = "2">画家 アガサ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><img src="img/say03.jpg"></td>
+<td></td>
+<td><img src="img/say04.jpg"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+セットメッセージ
+<div class="announce fortune">時計職人 プリシラ は 画家 アガサ を占います。</div>
+<div class="announce fortune">時計職人 プリシラ は占い対象選択を取り消します。</div>
+<br>
+能力発動メッセージ
+<div class="announce fortune">時計職人 プリシラ は、画家 アガサ を占いました。<br>画家 アガサ は 人間のようです。</div>
+<div class="announce fortune">時計職人 プリシラ は、雑貨屋 サラ を占いました。(ランダム)<br>雑貨屋 サラ は 人狼のようです。</div>
+邪魔狂人に邪魔された場合
+<div class="announce fortune">時計職人 プリシラ は、学者 ダニエル を占いました。<br>しかし何かの力に邪魔されました</div>
+<div class="announce fortune">時計職人 プリシラ は、学者 ダニエル を占いました。(ランダム)<br>しかし何かの力に邪魔されました。</div>
+<br>
+					</td>
+				</tr>
+				<tr>
+					<td>
+<table class="list">
+<tr>
+<th colspan="2">
+生存 1人
+</th>
+</tr>
+<tr><td width="38" height="49"><img src="img/plain_s03.png"></td><td>雑貨屋 サラ<br>&lt; 0 &gt;30/30</td></tr>
+<tr>
+<th colspan="2">
+犠牲 0人
+</th>
+</tr>
+<tr>
+<th colspan="2">
+処刑 2人
+</th>
+</tr>
+<tr><td width="38" height="49"><img src="img/plain_s01.png"></td><td>画家 アガサ<div class="human">人間</div></td></tr><tr><td width="38" height="49"><img src="img/plain_s02.png"></td><td>時計職人 プリシラ<div class="wolf">人狼</div></td></tr>
+</table>
+					</td>
+					<td>
+						<br><a name="3" class="large_doc">霊能者</a><br>霊能判定を見ることができます。
+<table cellpadding=0 class="action_box">
+<tr>
+<td width="50"><img src="img/plain03.png"></td>
+<td width="16"><img src="img/say00b.jpg"></td>
+<td>
+<table cellpadding=0 cellspacing=0 class="action_balloon">
+<tr>
+<td width="8"><img src="img/say01.jpg"></td>
+<td></td>
+<td width="8"><img src="img/say02.jpg"></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+雑貨屋 サラ (霊能者)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+投票：
+<select name="vote_id">
+<option value = -1>未設定 *
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+<textarea name="message" rows="5" class="action_textarea"></textarea><br>
+<input type="submit" value="発言" class="submit">
+(30/30)
+<input name="think" value="on" type="checkbox">独り言
+<input name="loud" value="on" type="checkbox">大声
+<span class="act_toggle">▲</span>
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body"><br>
+雑貨屋 サラ
+<select name="postpos" class="postpos">
+<option value = "0">は、
+<option value = "1">が、
+<option value = "2">　
+</select>
+<select name="action_id">
+<option value = "" selected>
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="text" name="message" class="action_text" maxlength="50" autocomplete="off">
+<input type="submit" value="アクション" class="submit">
+(30/30)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><img src="img/say03.jpg"></td>
+<td></td>
+<td><img src="img/say04.jpg"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+能力発動メッセージ(処刑、突然死メッセージ直後)
+<div class="announce spirit">画家 アガサ は 人間だったようです。</div>
+<div class="announce spirit">時計職人 プリシラ は 人狼だったようです。</div>
+<br>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<br><a name="4" class="large_doc">狂人</a><br>狂ってる人です。<br>
+                                                          狂人スウィッチ有りに設定すると、押すまで夜が明けないスウィッチを押すことが出来ます。
+<table cellpadding=0 class="action_box">
+<tr>
+<td width="50"><img src="img/plain04.png"></td>
+<td width="16"><img src="img/say00b.jpg"></td>
+<td>
+<table cellpadding=0 cellspacing=0 class="action_balloon">
+<tr>
+<td width="8"><img src="img/say01.jpg"></td>
+<td></td>
+<td width="8"><img src="img/say02.jpg"></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+花売り ウェンディ (狂人)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+投票：
+<select name="vote_id">
+<option value = -1>未設定 *
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+<textarea name="message" rows="5" class="action_textarea"></textarea><br>
+<input type="submit" value="発言" class="submit">
+(30/30)
+<input name="think" value="on" type="checkbox">独り言
+<input name="loud" value="on" type="checkbox">大声
+<span class="act_toggle">▲</span>
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body"><br>
+花売り ウェンディ
+<select name="postpos" class="postpos">
+<option value = "0">は、
+<option value = "1">が、
+<option value = "2">　
+</select>
+<select name="action_id">
+<option value = "" selected>
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="text" name="message" class="action_text" maxlength="50" autocomplete="off">
+<input type="submit" value="アクション" class="submit">
+(30/30)
+</td>
+<td></td>
+</tr>
+<tr><td></td><td><br></td><td></td></tr>
+<tr>
+<td></td>
+<td class="action_body">
+スウィッチ:
+<select name="commit_value">
+<option value = -1>未設定 *<option value = 0>押す
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><img src="img/say03.jpg"></td>
+<td></td>
+<td><img src="img/say04.jpg"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+セットメッセージ
+<div class="announce possessed">修道女 アイリス がスウィッチを押しました。</div>
+<div class="announce possessed">修道女 アイリス がスウィッチを引きました。</div>
+
+<br>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<br><a name="5" class="large_doc">狩人</a><br>GJとかする人です。
+<table cellpadding=0 class="action_box">
+<tr>
+<td width="50"><img src="img/plain05.png"></td>
+<td width="16"><img src="img/say00b.jpg"></td>
+<td>
+<table cellpadding=0 cellspacing=0 class="action_balloon">
+<tr>
+<td width="8"><img src="img/say01.jpg"></td>
+<td></td>
+<td width="8"><img src="img/say02.jpg"></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+修道女 アイリス (狩人)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+投票：
+<select name="vote_id">
+<option value = -1>未設定 *
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+<textarea name="message" rows="5" class="action_textarea"></textarea><br>
+<input type="submit" value="発言" class="submit">
+(30/30)
+<input name="think" value="on" type="checkbox">独り言
+<input name="loud" value="on" type="checkbox">大声
+<span class="act_toggle">▲</span>
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body"><br>
+修道女 アイリス
+<select name="postpos" class="postpos">
+<option value = "0">は、
+<option value = "1">が、
+<option value = "2">　
+</select>
+<select name="action_id">
+<option value = "" selected>
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="text" name="message" class="action_text" maxlength="50" autocomplete="off">
+<input type="submit" value="アクション" class="submit">
+(30/30)
+</td>
+<td></td>
+</tr>
+<tr><td></td><td><br></td><td></td></tr>
+<tr>
+<td></td>
+<td class="action_body">
+護衛：
+<select name="target_id">
+<option value = -1>未設定 *
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><img src="img/say03.jpg"></td>
+<td></td>
+<td><img src="img/say04.jpg"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+セットメッセージ
+<div class="announce guard">修道女 アイリス は 画家 アガサ を護衛します。</div>
+<div class="announce guard">修道女 アイリス は護衛対象選択を取り消します。</div>
+<br>
+能力発動メッセージ
+<div class="announce guard">修道女 アイリス は、画家 アガサ を護衛しています。</div>
+<div class="announce guard">修道女 アイリス は、画家 アガサ を護衛しています。(ランダム)</div>
+<br>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<br><a name="6" class="large_doc">共有者</a><br>何かを共有している人です。
+<table cellpadding=0 class="action_box">
+<tr>
+<td width="50"><img src="img/plain06.png"></td>
+<td width="16"><img src="img/say00b.jpg"></td>
+<td>
+<table cellpadding=0 cellspacing=0 class="action_balloon">
+<tr>
+<td width="8"><img src="img/say01.jpg"></td>
+<td></td>
+<td width="8"><img src="img/say02.jpg"></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+助手 カレン (共有者)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+投票：
+<select name="vote_id">
+<option value = -1>未設定 *
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+<textarea name="message" rows="5" class="action_textarea"></textarea><br>
+<input type="submit" value="発言" class="submit">
+(30/30)
+<input name="think" value="on" type="checkbox">独り言
+<input name="loud" value="on" type="checkbox">大声
+<span class="act_toggle">▲</span>
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body"><br>
+助手 カレン
+<select name="postpos" class="postpos">
+<option value = "0">は、
+<option value = "1">が、
+<option value = "2">　
+</select>
+<select name="action_id">
+<option value = "" selected>
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="text" name="message" class="action_text" maxlength="50" autocomplete="off">
+<input type="submit" value="アクション" class="submit">
+(30/30)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><img src="img/say03.jpg"></td>
+<td></td>
+<td><img src="img/say04.jpg"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+開始時の編成公開メッセージ直後
+<br>
+1人の場合
+<div class="announce free">あなたは凄い共有者です。凄すぎて相方はいません。</div>
+2人以上の場合
+<div class="announce free">あなたと心を共有するのは、お嬢様 ナタリー、画家 アガサ です。</div>
+<br>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<br><a name="7" class="large_doc">妖魔</a><br>ただの妖魔です。
+<table cellpadding=0 class="action_box">
+<tr>
+<td width="50"><img src="img/plain07.png"></td>
+<td width="16"><img src="img/say00b.jpg"></td>
+<td>
+<table cellpadding=0 cellspacing=0 class="action_balloon">
+<tr>
+<td width="8"><img src="img/say01.jpg"></td>
+<td></td>
+<td width="8"><img src="img/say02.jpg"></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+鍛冶屋 ブリジット (妖魔)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+投票：
+<select name="vote_id">
+<option value = -1>未設定 *
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+<textarea name="message" rows="5" class="action_textarea"></textarea><br>
+<input type="submit" value="発言" class="submit">
+(30/30)
+<input name="think" value="on" type="checkbox">独り言
+<input name="loud" value="on" type="checkbox">大声
+<span class="act_toggle">▲</span>
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body"><br>
+鍛冶屋 ブリジット
+<select name="postpos" class="postpos">
+<option value = "0">は、
+<option value = "1">が、
+<option value = "2">　
+</select>
+<select name="action_id">
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="text" name="message" class="action_text" maxlength="50" autocomplete="off">
+<input type="submit" value="アクション" class="submit">
+(30/30)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><img src="img/say03.jpg"></td>
+<td></td>
+<td><img src="img/say04.jpg"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<br>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<br><a name="8" class="large_doc">Ｃ国狂人</a><br>囁ける狂人です。
+<table cellpadding=0 class="action_box">
+<tr>
+<td width="50"><img src="img/plain08.png"></td>
+<td width="16"><img src="img/say00b.jpg"></td>
+<td>
+<table cellpadding=0 cellspacing=0 class="action_balloon">
+<tr>
+<td width="8"><img src="img/say01.jpg"></td>
+<td></td>
+<td width="8"><img src="img/say02.jpg"></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+薬剤師 シャロン (Ｃ国狂人)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+投票：
+<select name="vote_id">
+<option value = -1>未設定 *
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+<textarea name="message" rows="5" class="action_textarea"></textarea><br>
+<input type="submit" value="発言" class="submit">
+(30/30)
+<input name="think" value="on" type="checkbox">独り言
+<input name="loud" value="on" type="checkbox">大声
+<span class="act_toggle">▲</span>
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body"><br>
+薬剤師 シャロン
+<select name="postpos" class="postpos">
+<option value = "0">は、
+<option value = "1">が、
+<option value = "2">　
+</select>
+<select name="action_id">
+<option value = "" selected>
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="text" name="message" class="action_text" maxlength="50" autocomplete="off">
+<input type="submit" value="アクション" class="submit">
+(30/30)
+</td>
+<td></td>
+</tr>
+<tr><td></td><td><br></td><td></td></tr>
+<tr>
+<td></td>
+<td class="action_body">
+<textarea name="message" rows="5" class="whisper_textarea"></textarea><br>
+<input value="人狼のささやき" type="submit" class="submit">
+<input name="think" value="on" type="checkbox">独り言
+<input name="loud" value="on" type="checkbox">大声
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><img src="img/say03.jpg"></td>
+<td></td>
+<td><img src="img/say04.jpg"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+開始時の編成公開メッセージ直後
+<div class="announce whisper">この村に潜む人狼は、画家 アガサ、船乗り ガイ、医師 パスカル です。</div>
+<br>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<br><a name="9" class="large_doc">狂信者</a><br>だれが狼かわかる狂人です。
+<table cellpadding=0 class="action_box">
+<tr>
+<td width="50"><img src="img/plain09.png"></td>
+<td width="16"><img src="img/say00b.jpg"></td>
+<td>
+<table cellpadding=0 cellspacing=0 class="action_balloon">
+<tr>
+<td width="8"><img src="img/say01.jpg"></td>
+<td></td>
+<td width="8"><img src="img/say02.jpg"></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+帽子屋 ロレッタ (狂信者)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+投票：
+<select name="vote_id">
+<option value = -1>未設定 *
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+<textarea name="message" rows="5" class="action_textarea"></textarea><br>
+<input type="submit" value="発言" class="submit">
+(30/30)
+<input name="think" value="on" type="checkbox">独り言
+<input name="loud" value="on" type="checkbox">大声
+<span class="act_toggle">▲</span>
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body"><br>
+帽子屋 ロレッタ
+<select name="postpos" class="postpos">
+<option value = "0">は、
+<option value = "1">が、
+<option value = "2">　
+</select>
+<select name="action_id">
+<option value = "" selected>
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="text" name="message" class="action_text" maxlength="50" autocomplete="off">
+<input type="submit" value="アクション" class="submit">
+(30/30)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><img src="img/say03.jpg"></td>
+<td></td>
+<td><img src="img/say04.jpg"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+開始時の編成公開メッセージ直後
+<div class="announce whisper">この村に潜む人狼は、画家 アガサ、船乗り ガイ、医師 パスカル です。</div>
+<br>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<br><a name="10" class="large_doc">聖痕者</a><br>聖なる痣がある人です。
+<table cellpadding=0 class="action_box">
+<tr>
+<td width="50"><img src="img/plain10.png"></td>
+<td width="16"><img src="img/say00b.jpg"></td>
+<td>
+<table cellpadding=0 cellspacing=0 class="action_balloon">
+<tr>
+<td width="8"><img src="img/say01.jpg"></td>
+<td></td>
+<td width="8"><img src="img/say02.jpg"></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+靴屋の娘 リタ (聖痕者)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+投票：
+<select name="vote_id">
+<option value = -1>未設定 *
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+<textarea name="message" rows="5" class="action_textarea"></textarea><br>
+<input type="submit" value="発言" class="submit">
+(30/30)
+<input name="think" value="on" type="checkbox">独り言
+<input name="loud" value="on" type="checkbox">大声
+<span class="act_toggle">▲</span>
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body"><br>
+靴屋の娘 リタ
+<select name="postpos" class="postpos">
+<option value = "0">は、
+<option value = "1">が、
+<option value = "2">　
+</select>
+<select name="action_id">
+<option value = "" selected>
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="text" name="message" class="action_text" maxlength="50" autocomplete="off">
+<input type="submit" value="アクション" class="submit">
+(30/30)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><img src="img/say03.jpg"></td>
+<td></td>
+<td><img src="img/say04.jpg"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+開始時の編成公開メッセージ直後
+<div class="announce stigmata">あなたは 聖痕者1 です。</div>
+<br>
+					</td>
+				</tr>
+				<tr>
+					<td>
+<table class="list">
+<tr>
+<th colspan="2">
+生存 2人
+</th>
+</tr>
+<tr><td width="38" height="49"><img src="img/plain_s01.png"></td><td>画家 アガサ</a><br>&lt; 0 &gt;30/30<br>ID: agatha_id</td></tr><tr><td width="38" height="49"><img src="img/plain_s11.png"></td><td>お嬢様 ナタリー<br>&lt; 0 &gt;30/30</td></tr>
+<tr>
+<th colspan="2">
+犠牲 １人
+</th>
+</tr>
+<tr><td width="38"  height="49"><img src="img/plain_s00.png"></td><td>学者 ダニエル<br>ID: DUMMY</td></tr>
+<tr>
+<th colspan="2">
+処刑 0人
+</th>
+</tr>
+</table>
+					</td>
+					<td>
+						<br><a name="11" class="large_doc">中身占い師</a><br>中身を占うことができる人です。
+<table cellpadding=0 class="action_box">
+<tr>
+<td width="50"><img src="img/plain11.png"></td>
+<td width="16"><img src="img/say00b.jpg"></td>
+<td>
+<table cellpadding=0 cellspacing=0 class="action_balloon">
+<tr>
+<td width="8"><img src="img/say01.jpg"></td>
+<td></td>
+<td width="8"><img src="img/say02.jpg"></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+お嬢様 ナタリー (中身占い師)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+投票：
+<select name="vote_id">
+<option value = -1>未設定 *
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+<textarea name="message" rows="5" class="action_textarea"></textarea><br>
+<input type="submit" value="発言" class="submit">
+(30/30)
+<input name="think" value="on" type="checkbox">独り言
+<input name="loud" value="on" type="checkbox">大声
+<span class="act_toggle">▲</span>
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body"><br>
+お嬢様 ナタリー
+<select name="postpos" class="postpos">
+<option value = "0">は、
+<option value = "1">が、
+<option value = "2">　
+</select>
+<select name="action_id">
+<option value = "" selected>
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="text" name="message" class="action_text" maxlength="50" autocomplete="off">
+<input type="submit" value="アクション" class="submit">
+(30/30)
+</td>
+<td></td>
+</tr>
+<tr><td></td><td><br></td><td></td></tr>
+<tr>
+<td></td>
+<td class="action_body">
+中身を占う：
+<select name="target_id">
+<option value = -1>未設定 *
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><img src="img/say03.jpg"></td>
+<td></td>
+<td><img src="img/say04.jpg"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+セットメッセージ
+<div class="announce fortune_id">お嬢様 ナタリー は 学者 ダニエル の中身を占います。</div>
+<div class="announce fortune_id">お嬢様 ナタリー は中身占い対象選択を取り消します。</div>
+<br>
+能力発動メッセージ
+<div class="announce fortune_id">お嬢様 ナタリー は、学者 ダニエル の中身を占いました。<br>学者 ダニエル の中身は DUMMY のようです。</div>
+<div class="announce fortune_id">お嬢様 ナタリー は、学者 ダニエル の中身を占いました。(ランダム)<br>学者 ダニエル の中身は DUMMY のようです。</div>
+邪魔狂人に邪魔された場合
+<div class="announce fortune_id">お嬢様 ナタリー は、学者 ダニエル の中身を占いました。<br>しかし何かの力に邪魔されました。</div>
+<div class="announce fortune_id">お嬢様 ナタリー は、学者 ダニエル の中身を占いました。(ランダム)<br>しかし何かの力に邪魔されました。</div>
+<br>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<br><a name="12" class="large_doc">キューピッド</a><br>恋のキューピッドです。
+<table cellpadding=0 class="action_box">
+<tr>
+<td width="50"><img src="img/plain12.png"></td>
+<td width="16"><img src="img/say00b.jpg"></td>
+<td>
+<table cellpadding=0 cellspacing=0 class="action_balloon">
+<tr>
+<td width="8"><img src="img/say01.jpg"></td>
+<td></td>
+<td width="8"><img src="img/say02.jpg"></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+教師 レイチェル (キューピッド)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+コミット:
+<select name="commit_value">
+<option value = -1>未設定 *
+<option value = 0>時間を進める
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+<textarea name="message" rows="5" class="action_textarea"></textarea><br>
+<input type="submit" value="発言" class="submit">
+(30/30)
+<input name="think" value="on" type="checkbox">独り言
+<input name="loud" value="on" type="checkbox">大声
+<span class="act_toggle">▲</span>
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body"><br>
+教師 レイチェル
+<select name="postpos" class="postpos">
+<option value = "0">は、
+<option value = "1">が、
+<option value = "2">　
+</select>
+<select name="action_id">
+<option value = "" selected>
+<option value = "1">学者 ダニエル
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="text" name="message" class="action_text" maxlength="50" autocomplete="off">
+<input type="submit" value="アクション" class="submit">
+(30/30)
+</td>
+<td></td>
+</tr>
+<tr><td></td><td><br></td><td></td></tr>
+<tr>
+<td></td>
+<td class="action_body">
+愛の矢を撃つ：<br>
+<select name="target_id">
+<option value = -1>未設定 *
+<option value = "1">学者 ダニエル
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+<option value = "18">教師 レイチェル
+</select>
+と
+<select name="target_id2">
+<option value = -1>未設定 *
+<option value = "1">学者 ダニエル
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+<option value = "18">教師 レイチェル
+</select>
+<br><input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><img src="img/say03.jpg"></td>
+<td></td>
+<td><img src="img/say04.jpg"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+セットメッセージ
+<div class="announce cupid">教師 レイチェル は 学者 ダニエル と 画家 アガサ に愛の矢を撃ちます。</div>
+<div class="announce cupid">教師 レイチェル は矢を撃つ対象選択を取り消します。</div>
+<br>
+能力発動メッセージ
+<div class="announce cupid">教師 レイチェル は愛の矢を撃ちました。<br>学者 ダニエル と 画家 アガサ は恋に落ちました。</div>
+<div class="announce cupid">教師 レイチェル は愛の矢を撃ちました。(ランダム)<br>学者 ダニエル と 画家 アガサ は恋に落ちました。</div>
+<br>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<br><a name="13" class="large_doc">求愛者</a><br>自分ともう１人を恋人にします。ようするに強制的に自打ちになるキューピッドです。キューピッドと同陣営です。
+<table cellpadding=0 class="action_box">
+<tr>
+<td width="50"><img src="img/plain13.png"></td>
+<td width="16"><img src="img/say00b.jpg"></td>
+<td>
+<table cellpadding=0 cellspacing=0 class="action_balloon">
+<tr>
+<td width="8"><img src="img/say01.jpg"></td>
+<td></td>
+<td width="8"><img src="img/say02.jpg"></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+使用人 テレサ (求愛者)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+コミット:
+<select name="commit_value">
+<option value = -1>未設定 *
+<option value = 0>時間を進める
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+<textarea name="message" rows="5" class="action_textarea"></textarea><br>
+<input type="submit" value="発言" class="submit">
+(30/30)
+<input name="think" value="on" type="checkbox">独り言
+<input name="loud" value="on" type="checkbox">大声
+<span class="act_toggle">▲</span>
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body"><br>
+使用人 テレサ
+<select name="postpos" class="postpos">
+<option value = "0">は、
+<option value = "1">が、
+<option value = "2">　
+</select>
+<select name="action_id">
+<option value = "" selected>
+<option value = "1">学者 ダニエル
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="text" name="message" class="action_text" maxlength="50" autocomplete="off">
+<input type="submit" value="アクション" class="submit">
+(30/30)
+</td>
+<td></td>
+</tr>
+<tr><td></td><td><br></td><td></td></tr>
+<tr>
+<td></td>
+<td class="action_body">
+愛を求める：
+<select name="target_id">
+<option value = -1>未設定 *
+<option value = "1">学者 ダニエル
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><img src="img/say03.jpg"></td>
+<td></td>
+<td><img src="img/say04.jpg"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+セットメッセージ
+<div class="announce cupid">使用人 テレサ は 学者 ダニエル に愛を求めます。</div>
+<div class="announce cupid">使用人 テレサ は求愛対象選択を取り消します。</div>
+<br>
+能力発動メッセージ
+<div class="announce cupid">使用人 テレサ は 学者 ダニエル に愛を求めました。<br>使用人 テレサ と 学者 ダニエル は恋に落ちました。</div>
+<div class="announce cupid">使用人 テレサ は 学者 ダニエル に愛を求めました。(ランダム)<br>使用人 テレサ と 学者 ダニエル は恋に落ちました</div>
+<br>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<br><a name="14" class="large_doc">邪魔狂人</a><br>邪魔狂人の能力の対象にされた占い師と中身占い師は、その日の占いをおこなうことができません。邪魔対象が占い師や中身占い師だったかどうかはわかりません。また、邪魔された側もだれが邪魔狂人かはわかりません。占いを邪魔された場合、妖魔を溶かすことはできません。<br>その他勝利条件等は普通の狂人と同じです。
+<table cellpadding=0 class="action_box">
+<tr>
+<td width="50"><img src="img/plain14.png"></td>
+<td width="16"><img src="img/say00b.jpg"></td>
+<td>
+<table cellpadding=0 cellspacing=0 class="action_balloon">
+<tr>
+<td width="8"><img src="img/say01.jpg"></td>
+<td></td>
+<td width="8"><img src="img/say02.jpg"></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+船乗り ガイ (邪魔狂人)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+投票：
+<select name="vote_id">
+<option value = -1>未設定 *
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+<textarea name="message" rows="5" class="action_textarea"></textarea><br>
+<input type="submit" value="発言" class="submit">
+(30/30)
+<input name="think" value="on" type="checkbox">独り言
+<input name="loud" value="on" type="checkbox">大声
+<span class="act_toggle">▲</span>
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body"><br>
+船乗り ガイ
+<select name="postpos" class="postpos">
+<option value = "0">は、
+<option value = "1">が、
+<option value = "2">　
+</select>
+<select name="action_id">
+<option value = "" selected>
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="text" name="message" class="action_text" maxlength="50" autocomplete="off">
+<input type="submit" value="アクション" class="submit">
+(30/30)
+</td>
+<td></td>
+</tr>
+<tr><td></td><td><br></td><td></td></tr>
+<tr>
+<td></td>
+<td class="action_body">
+邪魔する：
+<select name="target_id">
+<option value = -1>未設定 *
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><img src="img/say03.jpg"></td>
+<td></td>
+<td><img src="img/say04.jpg"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+セットメッセージ
+<div class="announce gammer">船乗り ガイ は 学者 ダニエル の邪魔をします。</div>
+<div class="announce gammer">船乗り ガイ は邪魔対象選択を取り消します。</div>
+<br>
+能力発動メッセージ
+<div class="announce gammer">船乗り ガイ は、学者 ダニエル の邪魔をしています。</div>
+<div class="announce gammer">船乗り ガイ は、学者 ダニエル の邪魔をしています。(ランダム)</div>
+<br>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<br><a name="15" class="large_doc">烙印者</a><br>烙印があります。番号が無い聖痕者みたいなもの。
+<table cellpadding=0 class="action_box">
+<tr>
+<td width="50"><img src="img/plain16.png"></td>
+<td width="16"><img src="img/say00b.jpg"></td>
+<td>
+<table cellpadding=0 cellspacing=0 class="action_balloon">
+<tr>
+<td width="8"><img src="img/say01.jpg"></td>
+<td></td>
+<td width="8"><img src="img/say02.jpg"></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+金貸し オリバー (烙印者)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+投票：
+<select name="vote_id">
+<option value = -1>未設定 *
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+<textarea name="message" rows="5" class="action_textarea"></textarea><br>
+<input type="submit" value="発言" class="submit">
+(30/30)
+<input name="think" value="on" type="checkbox">独り言
+<input name="loud" value="on" type="checkbox">大声
+<span class="act_toggle">▲</span>
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body"><br>
+金貸し オリバー
+<select name="postpos" class="postpos">
+<option value = "0">は、
+<option value = "1">が、
+<option value = "2">　
+</select>
+<select name="action_id">
+<option value = "" selected>
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+</select>
+<input type="text" name="message" class="action_text" maxlength="50" autocomplete="off">
+<input type="submit" value="アクション" class="submit">
+(30/30)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><img src="img/say03.jpg"></td>
+<td></td>
+<td><img src="img/say04.jpg"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<br>
+					</td>
+				</tr>
+				<tr>
+					<td>
+<table class="list">
+<tr>
+<th colspan="2">
+生存 3人
+</th>
+</tr>
+<tr><td width="38" height="49"><img src="img/plain_s01.png"></td><td>画家 アガサ<br>&lt; 0 &gt;30/30</td></tr><tr><td width="38" height="49"><img src="img/plain_s03.png"></td><td>雑貨屋 サラ<br>&lt; 0 &gt;30/30<br><span class="guard">護衛終了</span></td></tr><tr><td width="38" height="49"><img src="img/plain_s17.png"></td><td>料理人 ハリー<br>&lt; 0 &gt;30/30</td></tr>
+<tr>
+<th colspan="2">
+犠牲 1人
+</th>
+</tr>
+<th colspan="2">
+処刑 0人
+</th>
+</tr>
+</table>
+					</td>
+					<td>
+						<br><a name="16" class="large_doc">風来狩人</a><br>基本は狩人です。「犠牲者無しの日」に自身が護衛していた対象は再び護衛することができません。<br>本人の護衛の成否とは関係ありません。後追いは犠牲者に含まれません。護衛できない生存者はリストに「護衛終了」と表示されます。護衛できない対象にもセットは可能です。
+<table cellpadding=0 class="action_box">
+<tr>
+<td width="50"><img src="img/plain17.png"></td>
+<td width="16"><img src="img/say00b.jpg"></td>
+<td>
+<table cellpadding=0 cellspacing=0 class="action_balloon">
+<tr>
+<td width="8"><img src="img/say01.jpg"></td>
+<td></td>
+<td width="8"><img src="img/say02.jpg"></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+料理人 ハリー (風来狩人)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+投票：
+<select name="vote_id">
+<option value = -1>未設定 *
+<option value = "2">画家 アガサ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+<textarea name="message" rows="5" class="action_textarea"></textarea><br>
+<input type="submit" value="発言" class="submit">
+(30/30)
+<input name="think" value="on" type="checkbox">独り言
+<input name="loud" value="on" type="checkbox">大声
+<span class="act_toggle">▲</span>
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body"><br>
+料理人 ハリー
+<select name="postpos" class="postpos">
+<option value = "0">は、
+<option value = "1">が、
+<option value = "2">　
+</select>
+<select name="action_id">
+<option value = "" selected>
+<option value = "2">画家 アガサ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="text" name="message" class="action_text" maxlength="50" autocomplete="off">
+<input type="submit" value="アクション" class="submit">
+(30/30)
+</td>
+<td></td>
+</tr>
+<tr><td></td><td><br></td><td></td></tr>
+<tr>
+<td></td>
+<td class="action_body">
+護衛：
+<select name="target_id">
+<option value = -1>未設定 *
+<option value = "2">画家 アガサ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "16">医師 パスカル
+<option value = "17">金貸し オリバー
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><img src="img/say03.jpg"></td>
+<td></td>
+<td><img src="img/say04.jpg"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+セットメッセージ
+<div class="announce guard">料理人 ハリー は 雑貨屋 サラ を護衛します。</div>
+<div class="announce guard">料理人 ハリー は護衛対象選択を取り消します。</div>
+<br>
+能力発動メッセージ
+<div class="announce guard">料理人 ハリー は、雑貨屋 サラ を護衛しています。</div>
+<div class="announce guard">料理人 ハリー は、雑貨屋 サラ を護衛しています。(ランダム)</div>
+護衛できない人物を護衛した場合
+<div class="announce guard">料理人 ハリー は、雑貨屋 サラ をもう護衛しません。</div>
+<div class="announce guard">料理人 ハリー は、雑貨屋 サラ をもう護衛しません。(ランダム)</div>
+<br>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<br><a name="a0" class="large_doc">恋人</a><br>恋してます。
+<table cellpadding=0 class="action_box">
+<tr>
+<td width="50"><img src="img/plain15.png"></td>
+<td width="16"><img src="img/say00b.jpg"></td>
+<td>
+<table cellpadding=0 cellspacing=0 class="action_balloon">
+<tr>
+<td width="8"><img src="img/say01.jpg"></td>
+<td></td>
+<td width="8"><img src="img/say02.jpg"></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+医師 パスカル (村人)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+投票：
+<select name="vote_id">
+<option value = -1>未設定 *
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "18">金貸し オリバー
+</select>
+<input type="submit" value="変更" class="submit">
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body">
+<textarea name="message" rows="5" class="action_textarea"></textarea><br>
+<input type="submit" value="発言" class="submit">
+(30/30)
+<input name="think" value="on" type="checkbox">独り言
+<input name="loud" value="on" type="checkbox">大声
+<span class="act_toggle">▲</span>
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td class="action_body"><br>
+医師 パスカル
+<select name="postpos" class="postpos">
+<option value = "0">は、
+<option value = "1">が、
+<option value = "2">　
+</select>
+<select name="action_id">
+<option value = "" selected>
+<option value = "2">画家 アガサ
+<option value = "3">時計職人 プリシラ
+<option value = "4">雑貨屋 サラ
+<option value = "5">花売り ウェンディ
+<option value = "6">修道女 アイリス
+<option value = "7">助手 カレン
+<option value = "8">鍛冶屋 ブリジット
+<option value = "9">薬剤師 シャロン
+<option value = "10">帽子屋 ロレッタ
+<option value = "11">靴屋の娘 リタ
+<option value = "12">お嬢様 ナタリー
+<option value = "13">教師 レイチェル
+<option value = "14">使用人 テレサ
+<option value = "15">船乗り ガイ
+<option value = "18">金貸し オリバー
+</select>
+<input type="text" name="message" class="action_text" maxlength="50" autocomplete="off">
+<input type="submit" value="アクション" class="submit">
+(30/30)
+</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>
+<br><span class="love">あなたは 使用人 テレサ と愛し合っています。</span>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><img src="img/say03.jpg"></td>
+<td></td>
+<td><img src="img/say04.jpg"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<br><a name="a1" class="large_doc">遠吠え</a>
+<br>プライン、七彩、悪夢(ame)、knightの遠吠え。
+<table class="message"><tr><td width="50" rowspan="2"><img src="img/howl.png"></td><td colspan="2" class="howl">狼の遠吠え</td></tr><tr><td width="16"><img src="img/whisper00.jpg"></td><td width="464"><div class="mes_whisper_body0"><div class="mes_whisper_body1">わおーん</div></div></td></tr></table>
+<br>アニマルの遠吠え。
+<table class="message"><tr><td width="50" rowspan="2"><img src="img/silverhowl.png"></td><td colspan="2" class="howl">狼の遠吠え</td></tr><tr><td width="16"><img src="img/whisper00.jpg"></td><td width="464"><div class="mes_whisper_body0"><div class="mes_whisper_body1">わおーん</div></div></td></tr></table>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<br><a name="a2" class="large_doc">ダミー</a><br>ダミー専用キャラクター達です。プレイヤーが使用することはできません。<br>ダミー認知度が低いため、よく占われそうになったりします。
+						<table class="char">
+<%=
+	s = ''
+	for i in 0...Charset.charsets.size
+		s += %Q(<tr><td><img src="img/#{Charset.charsets[i].file_name}00.png"></td><td>#{Charset.charsets[i].char_names[0]}</td></tr>)
+	end
+	s
+%>
+						</table>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<br><a name="a3" class="large_doc">本家天国との違い</a><br>違いまとめ。
+						<ul>
+						<li>パスワードによって参加者を限定することができます。</li>
+						<li>一部のキャラセットがありません。</li>
+						<li>発言の横幅が広いです。</li>
+						<li>C狂人は妖魔の有無に関わらず、人間としてカウントされます。</li>
+						<li>ランダム編成があります。</li>
+						<li>狂人スウィッチの見た目などがちょこっとだけ違います（機能はまったく同じ）。
+						<li>他にも色々違うかもしれません。要注意。</li>
+						</ul>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<br><a name="a4" class="large_doc">編成</a><br>
+						ワイドカスタムや編成投稿は、どちらも「ダ村狼占霊狂狩共妖Ｃ信聖中Ｑ求邪」などの文字で編成を設定する方法です。<br>
+						ワイドカスタムの使用例として下の編成を作る手順を述べます。村作成や村編集画面の編成でワイドカスタムを選び、下の編成の文字列をそのまま全部コピペすれば完了です。<br><br>
+
+						10人：村村村村狼狼占霊狩邪<br>
+						11人：村村村村村狼狼占霊狩邪<br>
+						12人：村村村村村村狼狼占霊狩邪<br>
+						13人：村村村村村村村狼狼占霊狩邪<br>
+						14人：村村村村村村村村狼狼占霊狩邪<br>
+						15人：村村村村村村村村村狼狼占霊狩邪<br>
+						16人：村村村村村村村狼狼狼占霊狩共共邪<br>
+						17人：村村村村村村村村狼狼狼占霊狩共共邪<br>
+						18人：村村村村村村村村村狼狼狼占霊狩共共邪<br>
+						19人：村村村村村村村村村村狼狼狼占霊狩共共邪<br>
+						20人：村村村村村村村村村村村狼狼狼占霊狩共共邪<br>
+						21人：村村村村村村村村村村村村狼狼狼占霊狩共共邪<br>
+						22人：村村村村村村村村村村村村村狼狼狼占霊狩共共邪<br><br>
+
+						この例のように、改行すれば複数の編成を一度に設定できます。編成の方針さえ決まっていれば、参加人数によって調節しなくていいので楽かもしれません。もちろん1つの編成だけを設定してもかまいません。<br>
+						「10人：」などの余計な文字は無視されるので入れても入れなくてもかまいません。<br>
+						「ダ」は「村」の文字と同じ扱いで、どちらも村人になります。<br>
+						設定できるのは4〜22人の編成です。
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<br><a name="a5" class="large_doc">ランダム編成</a><br>
+						かつての欧州に存在したランダム編成とほぼ同じです。<br>
+						現在仕様が流動的なので、ここに書いてあることはウソの可能性があります。<br>
+						<li>人狼と占い師が最低一人ずつ居る以外は全ての役職がランダムに出現します。</li>
+						<li>村側が最低半数はいる、などということはありません（PPチェックなし）。</li>
+						<li>村が開始した瞬間には終わらない、などということはありません（初回終了チェックなし）。</li>
+						<li>ダミーは人狼以外の全ての役職になります。</li>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<br><a name="a6" class="large_doc">いろいろ</a><br>
+						<ul>
+						<li>ソースコード<br>四国のソースコードが配布されている場所は<a href="http://mshe.skr.jp/tss.tgz">http://mshe.skr.jp/tss.tgz</a>です。<br>天国の→ <a href="http://wolften.sakura.ne.jp/ten.tar.gz">http://wolften.sakura.ne.jp/ten.tar.gz</a></li>
+						</ul>
+					</td>
+				</tr>
+				<tr><td><a href="index.cgi">トップページ</a></td><td></td></tr>
+				</table>
+			</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+</table>

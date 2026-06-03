@@ -1,0 +1,51 @@
+<% if (@conf.focus == 1 && !@player) %>
+	<form name="focus_form" action="index.cgi" method="post">
+<% else %>
+	<form action="index.cgi" method="post">
+<% end %>
+<input type="hidden" name="cmd" value="msg">
+<input type="hidden" name="guest" value="on">
+<input type="hidden" name="vid" value="<%= @vid %>">
+<input type="hidden" name="j_data" value="日本語のデータ">
+<table border=0 cellpadding=0 cellspacing=0 class="action_box">
+	<tr>
+<%=
+	pid = Charset.charsets[@vil.char].spectator_filename
+	%Q(<td width="50"><img src="img/#{pid}.png"></td>)
+%>
+		<td width="16"><img src="img/say00b.jpg"></td>
+		<td>
+			<table border=0 cellpadding=0 cellspacing=0 class="action_balloon">
+			<tr>
+				<td width="8"><img src="img/say01.jpg"></td>
+				<td></td>
+				<td width="8"><img src="img/say02.jpg"></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td class="action_body"><%= @login.userid %></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td class="action_body">
+				<textarea name="message" rows="5" class="action_textarea"></textarea><br>
+				<input type="submit" value="発言" class="submit">
+				<input id="spc_th" name="think" value="on" type="checkbox"><label for="spc_th">独り言</label>
+				<input id="spc_lo" name="loud" value="on" type="checkbox"><label for="spc_lo">大声</label>
+<% if (SMALL_VOICE) %>
+				<input id="spc_sm" name="small_voice" value="on" type="checkbox"><label for="spc_sm"><%= SMALL_VOICE %></label>
+<% end %>
+				</td>
+				<td></td>
+			</tr>
+			<tr>
+				<td><img src="img/say03.jpg"></td>
+				<td></td>
+				<td><img src="img/say04.jpg"></td>
+			</tr>
+			</table>
+		</td>
+	</tr>
+</table>
+</form>

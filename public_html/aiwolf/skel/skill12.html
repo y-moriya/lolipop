@@ -1,0 +1,59 @@
+<% if (@vil.can_cupid(@vil.date + 1)) %>
+<tr><td></td><td><br></td><td></td></tr>
+<form action="index.cgi" method="post">
+<input type="hidden" name="vid" value="<%= @vid %>">
+<input type="hidden" name="set_date" value="<%= @vil.date %>">
+<input type="hidden" name="cmd" value="skill">
+<tr>
+	<td></td>
+	<td class="action_body">
+愛の矢を撃つ：<br>
+	<select name="target_id">
+<%=
+s = ''
+if (@player.target == -1)
+	s += "<option value = -1>未設定 *"
+else
+	s += "<option value = -1>キャンセル"
+end
+s += "\n"
+@vil.pids.each do |p|
+	i = p.num_id
+	if (@player.target == i)
+		s += %Q(<option value = "#{i}" selected>#{p.name} *)
+	else
+		s += %Q(<option value = "#{i}">#{p.name})
+	end
+	s += "\n"
+end 
+s 
+%>
+	</select>
+と
+	<select name="target_id2">
+<%=
+s = ''
+if (@player.target2 == -1)
+	s += "<option value = -1>未設定 *"
+else
+	s += "<option value = -1>キャンセル"
+end
+s += "\n"
+@vil.pids.each do |p|
+	i = p.num_id
+	if (@player.target2 == i)
+		s += %Q(<option value = "#{i}" selected>#{p.name} *)
+	else
+		s += %Q(<option value = "#{i}">#{p.name})
+	end
+	s += "\n"
+end 
+s 
+%>
+	</select>
+	<br><input type="submit" value="変更" class="submit">
+	</td>
+	<td></td>
+</tr>
+</form>
+<% end %>

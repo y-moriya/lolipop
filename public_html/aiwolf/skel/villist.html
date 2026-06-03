@@ -1,0 +1,129 @@
+<%
+completion = Array.new
+showdown = Array.new
+progress = Array.new
+preinitiation = Array.new
+page_list = Array.new
+vldb = PStore.new('db/vil.db')
+vldb.transaction do
+	break if (!vldb['recent_vid'])
+	recent_vid = vldb['recent_vid'].to_i
+	fid = 0
+	page = @cgi['page'].to_i
+
+	pages = recent_vid / 100
+	pages.downto(0) do |i|
+		page_list.push(%Q(<td>[<a href="?page=#{i}">#{pages-i}</a>]</td>))
+	end
+
+	page_vid = (pages+1)*100 - (page * 100)
+	page_vid = 100 if (page_vid < 100)
+	while (!File.exists?("db/vil#{fid}"))
+		fid = fid + 1
+	end
+
+	if @cgi['villist'] == 'all'
+		(recent_vid).downto(1) do |i|
+			vild = vldb["root#{i}"]
+			next if (!vild)
+			if (vild['state'] > 2)
+				if (File.exists?("db/vil#{(i - 1) / 100}/#{i}.db"))
+					completion.push(vil_list(vild))
+				end
+			elsif (vild['state'] == 2)
+				showdown.push(vil_list(vild))
+			elsif (vild['state'] == 1)
+				progress.push(vil_list(vild))
+			else
+				preinitiation.push(vil_list(vild))
+			end
+		end
+	else
+		(page_vid).downto(pages*100 - page*100 + 1) do |i|
+			vild = vldb["root#{i}"]
+			next if (!vild)
+			if (vild['state'] > 2)
+				if ((completion.size < 101) && File.exists?("db/vil#{(i - 1) / 100}/#{i}.db"))
+					completion.push(vil_list(vild))
+				end
+				if (i == pages*100- page*100 + 1)
+					completion.push(%Q(<tr><td colspan="10"><a href="?page=#{page+1}">次の100件を表示する。</a></td></tr>))
+				end
+			elsif (vild['state'] == 2)
+				showdown.push(vil_list(vild))
+			elsif (vild['state'] == 1)
+				progress.push(vil_list(vild))
+			else
+				preinitiation.push(vil_list(vild))
+			end
+		end
+	end
+end
+%>
+<table width="100%">
+<tr>
+	<td align="center">
+		<table class="main">
+		<tr>
+			<td class="center"><img src="img/ten_banner.jpg"></td>
+		</tr>
+		<tr>
+			<td class="caption">
+				<div class="credit">プライン Illustrated by namba　七彩 Illustrated by 七彩<br>アニマル Illustrated by silver25　悪夢(ame) Illustrated by amenohi<br>knight Illustrated by knight</div>
+				<br>天国ログ保管庫。<br>
+        <br><br>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<table class="menu">
+				<tr>
+					<td><div><a href="?cmd=doc">説明書など</a></div></td>
+					<td><div><a href="?cmd=conf">ユーザ設定</a></div></td>
+					<td><div><a href="http://record.gunjobiyori.com/userlist.html">ユーザ一覧</a></div></td>
+					<td><div><a href="http://record.gunjobiyori.com/">戦績ビューワ</a></div></td>
+				</tr>
+				</table>
+			</td>
+		</tr>
+		<tr>
+		<form action="index.cgi" method="post">
+			<td class="right">
+<% if (@login.login) %>
+		<input type="hidden" name="cmd" value="logout">
+			<a href="?cmd=user&uid=<%= CGI.escape(@login.userid) %>"><%= @login.userid %></a>
+		<input type="submit" value="ログアウト" class="submit">
+<% else %>
+		<input type="hidden" name="cmd" value="login">
+		ID: <input type="text" name="userid" class="pass">
+		PASS: <input type="password" name="pass" class="pass">
+		<input type="submit" value="ログイン" class="submit">
+<% end %>
+			</td>
+		</form>
+		</tr>
+		<tr>
+			<td>
+
+				<table><tr><%= page_list %></tr></table>
+				<table class="vil_index">
+				<tr><td colspan="10" class="vil_title">○ 募集中</td></tr>
+<%= preinitiation %>
+				<tr><td class="space"></td></tr>
+				<tr><td colspan="10" class="vil_title">○ 進行中</td></tr>
+<%= progress %>
+				<tr><td class="space"></td></tr>
+				<tr><td colspan="10" class="vil_title">○ 決着</td></tr>
+<%= showdown %>
+				<tr><td class="space"></td></tr>
+				<tr><td colspan="10" class="vil_title">○ 終了</td></tr>
+<%= completion %>
+				</table>
+			</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+</table>
+<br>
+<br>

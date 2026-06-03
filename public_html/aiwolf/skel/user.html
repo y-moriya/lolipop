@@ -1,0 +1,76 @@
+<table border=0 width="100%">
+<tr>
+	<td align="center">
+		<table class="main" border=0>
+		<tr>
+			<td align="left" valign="top">
+				<table class="vil_main">
+				<tr><td width="<%= LIST_WIDTH %>"><a href="index.cgi">トップページ</a></td><td></td></tr>
+				<tr>
+					<td></td>
+					<td>
+						<table>
+<%=
+	userid = ''
+	if (/cmd=user&uid=(.*)$/ =~ CGI.unescape(ENV['QUERY_STRING']))
+	 	userid = $1
+	end
+	s = ""
+	recorddb = PStore.new('db/record.db')
+	recorddb.transaction do
+		if (recorddb.root?(userid)  && userid != '')
+			s += "<tr><td><h2>#{userid}</h2></td></tr>"
+			s += "<tr><td>#{announce("プロフィール").sub(/<!--say-->/, '')}</td></tr>"
+			prodb = PStore.new('db/profile.db')
+			prodb.transaction do
+				if (prodb.root?(userid))
+					if (prodb[userid].key?('text') && prodb[userid]['text'] != '')
+						s += "<tr><td>#{prodb[userid]['text']}</td></tr>"
+					end
+				else
+					prodb[userid] = Hash.new
+				end
+			end
+			s += "<tr><td>#{announce("村の記録").sub(/<!--say-->/, '')}</td></tr>"
+			if (recorddb[userid].size != 0)
+				s += %Q(<tr><td><table class="vil_index">)
+				rec = recorddb[userid]
+				(rec.size - 1).downto(0) do |i|
+					v = rec[i]
+					kako = (File.exists?("db/vil#{(v['vid'] - 1) / 100}/#{v['vid']}.db")) ? "" : "http://www7.atpages.jp/buta/"
+					s += %Q(<tr><td><a class="vid" href="?vid=#{v['vid']}&amp;date=0">#{v['vid']}村</a></td><td><a href="#{kako}?vid=#{v['vid']}&amp;date=1&amp;log=all">#{v['sname']}</a></td><td>#{v['num']}人</td><td>#{Composition.compositions[v['composition']].name}</td><td>#{v['p_name']}</td></tr>)
+				end
+				s += "</table></td></tr>"
+				if (@login.login && @login.userid == userid)
+					s += "<tr><td>#{announce("プロフィール編集")}</td></tr>"
+					s += %Q(<form action="index.cgi" method="post"><input type="hidden" name="cmd" value="profile"><input type="hidden" name="userid" value="#{@login.userid}">)
+					s += %Q(<tr><td>)
+					s += %Q(<textarea name="pro_text" rows="7" class="action_textarea">)
+					prodb.transaction do
+						if (prodb.root?(userid) && prodb[userid].key?('pre'))
+							s += prodb[userid]['pre']
+						end
+					end
+					s += %Q(</textarea><input type="submit" value="編集" class="submit"></td></tr>)
+					s += "</form>"
+				end
+			else
+				s += "<tr><td>まだ戦績がありません。</td></tr>"
+			end
+		else
+			s += "<tr><td>登録されてないIDです。</td></tr>"
+		end
+	end
+	s
+%>
+						</table>
+					</td>
+				</tr>
+				<tr><td><a href="index.cgi">トップページ</a></td><td></td></tr>
+				</table>
+			</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+</table>

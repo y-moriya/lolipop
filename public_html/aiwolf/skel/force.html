@@ -1,0 +1,14 @@
+<% if (@vil.state == 0) %>
+<form action="index.cgi" method="post">
+<input type="hidden" name="cmd" value="upstart">
+<input type="hidden" name="vid" value="<%= @vil.vid %>">
+<input type="submit" value="村スタート">
+</form>
+<% end %>
+
+<br>
+<form action="index.cgi" method="post">
+<input type="hidden" name="cmd" value="super_commit">
+<input type="hidden" name="vid" value="<%= @vil.vid %>">
+<input type="submit" value="スーパーコミット">
+</form>

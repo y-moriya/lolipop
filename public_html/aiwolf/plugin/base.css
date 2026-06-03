@@ -1,0 +1,396 @@
+ * {
+    line-height: 140%;
+    font-size: 100%
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background: #000;
+    color: #ddd
+}.credit {
+    font-size: 120%
+}.large_doc {
+    font-size: 160%
+}
+
+a:visited, a:link {
+    color: #bcb
+}
+
+a:hover {
+    color: #fee
+}
+
+a:visited.vid, a:link.vid {
+    color: #ddd;
+    text-decoration: none
+}
+
+a:hover .vid {
+    text-decoration: underline
+} .love {
+    color: #f6b
+} .win_res {
+    color: #e00
+} .lose_res {
+    color: #00e
+} .announce {
+    width: 530;
+    border: 1px solid #445;
+    margin: 6px 0;
+    padding: 4px;
+    font-size: 90%
+} .alllog_announce {
+    width: 530;
+    border: 1px solid #554;
+    margin: 6px 0;
+    padding: 4px;
+    color: #994;
+    font-size: 90%
+} .time_announce {
+    width: 530;
+    border: 1px solid #644;
+    margin: 6px 0;
+    padding: 4px;
+    color: #c44;
+    font-size: 90%
+} .win {
+    padding: 4px;
+    color: #c44;
+    font-size: 130%
+} .whisper {
+    color: #b66
+} .relive {
+    color: #96b
+} .fortune {
+    color: #96b
+} .fortune_id {
+    color: #b99
+} .guard {
+    color: #5a5
+} .safety {
+    color: #ddd
+} .spirit {
+    color: #69b
+} .free {
+    color: #b96
+} .stigmata {
+    color: #8a2
+} .gammer {
+    color: #9a8
+} .cupid {
+    color: #b69
+} .possessed {
+    color: #5db
+} .human {
+    color: #2bb;
+    line-height: 110%
+} .wolf {
+    color: #c44;
+    line-height: 110%
+} .vote, .conf, .flash {
+    color: #aa6
+} .char_name {
+    font-size: 180%;
+    color: #bbb
+} .comp_vote {
+    color: #dd2;
+    font-weight: 700;
+    line-height: 110%
+}
+
+input.submit {
+    width: 100px;
+    border: 1px #aaa solid;
+    color: #ddd;
+    background-color: #444
+}
+
+input.pass {
+    width: 86px;
+    height: 24px;
+    font-size: 100%
+}
+
+select {
+    font-size: 90%;
+    width: 165px
+}
+
+select.edit {
+    width: 150px
+}
+
+select.postpos {
+    width: auto
+}.action_text {
+    width: 90%;
+    height: 23px
+}.monospace {
+    font-family: monospace
+}
+
+table.main {
+    width: 900px;
+    background: #000;
+    border: 1px
+}
+
+table.menu td div {
+    font-size: 90%;
+    width: 9em;
+    margin: 0 20px 4px 0;
+    padding: 2px;
+    border: 1px #666 solid;
+    color: #ccc;
+    text-align: center;
+    background-color: #444
+}
+
+table.vil_index {
+    font-size: 80%;
+    color: #bbb;
+    border-collapse: collapse
+}
+
+table.vil_index td {
+    white-space: nowrap;
+    border: 1px #444 solid;
+    padding: 4px
+}
+
+table.vil_index td.vil_title {
+    font-size: 130%;
+    padding: 2px 8px;
+    margin: 0;
+    color: #ccc;
+    background-color: #444
+}
+
+table.vil_index td.space {
+    border: 0;
+    height: 20px;
+    padding: 2px 4px
+}
+
+table.char, input, .caption {
+    font-size: 90%
+}
+
+table.list {
+    font-size: 80%;
+    border: 3px solid #444;
+    width: 170px;
+    margin: 20px 0 0
+}
+
+table.list td {
+    color: #bbb;
+    text-align: left;
+    line-height: 110%
+}
+
+table.list td a:visited, table.list td a:link {
+    color: #bbb;
+    line-height: 110%
+}
+
+table.list td a:hover {
+    color: #fff;
+    line-height: 110%
+}
+
+table.list th {
+    padding: 3px 6px;
+    border: 1px solid #555;
+    background-color: #444
+}
+
+img {
+    border: 0
+}
+
+sizuof {
+    width: 30;
+    heigt: 30
+}
+
+p {
+    text-indent: 1em;
+    margin: 12px 0 16px
+}
+
+h2 {
+    width: 530;
+    font-size: 130%;
+    padding: 2px 8px;
+    margin: 0;
+    border: #666 solid;
+    color: #ccc;
+    background-color: #444;
+    border-width: 1px 1px 1px 1px
+}.loud {
+    display: inline;
+    color: #911;
+    font-size: 120%;
+    font-weight: 700
+}
+
+table.message {
+    margin: 0 0 10px;
+    width: 530px;
+    border-collapse: collapse;
+    border-spacing: 0
+}.ajax {
+	position : absolute;
+    border-collapse: collapse;
+    border-spacing: 0
+}
+
+table.message td, table.vote_t td {
+    padding: 0
+}
+
+table.message td a:visited, table.message td a:link {
+    font-size: 80%;
+    text-decoration: none;
+    color: #bbb
+}
+
+table.message td a:hover {
+    color: #fff;
+    text-decoration: underline
+}
+
+table.message td.howl, table.message span.char_name {
+    font-size: 80%;
+    color: #bbb
+}
+
+table.message td a:visited.say, table.message td a:link.say, .popsay {
+    font-size: 100%;
+    color: #200;
+    text-decoration: underline
+}
+
+td span.cut a:visited.say, td span.cut a:link.say, .cut {
+    color: #cc9
+}.mes_say {
+    padding: 8px 0 0;
+    width: 16px;
+    background: url(../img/say00.jpg) no-repeat center
+}.mes_say_body0 {
+    padding: 8px 0 0;
+    background: #fff url(../img/say05.jpg) no-repeat top
+}.mes_say_body1 {
+    padding: 0 12px 8px;
+    background: #fff url(../img/say06.jpg) no-repeat bottom;
+    color: #000
+}.mes_whisper {
+    padding: 8px 0 0;
+    width: 16px;
+    background: url(../img/whisper00.jpg) no-repeat center
+}.mes_whisper_body0 {
+    padding: 8px 0 0;
+    background: #f77 url(../img/whisper05.jpg) no-repeat top
+}.mes_whisper_body1 {
+    padding: 0 12px 8px;
+    background: #f77 url(../img/whisper06.jpg) no-repeat bottom;
+    color: #000
+}.mes_groan {
+    padding: 8px 0 0;
+    width: 16px;
+    background: url(../img/groan00.jpg) no-repeat center
+}.mes_groan_body0 {
+    padding: 8px 0 0;
+    background: #9fb7cf url(../img/groan05.jpg) no-repeat top
+}.mes_groan_body1 {
+    padding: 0 12px 8px;
+    background: #9fb7cf url(../img/groan06.jpg) no-repeat bottom;
+    color: #000
+}.mes_think {
+    padding: 8px 0 0;
+    width: 16px;
+    background: url(../img/think00.jpg) no-repeat center
+}.mes_think_body0 {
+    padding: 8px 0 0;
+    background: #939393 url(../img/think05.jpg) no-repeat top
+}.mes_think_body1 {
+    padding: 0 12px 8px;
+    background: #939393 url(../img/think06.jpg) no-repeat bottom;
+    color: #000
+}.action_box {
+    border-collapse: collapse;
+    margin: 20px 0;
+    width: 530px
+}.action_body {
+    padding: 2px;
+    color: #000
+}.action_balloon {
+    width: 100%;
+    background: #fff
+}.action_textarea {
+    width: 100%;
+    font-size: 10pt;
+    line-height: 100%
+}.whisper_textarea {
+    width: 100%;
+    font-size: 10pt;
+    line-height: 100%;
+    background: #fcc
+}.groan_textarea {
+    width: 100%;
+    font-size: 10pt;
+    line-height: 100%;
+    background: #bde
+}
+
+span.today {
+    color: #888
+}.time {
+    font-size: 80%;
+    color: #888
+}.act_time {
+    font-size: 90%;
+    color: #888
+}.act_toggle {
+    font-size: 90%;
+    margin: 0 0 0 40px;
+    padding: 1px 4px;
+    border: 1px #aaa solid;
+    color: #ddd;
+    background-color: #444;
+    cursor: pointer
+}.right {
+    text-align: right
+}.left, table.vil_main {
+    text-align: left
+}.center {
+    text-align: center
+}.small_voice {
+    font-size: 9pt;
+    line-height: 100%
+}
+
+img.video_thumb_img {
+    width: 96px;
+    height: 72px;
+    border: solid 1px #333;
+    float: left;
+}
+
+div.video_thumb_res {
+    font-size: 10pt;
+}
+
+span.small {
+    font-size: 80%;
+}
+
+
+.close {
+	float: right;
+	cursor: pointer;
+	font-weight: bold;
+}

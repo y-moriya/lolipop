@@ -1,0 +1,73 @@
+<% if (@vil.night || !@vil.card) %>
+<% if (!@vil.card && !@vil.night) %>
+	<tr><td></td><td><br></td><td></td></tr>
+<% end %>
+<form action="index.cgi" method="post">
+<input type="hidden" name="vid" value="<%= @vid %>">
+<input type="hidden" name="set_date" value="<%= @vil.date %>">
+<input type="hidden" name="cmd" value="skill">
+<tr>
+	<td></td>
+	<td class="action_body">
+	襲う：
+	<select name="target_id">
+<%=
+s = ''
+if (@player.target == -1)
+	s += "<option value = -1>未設定 *"
+else
+	s += "<option value = -1>キャンセル"
+end
+s += "\n"
+if (@vil.attack_dummy(@vil.date + 1))
+	p = @vil.player_p(1)
+	if (@player.target == 1)
+		s += %Q(<option value = "#{1}" selected>#{p.name} *)
+	else
+		s += %Q(<option value = "#{1}">#{p.name})
+	end
+	s += "\n"	
+else
+	@vil.pids.each do |p|
+		next if (p == @player)
+		next if (p.sid == 1)
+		i = p.num_id
+		if (@player.target == i)
+			s += %Q(<option value = \"#{i}\" selected>#{p.name} *)
+		else
+			s += %Q(<option value = \"#{i}\">#{p.name})
+		end
+		s += "\n"
+	end 
+end
+s 
+%>
+</select>
+<input type="submit" value="変更" class="submit">
+	</td>
+	<td></td>
+</tr>
+</form>
+<% if (@conf.focus == 1 && @vil.night) %>
+	<form name="focus_form" action="index.cgi" method="post">
+<% else %>
+	<form action="index.cgi" method="post">
+<% end %>
+<tr>
+	<td></td>
+	<td class="action_body">
+	<input type="hidden" name="whisper" value="on">
+	<input type="hidden" name="j_data" value="日本語のデータ">
+	<textarea name="message" rows="5" class="whisper_textarea"></textarea><br>
+	<input type="hidden" name="cmd" value="msg">
+	<input type="hidden" name="whisper" value="on">
+	<input type="hidden" name="vid" value="<%= @vid %>">
+	<input type="hidden" name="pid" value="<%= @player.pid %>">
+	<input value="人狼のささやき" type="submit" class="submit">
+	<input id="wis_th" name="think" value="on" type="checkbox"><label for="wis_th">独り言</label>
+	<input id="wis_lo" name="loud" value="on" type="checkbox"><label for="wis_lo">大声</label>
+	</td>
+	<td></td>
+</tr>
+</form>
+<% end %>

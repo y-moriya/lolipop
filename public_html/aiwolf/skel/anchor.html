@@ -1,0 +1,18 @@
+<%=
+date = @cgi['date'].to_i
+num = @cgi['num']
+s = ''
+
+File.open("db/log#{(@vid - 1) / 100}/#{@vid}_#{date}.html") do |ifile|
+  reg = /(<table class="message"><tr><td width="50" rowspan="2"><img src="img\/[^\.]+.png"><\/td><td colspan="2"><a name="#{num}">.*)$/
+  ifile.each do |line|
+    if (reg =~ line)
+      s = '<div class="anchor">' + line + '</div>'
+      break
+    end
+  end
+end
+
+s
+
+%>

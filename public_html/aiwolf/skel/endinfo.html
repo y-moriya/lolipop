@@ -1,0 +1,105 @@
+<table>
+<tr><td>
+	<table>
+	<tr><td width="100">村の名前:</td><td><%= @name %></td></tr>
+	<tr><td>村作成者:</td><td><%= @userid %></td></tr>
+	<tr><td>キャラセット:</td><td><%= Charset.charsets[@char].name %></td></tr>	
+	</table>
+</td></tr>		
+<tr><td><br></td></tr>				
+<tr><td>
+<table>
+<tr>
+	<td width="130">昼の長さ: 
+	    <% if (@period % 60 == 0) %>
+	    	<%= @period / 60 %>時間
+	    <% else %>
+	    	<%= @period %>分
+	    <% end %>
+	</td>
+</tr>
+<tr>
+	<td>夜の長さ: 
+	    <%
+	    np = @night_period.to_i
+		if (np != 0)
+	    	if (np % 60 == 0)
+	    %>
+	    		<%= np / 60 %>時間
+	    	<% else %>
+	    		<%= np %>分
+	    	<% end %>
+			<% if (@life_period && @life_period != 0) %>
+				<td>生存者1人ごとに <%= @life_period %>秒追加</td>
+			<% end %>
+		<% else %>
+			夜無し
+		<% end %>
+	</td>
+</tr>
+</table>
+<tr><td>開始方法: <%= if (@upstart_time) then "#{@start_hour}時 #{@start_min}分に自動開始" else "手動開始" end %></td></tr>
+<tr><td>最低開始可能人数: <%= @entry_min %>人</td></tr>
+<tr><td>最大参加可能人数: <%= @entry_max %>人</td></tr>
+<tr><td><br></td></tr>
+<tr><td>
+<table>
+<tr>
+	<td  colspan="2">
+<%= 
+	s = 'ダミー'
+	if (@dummy)
+		s += 'あり' 
+	else 
+		s += 'なし'
+		s += (@first_guard) ? '（初日護衛可能）' : '（初日護衛不可能）'
+	end
+	s
+%>
+</td></tr>
+<tr>
+	<td width="180"><%= if (@card) then 'カード人狼形式' else 'ＢＢＳ形式' end %></td>
+	<td><%= if (@open_vote) then '記名投票' else '無記名投票' end %></td>
+</tr>
+<tr>
+	<td>役職希望<%= if (@hope_skill) then '有効' else '無効' end %></td>
+	<td>夜コミット<%= if (@night_commit) then '有り' else '無し' end %></td>
+</tr>
+<tr>
+	<td>ID公開<%= if (@open_id) then '有り' else '無し' end %></td>
+	<td>墓下公開<%= if (@open_skill) then '有り' else '無し' end %></td>
+</tr>
+<tr>
+	<td><%= if (@death_defeat) then '死んだら負け' else '普通に陣営が勝てばいいよ' end %></td>
+	<td></td>
+</tr>
+</table>
+</td></tr>
+<tr><td><br></td></tr>
+<tr><td>編成: <%= Composition.compositions[@composition].name %></td></tr>
+
+	<tr><td class="monospace"><%= display_skill %></td></tr>
+	<tr><td><table>
+	<%=
+		s = ""
+		for i in 0...(@skill_nums.size+1)/2
+			s += "<tr>"
+			sid = i*2
+			sk = Skill.skills[sid]
+			s += "<td>#{sk.name}: </td><td>#{@skill_nums[sid]}人</td>"
+			sid += 1
+			s += %Q(<td width="50"></td>)
+			if (sid == @skill_nums.size)
+			s += "<td></td><td></td>"
+			else
+			sk = Skill.skills[sid]
+			s += "<td>#{sk.name}: </td><td>#{@skill_nums[sid]}人</td>"
+			end
+			s += "</tr>"
+		end
+		s
+	%>
+	</table></tr></td>
+
+</table>
+

@@ -1,0 +1,85 @@
+<table border=0 width="100%">
+<tr>
+	<td align="center">
+		<table class="main" border=0>
+		<tr>
+			<td align="left" valign="top">
+				<table class="vil_main">
+				<tr><td width="<%= LIST_WIDTH %>"><a href="index.cgi">トップページ</a></td><td></td></tr>
+				<tr>
+					<td></td>
+					<td>
+						<table>
+						<tr><td><h2>編成投稿</h2></td></tr>
+						<tr><td class="caption">「村狼占霊狂狩共妖Ｃ信聖中Ｑ求邪風」などの文字を改行無しに入れれば、4〜22人の編成を投稿することができます。<br>
+												一度に複数の編成を投稿したい場合は改行をはさんでください。<br>
+												自分が投稿した編成は削除することができます。<br>
+												村人を1人も入れなかった場合、その編成はダミー無し専用になります。<br>
+												ワイドカスタムとだいたい同じです。</tr>
+						<tr>
+							<td>
+<% if (@login.login) %>
+							<form action="index.cgi" method="post">
+							<input type="hidden" name="cmd" value="pscomp">
+							<textarea name="comp_text" rows="7" class="action_textarea"></textarea>
+							<input type="submit" value="編成投稿" class="submit">
+							</form>
+<% else %>
+							投稿するにはログインしてください。
+<% end %>
+							</td>
+						</tr>
+						<tr><td><%= announce("投稿された編成一覧") %></td></tr>
+						<form action="index.cgi" method="post">
+						<input type="hidden" name="cmd" value="delcomp">
+						<tr>
+							<td>
+								<table class="vil_index">
+
+<%=
+	s = ''
+	che = false
+	po = Composition.compositions[POSTING]
+	pscompdb = PStore.new('db/pscomp.db')
+	pscompdb.transaction do
+		for n in  po.min..po.max do
+			next if (!pscompdb.root?(n))
+			psn = pscompdb[n]
+			next if (psn.size == 0)
+			s += %Q(<tr><td colspan="#{ if (@login.login && @login.userid == MASTER) then 3 else 2 end }" class="vil_title">#{n}人</td></tr>)
+			(psn.size - 1).downto(0) do |i|
+				s += "<tr>"
+				if (@login.userid == MASTER || @login.userid == psn[i]['userid'])
+					che = true if (!che)
+					s += %Q(<td width="20"><input type="checkbox" name="#{n}_#{i}" value="on"></td>)
+				else
+					s += %Q(<td width="20"></td>)
+				end
+				if (@login.userid == MASTER)
+					s += %Q(<td>#{psn[i]['userid']}</td>)
+				end
+				s += %Q(<td class="monospace">#{psn[i]['comp']}</td>)
+				s += "</tr>"
+			end
+		end
+	end
+	s
+%>
+								</table>
+							</td>
+						</tr>
+<% if (che) %>
+						<tr><td><br><input type="submit" value="編成を削除する" class="submit"></td></tr>
+<% end %>
+						</form>
+						</table>
+					</td>
+				</tr>
+				<tr><td width="<%= LIST_WIDTH %>"><a href="index.cgi">トップページ</a></td><td></td></tr>
+				</table>
+			</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+</table>

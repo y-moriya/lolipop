@@ -1,0 +1,452 @@
+<table width="100%">
+<tr>
+	<td align="center">
+		<table class="main" cellpadding=0 cellspacing=0>
+		<tr>
+			<td align="left" valign="top">
+				<table class="vil_main">
+				<tr><td width ="<%= LIST_WIDTH %>"><a href="index.cgi">トップページ</a></td><td></td></tr>
+				<tr>
+      				<td></td>
+      				<td>
+						<h2><%= @vid %>村 <%= @vil.name %></h2>
+						<p>
+<%=
+date =
+if (@cgi.key?('date'))
+	@cgi['date'].to_i
+else
+	@vil.date
+end
+
+all = (@cgi['log'] == 'all') ? true : false
+part = (@cgi['log'] == 'part') ? true : false
+anc = (@cgi['log'] == 'anc') ? true : false
+exids = @cgi['id']
+exidplus = ''
+exidhref = ''
+if exids != ''
+	exidplus = exids + ':'
+	exidhref = '&id='+exids
+	exid = exids.split(':')
+else
+	exid = []
+end
+type = @cgi['type']
+if type != ''
+	typehref = '&type='+type
+else
+	typehref = ''
+end
+date_all = ''
+for i in 0..@vil.date
+
+	datestr =
+	if (i == 0)
+		"情報"
+	else
+		"#{i}日目"
+	end
+	if (i == date)
+		date_all += %Q(<span class="today">#{datestr}</span> )
+	else
+		href = "?vid=#{@vid}&date=#{i}"
+		href += "&type=#{type}" if type != ""
+		href += "&id=#{exids}" if exids != ""
+		href += "&log=all" if all
+		date_all += %Q(<a href="#{href}">#{datestr}</a> )
+	end
+end
+date_all += %Q(<a href="?vid=#{@vid}#form">最新</a> |)
+sa = %Q( <a href="?vid=#{@vid}&type=say&date=#{date}#{exidhref}">人</a>)
+wh = %Q( <a href="?vid=#{@vid}&type=whisper&date=#{date}#{exidhref}">狼</a>)
+gr = %Q( <a href="?vid=#{@vid}&type=groan&date=#{date}#{exidhref}">墓</a>)
+th = %Q( <a href="?vid=#{@vid}&type=think&date=#{date}#{exidhref}">独</a>)
+if(type != '')
+	if (type == 'say')
+		sa = %Q( <span class="today">人</span>)
+	elsif (type == 'whisper')
+		wh = %Q( <span class="today">狼</span>)
+	elsif (type == 'groan')
+		gr = %Q( <span class="today">墓</span>)
+	elsif (type == 'think')
+		th = %Q( <span class="today">独</span>)
+	end
+end
+if (!all)
+	al = %Q( <a href="?vid=#{@vid}&date=#{date}&log=all">全</a>)
+else
+	al = %Q( <span class="today">全</span>)
+end
+date_all += sa + wh + gr + th + al
+date_all
+%>
+						</p>
+					<td>
+				</tr>
+				<tr>
+
+<% if (date == 0) %>
+					<td></td>
+					<td valign="top">
+
+<%=	erbres('skel/info.html') %>
+<% if ((@vil.userid == @login.userid || @login.userid == MASTER || @login.userid == ADMIN) && @vil.state == 0) %>
+	<%=	erbres('skel/edvil.html') %>
+<% end %>
+
+<% elsif anc %>
+					<td></td>
+					<td valign="top">
+<%=	erbres('skel/anchor.html') %>
+
+<% else %>
+<%
+	@conf = Conf.new(@login.userid)
+	if (@conf.up2down == 0)
+%>
+					<td valign="bottom">
+	<%	else %>
+					<td valign="top">
+	<%	end %>
+						<table class="list">
+						<tr>
+							<th colspan="2">
+								生存 <%= @vil.survivors.size %>人
+							</th>
+						</tr>
+<%=
+s = ''
+@player = @vil.player(@login)
+@vil.survivors.each do |p|
+	f_name = "#{Charset.charsets[@vil.char].file_name}_s#{two(p.pid)}"
+	s += %Q(<tr><td width="38" height="49"><img src="img/#{f_name}.png"></td>)
+	s += %Q(<td><a href="?vid=#{@vid}&date=#{date}&id=#{exidplus}#{p.num_id}#{typehref}" target="_blank">#{p.name}</a>)
+	if (@vil.state > 1 || @vil.open_id || (@vil.open_skill && @player && @player.dead != 0))
+		s += %Q(<br>ID: <a href="?cmd=user&uid=#{CGI.escape(p.userid)}">#{p.userid}</a>)
+	end
+	if (@vil.state < 2)
+		s += %Q(<br>&lt; #{p.say_cnt} &gt;)
+	end
+	if (@vil.state == 1 && p.say_remain)
+		s += %Q(#{p.say_remain}/#{@vil.sayfull})
+	end
+	if (@vil.tenko != -1 && p.tenko && p.tenko != -1)
+		s += %Q(<span class="comp_vote">点呼#{p.tenko}</span>)
+	end
+	if (@vil.state == 1)
+		if (!@vil.night && !@vil.card && @vil.date == 2 && p.commit == 0)
+			s += %Q(<br><span class="comp_vote">コミット済</span>)
+		else
+			if (p.vote != -1)
+				s += %Q(<span class="comp_vote">投票済</span>)
+			end
+		end
+	end
+	if (@vil.state > 1 || (@vil.open_skill && @player && @player.dead != 0))
+		s += %Q(<br>#{Skill.skills[p.sid].name})
+		if (p.lovers.size != 0)
+			s += %Q(<span class="cupid">(恋人)</span>)
+		end
+	elsif (@vil.state == 1)
+		if (@player)
+			if (@player.sid == 2)
+				if(p.fortune_t.key?(@player))
+					d = p.fortune_t[@player]
+					if (p.sid == 1)
+						s += %Q(<br><span class="wolf">#{d}日目：#{Skill.skills[1].name}</span>)
+					else
+						s += %Q(<br><span class="human">#{d}日目：人間</span>)
+					end
+				end
+			elsif (@player.sid == 11)
+				if (!@vil.open_id)
+					if (p.fortune_id_t.key?(@player))
+						s += "<br>ID: #{p.userid}"
+					end
+				end
+			elsif (@player.sid == 16)
+				if (p.guard_t.key?(@player))
+					s += %Q(<br><span class="guard">護衛終了</span>)
+				end
+			end
+		end
+	end
+	s += "</td></tr>"
+end
+s
+%>
+
+						<tr>
+							<th colspan="2">
+								犠牲 <%= @vil.victims.size %>人
+							</th>
+						</tr>
+<%=
+s = ''
+@vil.victims.each do |p|
+	f_name = "#{Charset.charsets[@vil.char].file_name}_s#{two(p.pid)}"
+	s += %Q(<tr><td width="38"  height="49"><img src="img/#{f_name}.png"></td>)
+	s += %Q(<td><a href="?vid=#{@vid}&date=#{date}&id=#{exidplus}#{p.num_id}#{typehref}" target="_blank">#{p.name}</a>)
+	if (@vil.state > 1 || @vil.open_id || (@vil.open_skill && @player && @player.dead != 0))
+		s += %Q(<br>ID: <a href="?cmd=user&uid=#{CGI.escape(p.userid)}">#{p.userid}</a>)
+	end
+
+	if (@vil.state > 1 || (@vil.open_skill && @player && @player.dead != 0))
+		s += %Q(<br>#{Skill.skills[p.sid].name})
+		if (p.lovers.size != 0)
+			s += %Q(<span class="cupid">(恋人)</span>)
+		end
+	elsif (@vil.state == 1 && @player)
+		if (@player.sid == 2)
+			if(p.fortune_t.key?(@player))
+				d = p.fortune_t[@player]
+				if (p.sid == 1)
+					s += %Q(<br><span class="wolf">#{d}日目：#{Skill.skills[1].name}</span>)
+				else
+					s += %Q(<br><span class="human">#{d}日目：人間</span>)
+				end
+			end
+		elsif (@player.sid == 11)
+			if (!@vil.open_id)
+				if (p.fortune_id_t.key?(@player))
+					s += "<br>ID: #{p.userid}"
+				end
+			end
+		end
+	end
+	s += "</td></tr>"
+end
+s
+%>
+						<tr>
+							<th colspan="2">
+								処刑 <%= @vil.executions.size %>人
+							</th>
+						</tr>
+<%=
+s = ''
+@vil.executions.each do |p|
+	f_name = "#{Charset.charsets[@vil.char].file_name}_s#{two(p.pid)}"
+	s += %Q(<tr><td width="38" height="49"><img src="img/#{f_name}.png"></td>)
+	s += %Q(<td><a href="?vid=#{@vid}&date=#{date}&id=#{exidplus}#{p.num_id}#{typehref}" target="_blank">#{p.name}</a>)
+	if (@vil.state > 1 || @vil.open_id || (@vil.open_skill && @player && @player.dead != 0))
+		s += %Q(<br>ID: <a href="?cmd=user&uid=#{CGI.escape(p.userid)}">#{p.userid}</a>)
+	end
+
+	if (@vil.state > 1 || (@vil.open_skill && @player && @player.dead != 0))
+		s += %Q(<br>#{Skill.skills[p.sid].name})
+		if (p.lovers.size != 0)
+			s += %Q(<span class="cupid">(恋人)</span>)
+		end
+	elsif (@vil.state == 1 && @player)
+		if (@player.sid == 2)
+			if(p.fortune_t.key?(@player))
+				d = p.fortune_t[@player]
+				if (p.sid == 1)
+					s += %Q(<br><span class="wolf">#{d}日目：#{Skill.skills[1].name}</span>)
+				else
+					s += %Q(<br><span class="human">#{d}日目：人間</span>)
+				end
+			end
+		elsif (@player.sid == 11)
+			if (!@vil.open_id)
+				if (p.fortune_id_t.key?(@player))
+					s += "<br>ID: #{p.userid}"
+				end
+			end
+		elsif (@player.sid == 3)
+			if (p.sid == 1)
+				s += %Q(<div class="wolf">#{Skill.skills[1].name}</div>)
+			else
+				s += %Q(<div class="human">人間</div>)
+			end
+		end
+	end
+	s += "</td></tr>"
+end
+s
+%>
+						</table>
+					</td>
+					<td valign="top">
+<%
+s_log = Array.new
+date = @vil.date if (date > @vil.date)
+File.open("db/log#{(@vid - 1) / 100}/#{@vid}_#{date}.html") do |ifile|
+	lines = ifile.readlines
+	(lines.size - 1).downto(0) do |i|
+		line = lines[i]
+		if (line =~ /^<!--([a-z]+)(\d*)-->/)
+			if (type != '')
+				if (type == 'whisper')
+					next if ($1 != 'whisper' && $1 != 'whisperhowl')
+				else
+					next if (type != $1)
+				end
+			end
+			if (exid.size > 0)
+				next if !(exid.index($2))
+				next if (@vil.state < 2 && $1 == 'whisperhowl' && (@player == nil || !@player.can_whisper))
+			end
+			if (@vil.state < 2)
+				if ($1 == 'think')
+					next if (@player == nil)
+					next if (@player.num_id != $2.to_i)
+				elsif ($1 == 'whisperhowl')
+					next if(@vil.state == 0)
+					if (@player == nil || (!@player.can_whisper && (!@vil.open_skill || @player.dead == 0)))
+						line = howl_wolf(Charset.charsets[@vil.char].howl_filename)
+					end
+				elsif ($1 == 'whisper')
+					next if(@vil.state == 0)
+					next if (@player == nil)
+					next if (!@player.can_whisper && (!@vil.open_skill || @player.dead == 0))
+				elsif ($1 == 'groan')
+					next if(@vil.state == 0)
+					next if (@player == nil)
+					next if (@player.dead == 0)
+				elsif ($1 == 'sprit')
+					next if(@vil.state == 0)
+					next if (@player == nil)
+					next if (@player.sid != 3)
+				elsif ($1 == 'fanatic')
+					next if(@vil.state == 0)
+					next if (@player == nil)
+					next if (!@player.can_whisper && @player.sid != 9)
+				end
+			end
+		end
+		line.gsub!(/^<!--([a-z]+)(\d*)-->/, '')
+		s_log.push(line)
+		if (exid == 0 && !all && type == '')
+			if(s_log.size > 39 && !part)
+				s = %Q(省略されています。<a href="?vid=#{@vid}&date=#{date}&log=all">すべて表示する。</a>)
+				if(@vil.state == 2 && date == @vil.date && lines.size > 300)
+					s += %Q(　<a href="?vid=#{@vid}&date=#{date}&log=part">最新300を表示する</a>)
+				end
+				s_log.push(alllog_announce(s))
+				break
+			elsif(s_log.size > 299 && part && @vil.state == 2)
+				s = %Q(省略されています。<a href="?vid=#{@vid}&date=#{date}&log=all">すべて表示する。</a>)
+				s += %Q(　<a href="?vid=#{@vid}&date=#{date}">最新40を表示する</a>)
+				s_log.push(alllog_announce(s))
+				break
+			end
+		end
+	end
+end
+if (@conf.up2down == 0)
+	s_log.reverse!
+end
+%>
+
+<%
+s_time = ''
+if (@vil.date == date && @vil.update_time && @vil.state == 1)
+	if (@vil.period < LONG)
+		t = Time.at(@vil.update_time) - Time.now
+		if (t > 0)
+			dt = Time.at(t)
+			hour = dt.to_i / 3600
+			s_ti = %Q(<span id="resttime">#{hour}時間 #{dt.min}分 #{dt.sec}秒</span>)
+			if (@vil.night_commit && @vil.night)
+				s_ti += "後、または能力者全員が行動を決定すれば更新されます。"
+			else
+				s_ti += "後に更新されます。"
+			end
+			s_time += time_announce(s_ti)
+			s_time += SHOW_UPDATE_SCRIPT
+		else
+			s_time += time_announce(%Q(更新時間をすでに過ぎています。))
+		end
+	else
+		ts = Time.at(@vil.update_time)
+		s_time += time_announce("この村は、#{ts.mon}月 #{ts.day}日 #{ts.hour}時 #{ts.min}分に更新されます。")
+	end
+elsif (@vil.upstart_time && @vil.state == 0)
+	ts = Time.at(@vil.upstart_time)
+	str = "この村は、#{ts.mon}月 #{ts.day}日 #{ts.hour}時 #{ts.min}分に #{@vil.entry_min}人以上いれば開始されます。"
+	str += "ただし人数に応じた編成が無い場合は開始されません。" if (@vil.composition == WIDE_CUSTOM)
+	s_time += time_announce(str)
+elsif (@vil.date == date && @vil.update_time && @vil.state == 2)
+	ts = Time.at(@vil.update_time)
+	s_time += time_announce("この村は、#{ts.mon}月 #{ts.day}日 #{ts.hour}時 #{ts.min}分に終了します。")
+end
+%>
+<% if (@conf.up2down == 0) %>
+<%= s_log %>
+<%= s_time %>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+<% end %>
+
+<% if(@login.login && @vil.date == date) %>
+	<a name="form"></a>
+	<% if (@vil.state < 3) %>
+		<% if(!@player) %>
+			<% if (@vil.state == 0) %>
+				<%= erbres('skel/entry.html') %>
+			<% end %>
+		<% else %>
+			<%= erbres('skel/msg.html') %>
+		<% end %>
+
+		<% if (!@player || ((@vil.state != 1) && !(@player && @conf.win_id == 1))) %>
+			<%= erbres('skel/spectator.html') %>
+		<% end %>
+	<% end %>
+
+	<% if ((@vil.userid == @login.userid || @login.userid == MASTER || @login.userid == ADMIN) && @vil.state == 0) %>
+			<div align="right">
+				<form action="index.cgi" method="post">
+				<input type="hidden" name="cmd" value="tenko">
+				<input type="hidden" name="vid" value="<%= @vid %>">
+				<select name="tenko_value">
+				<%=
+				s = ''
+				if (@vil.tenko == -1)
+					s += "<option value = -1>点呼をしない *"
+					s += "\n"
+					s += "<option value = 0>点呼開始"
+				else
+					s += "<option value = 0>再点呼開始"
+					s += "\n"
+					s += "<option value = -1>点呼をやめる"
+				end
+				s += "\n"
+				s
+				%>
+				</select>
+				<input type="submit" value="発言確認" class="submit">
+			</div>
+		</form>
+	<% end %>
+
+	<% if (DEBUG) %>
+		<%= erbres('skel/force.html') %>
+	<% end %>
+<% end %>
+
+<% if (@conf.up2down == 1) %>
+<%= s_time %>
+<%= s_log %>
+<% end %>
+					</td>
+				</tr>
+<% end %>
+				<tr>
+					<td></td>
+					<td><p><%= date_all %></p></td>
+				</tr>
+				<tr><td><a href="index.cgi">トップページ</a></td><td></td></tr>
+				</table>
+			</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+</table>
