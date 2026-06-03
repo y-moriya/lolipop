@@ -436,7 +436,7 @@ class Vil
 				return false if (psco.size == 0)
 				r = psco[rand(psco.size).to_i]
 				for i in 0...Skill.skills.size do
-					n = r['comp'].jcount(Skill.skills[i].sname)
+					n = r['comp'].count(Skill.skills[i].sname)
 					a.push(n)
 				end
 				@skill_nums = a
@@ -446,7 +446,7 @@ class Vil
 			return false if(num_p < comp.min || num_p > comp.max)
 			return false if(!@wide_comps[num_p])
 			for i in 0...Skill.skills.size do
-				n = @wide_comps[num_p].jcount(Skill.skills[i].sname)
+				n = @wide_comps[num_p].count(Skill.skills[i].sname)
 				a.push(n)
 			end
 			@skill_nums = a
@@ -458,7 +458,7 @@ class Vil
 		else
 			return false if(num_p < comp.min || num_p > comp.max)
 			for i in 0...Skill.skills.size do
-				n = comp.list[num_p].jcount(Skill.skills[i].sname)
+				n = comp.list[num_p].count(Skill.skills[i].sname)
 				a.push(n)
 			end
 			@skill_nums = a
@@ -484,7 +484,7 @@ class Vil
   def set_random(comp, num_p)
     a = Array.new(Skill.skills.size, 0)
     for i in 0...Skill.skills.size do
-      n = comp.list.jcount(Skill.skills[i].sname)
+      n = comp.list.count(Skill.skills[i].sname)
       a[i] += n
       num_p -= n
     end
@@ -1032,7 +1032,7 @@ class Vil
 			end
 
 			picked = votes.select { |k, v| v == max }
-			result = picked[rand(picked.size).to_i][0]
+			result = picked.to_a[rand(picked.size).to_i][0]
 			addlog(str)
 			if (result.dead == 0)
 				result.dead = 3

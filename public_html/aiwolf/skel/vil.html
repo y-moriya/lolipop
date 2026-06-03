@@ -375,7 +375,7 @@ elsif (@vil.date == date && @vil.update_time && @vil.state == 2)
 end
 %>
 <% if (@conf.up2down == 0) %>
-<%= s_log %>
+<%= s_log.join %>
 <%= s_time %>
 					</td>
 				</tr>
@@ -433,7 +433,7 @@ end
 
 <% if (@conf.up2down == 1) %>
 <%= s_time %>
-<%= s_log %>
+<%= s_log.join %>
 <% end %>
 					</td>
 				</tr>

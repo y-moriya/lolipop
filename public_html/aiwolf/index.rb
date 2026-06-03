@@ -159,7 +159,7 @@ class CWolf
 		return if (!@login.login)
 		return if (!msg || msg == '')
 		j_data = @cgi['j_data']
-		j_code = NKF.guess1(j_data)
+		j_code = NKF.guess(j_data)
 		opt =
 			if (j_code == NKF::JIS)
 				'-xeJ'
@@ -508,7 +508,7 @@ class CWolf
 				a = Array.new
 				sum = 0
 				for j in 0...Skill.skills.size do
-					n = vals[i].jcount(Skill.skills[j].sname)
+					n = vals[i].count(Skill.skills[j].sname)
 					a.push(n)
 					sum += n
 				end
@@ -620,7 +620,7 @@ class CWolf
 		return false if (@cgi['think'] == 'on' || @cgi['groan'] == 'on')
 		return false if (!msg || msg == '')
 		j_data = @cgi['j_data']
-		j_code = NKF.guess1(j_data)
+		j_code = NKF.guess(j_data)
 		opt =
 			if (j_code == NKF::JIS)
 				'-xeJ'
@@ -694,7 +694,7 @@ class CWolf
 		c_msg = msg.gsub(/[\r\n]/, '')
 		return if (!c_msg || c_msg == '')
 		j_data = @cgi['j_data']
-		j_code = NKF.guess1(j_data)
+		j_code = NKF.guess(j_data)
 		opt =
 			if (j_code == NKF::JIS)
 				'-xeJ'
@@ -857,7 +857,7 @@ class CWolf
 				a = Array.new
 				sum = 0
 				for j in 0...Skill.skills.size do
-					n = vals[i].jcount(Skill.skills[j].sname)
+					n = vals[i].count(Skill.skills[j].sname)
 					a.push(n)
 					sum += n
 				end
@@ -1098,7 +1098,7 @@ class CWolf
 					a = Array.new
 					sum = 0
 					for j in 0...Skill.skills.size do
-						n = vals[i].jcount(Skill.skills[j].sname)
+						n = vals[i].count(Skill.skills[j].sname)
 						a.push(n)
 						sum += n
 					end
