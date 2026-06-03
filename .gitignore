@@ -3,3 +3,7 @@
 
 # DevContainer logs or temporal files
 .devcontainer/*.log
+
+# Werewolf CGI runtime databases and logs
+public_html/aiwolf/db/*
+!public_html/aiwolf/db/.gitkeep
