@@ -19,7 +19,7 @@ VIL_NUM = 15
 
 class Pigeon
 	def initialize
-		@cgi = CGI.new()
+		@cgi = CGI.new(accept_charset: 'EUC-JP')
 		@vid = @cgi['vid'].to_i
 		if (@vid > 0 && File.exist?("db/vil#{(@vid - 1) / 100}"))
 			@vildb = PStore.new("db/vil#{(@vid - 1) / 100}/#{@vid}.db")
