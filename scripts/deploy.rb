@@ -53,6 +53,15 @@ def upload_directory(ftp, local_path, remote_path)
     local_entry_path = File.join(local_path, entry)
     remote_entry_path = File.join(remote_path, entry)
 
+    # Git関連ファイルはデプロイしない
+    next if entry == '.gitkeep' || entry == '.gitignore' || entry.start_with?('.git')
+
+    # aiwolf/db 配下のデータファイルおよびディレクトリはデプロイしない
+    # (ただし db ディレクトリ自体は ftp.mkdir でリモートに作成されます)
+    if local_path.end_with?('aiwolf/db')
+      next
+    end
+
     if File.directory?(local_entry_path)
       upload_directory(ftp, local_entry_path, remote_entry_path)
     else
