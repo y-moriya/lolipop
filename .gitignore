@@ -1,0 +1,5 @@
+# Local configuration / Credentials
+.env
+
+# DevContainer logs or temporal files
+.devcontainer/*.log

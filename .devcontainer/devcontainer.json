@@ -1,0 +1,19 @@
+{
+  "name": "Lolipop Ruby 3.4 CGI DevContainer",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "web",
+  "workspaceFolder": "/workspace",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      },
+      "extensions": [
+        "rebornix.Ruby",
+        "castwide.solargraph",
+        "misogi.ruby-rubocop"
+      ]
+    }
+  },
+  "remoteUser": "root"
+}

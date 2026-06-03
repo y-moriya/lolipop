@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      # プロジェクトルートディレクトリをコンテナ内の固定パス /workspace にマウント
+      - ..:/workspace
+    ports:
+      # Windows側（ホスト側）から8063でアクセスできるように設定
+      - "8063:80"
+    # コンテナを起動したままにするための設定
+    tty: true
+    restart: unless-stopped
