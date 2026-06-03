@@ -14,6 +14,9 @@ RUN a2enmod cgi
 # これにより、パーミッション700のCGIスクリプトを実行可能にする
 RUN usermod -u 1000 www-data && groupmod -g 1000 www-data
 
+# Apacheの実行ディレクトリやログディレクトリの所有権を更新
+RUN chown -R www-data:www-data /var/run/apache2 /var/lock/apache2 /var/log/apache2 /var/lib/apache2
+
 # ロリポップのRubyパス /usr/local/bin/ruby3.4 に対応するためのシンボリックリンクを作成
 RUN ln -s /usr/local/bin/ruby /usr/local/bin/ruby3.4
 
