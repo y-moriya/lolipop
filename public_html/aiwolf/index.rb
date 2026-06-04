@@ -152,12 +152,27 @@ class CWolf
 
 	def handle_entry
 		pid = @cgi['pid'].to_i
-    pass = @cgi['pass']
+		pass = @cgi['pass']
 		msg = @cgi['message']
 		skill = @cgi['skill'].to_i
 
-		return if (!@login.login)
-		return if (!msg || msg == '')
+		debug_info = []
+		debug_info << "User: #{@login.userid.inspect}"
+		debug_info << "Login status: #{@login.login}"
+		debug_info << "Msg: #{msg.inspect}"
+		debug_info << "Pass: #{pass.inspect}"
+
+		if (!@login.login || !msg || msg == '')
+			debug_info << "Aborted early: login_ok=#{@login.login}, msg_ok=#{!!(msg && msg != '')}"
+			begin
+				File.open('db/entry_debug.log', 'a') do |f|
+					f.puts "[#{Time.now}] #{debug_info.join(' | ')}"
+				end
+			rescue
+			end
+			return
+		end
+
 		j_data = @cgi['j_data']
 		j_code = NKF.guess(j_data)
 		opt =
@@ -187,10 +202,24 @@ class CWolf
 		@vildb.transaction do
 			vil = get_vil(@vid)
 
-			return if (vil.players.key?(@login.userid))
-			return if (vil.state != 0)
-			return if (vil.players.size >= vil.entry_max)
-      return if (vil.pass != pass)
+			debug_info << "Vil exist: #{!!vil}"
+			if vil
+				debug_info << "Vil pass: #{vil.pass.inspect}"
+				debug_info << "Vil state: #{vil.state}"
+				debug_info << "Vil players: #{vil.players.size}/#{vil.entry_max}"
+				debug_info << "Already in: #{vil.players.key?(@login.userid)}"
+			end
+
+			if (!vil || vil.players.key?(@login.userid) || vil.state != 0 || vil.players.size >= vil.entry_max || vil.pass != pass)
+				debug_info << "Aborted in transaction"
+				begin
+					File.open('db/entry_debug.log', 'a') do |f|
+						f.puts "[#{Time.now}] #{debug_info.join(' | ')}"
+					end
+				rescue
+				end
+				return
+			end
 
 			ps = vil.players.values.select {|p| p.pid == pid}
 
