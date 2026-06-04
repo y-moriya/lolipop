@@ -18,7 +18,7 @@ class Login
 		cookie = cgi.cookies['login']
 		@login = false
 
-		if (cookie.size == 1)
+		if (cookie && cookie.size == 1)
 			vals = cookie[0].split(/,/)
       		@userid = vals[0]
 			@pass = vals[1]

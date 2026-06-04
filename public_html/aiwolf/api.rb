@@ -2,6 +2,7 @@
 require 'cgi'
 require 'json'
 require 'pstore'
+require 'time'
 require 'util'
 require 'login'
 require 'player'
@@ -26,6 +27,8 @@ class Api
       handle_players
     when 'log'
       handle_log
+    when 'events'
+      handle_events
     when 'vil', 'info'
       handle_vil
     else
@@ -126,6 +129,21 @@ class Api
   # 1. 村一覧を JSON で取得
   def handle_vils
     vils = []
+    
+    # フィルタ条件の抽出
+    state_filter = @cgi['state'] || @cgi['status']
+    filter_type = nil
+    if state_filter && !state_filter.empty?
+      case state_filter.downcase
+      when '0', '募集中', 'recruiting'
+        filter_type = :recruiting
+      when '1', '進行中', 'playing', 'active'
+        filter_type = :playing
+      when '2', '3', '決着', 'finished', 'ended', 'done', 'over'
+        filter_type = :finished
+      end
+    end
+
     vldb = PStore.new('db/vil.db')
     vldb.transaction(true) do
       if vldb.root?('recent_vid')
@@ -133,6 +151,18 @@ class Api
         1.upto(recent_vid) do |i|
           next unless vldb.root?("root#{i}")
           vild = vldb["root#{i}"]
+          
+          state_val = vild['state'].to_i
+          if filter_type
+            case filter_type
+            when :recruiting
+              next if state_val != 0
+            when :playing
+              next if state_val != 1
+            when :finished
+              next if state_val < 2
+            end
+          end
           
           # 各村の進行状況（現在の日付や生存人数など）を詳細DBから取得
           detail_data = {}
@@ -198,9 +228,10 @@ class Api
         # ゲーム終了している場合は全員の役職を開示
         game_over = vil.state >= 2
         
+        current_player = @login.login ? vil.player(@login) : nil
         vil.players.each do |userid, player|
           role_name = nil
-          if game_over
+          if game_over || (current_player && current_player.num_id == player.num_id)
             role_name = Skill.skills[player.sid].name
           end
 
@@ -233,6 +264,15 @@ class Api
 
     date_param = @cgi['date']
     log_dir = "db/log#{(@vid - 1) / 100}"
+
+    since_time = nil
+    since_param = @cgi['since'] || @cgi['time']
+    if since_param && !since_param.empty?
+      begin
+        since_time = Time.parse(since_param)
+      rescue
+      end
+    end
     
     if !File.exist?(log_dir)
       print "Content-Type: text/plain; charset=UTF-8\nStatus: 404 Not Found\n\n"
@@ -284,6 +324,7 @@ class Api
 
     print "Content-Type: text/plain; charset=UTF-8\n\n"
 
+    last_msg_time = nil
     log_files.each do |day, path|
       print "=== #{day}日目 ===\n"
       File.open(path, "r:utf-8") do |f|
@@ -308,6 +349,17 @@ class Api
                 if current_player.nil? || (!current_player.can_whisper && (!open_skill || current_player.dead == 0))
                   # タイムスタンプの抽出を試みる
                   time_str = line =~ /<span class="time">(.*?)<\/span>/ ? $1 : ""
+                  msg_time = nil
+                  begin
+                    msg_time = Time.parse(time_str)
+                  rescue
+                  end
+                  if msg_time
+                    last_msg_time = msg_time
+                    if since_time && msg_time < since_time
+                      next
+                    end
+                  end
                   print "[#{time_str}] [システム] 狼の遠吠え: わおーん\n"
                   next
                 end
@@ -319,7 +371,7 @@ class Api
                 next if vil_state == 0
                 next if current_player.nil?
                 next if current_player.dead == 0
-              when 'sprit' # 霊能者の霊界メッセージ (pigeon.rbでは 'sprit')
+              when 'sprit' # 霊能者の霊界メッセージ
                 next if vil_state == 0
                 next if current_player.nil?
                 next if current_player.sid != 3
@@ -350,11 +402,26 @@ class Api
                          else ''
                          end
 
+            msg_time = nil
+            begin
+              msg_time = Time.parse(time_str)
+            rescue
+            end
+            if msg_time
+              last_msg_time = msg_time
+              if since_time && msg_time < since_time
+                next
+              end
+            end
+
             print "[#{time_str}] #{speaker}#{type_label}: #{text_content}\n"
 
           # 1b. 狼の遠吠え (直接書き出されている場合)
           elsif line =~ /<table class="message">.*?<td colspan="2" class="howl">狼の遠吠え<\/td>.*?<div class="mes_whisper_body1">(.*?)<\/div>.*?<\/table>/
             content = $1
+            if since_time && last_msg_time && last_msg_time < since_time
+              next
+            end
             print "[システム] 狼の遠吠え: #{content}\n"
 
           # 2. アナウンス（システムメッセージ）
@@ -362,6 +429,10 @@ class Api
             content_html = $1
             text_content = content_html.gsub(/<br\s*\/?>/i, "\n").gsub(/<[^>]+>/, '')
             text_content = text_content.gsub(/&lt;/, '<').gsub(/&gt;/, '>').gsub(/&amp;/, '&').gsub(/&quot;/, '"')
+            
+            if since_time && last_msg_time && last_msg_time < since_time
+              next
+            end
             print "[システム]: #{text_content}\n"
           end
 
@@ -369,12 +440,113 @@ class Api
           if line =~ /<(?:div|span) class="(?:time_announce|alllog_announce)">(.*?)<\/(?:div|span)>/
             content_html = $1
             text_content = content_html.gsub(/<[^>]+>/, '').strip
+
+            if since_time && last_msg_time && last_msg_time < since_time
+              next
+            end
             print "[進行]: #{text_content}\n"
           end
         end
       end
       print "\n"
     end
+  end
+
+  # 5. ロングポーリングによるイベントストリーム取得
+  def handle_events
+    if @vid <= 0
+      print "Content-Type: application/json; charset=UTF-8\nStatus: 400 Bad Request\n\n"
+      print ({ error: "Invalid or missing vid parameter" }.to_json)
+      return
+    end
+
+    since_id = (@cgi['since'] || 0).to_i
+    db_path = "db/vil#{(@vid - 1) / 100}/#{@vid}.db"
+    
+    unless File.exist?(db_path)
+      print "Content-Type: application/json; charset=UTF-8\nStatus: 404 Not Found\n\n"
+      print ({ error: "Village not found" }.to_json)
+      return
+    end
+
+    # ロングポーリングループ（最大15秒、1秒スリープ）
+    max_wait = 15
+    start_time = Time.now
+    new_events = []
+    vil_state = 0
+    open_skill = false
+    current_player = nil
+
+    while (Time.now - start_time) < max_wait
+      begin
+        db = PStore.new(db_path)
+        db.transaction(true) do
+          vil = db['root']
+          if vil
+            vil_state = vil.state
+            open_skill = vil.open_skill
+            if @login.login
+              current_player = vil.player(@login)
+            end
+            
+            all_events = vil.events
+            new_events = all_events.select { |e| e[:id] > since_id }
+          end
+        end
+      rescue => e
+        # Ignore read errors and retry
+      end
+
+      break unless new_events.empty?
+      sleep 1.0
+    end
+
+    # 閲覧権限によるイベントフィルタリング
+    filtered_events = []
+    new_events.each do |e|
+      keep = true
+      masked_content = nil
+
+      if vil_state < 2
+        case e[:type_code]
+        when 'think'
+          if current_player.nil? || current_player.num_id != e[:speaker_id]
+            keep = false
+          end
+        when 'whisper', 'whisperhowl'
+          if current_player.nil? || (!current_player.can_whisper && (!open_skill || current_player.dead == 0))
+            if e[:type_code] == 'whisperhowl'
+              masked_content = "狼の遠吠え: わおーん"
+            else
+              keep = false
+            end
+          end
+        when 'groan'
+          if current_player.nil? || current_player.dead == 0
+            keep = false
+          end
+        when 'spirit'
+          if current_player.nil? || current_player.sid != 3
+            keep = false
+          end
+        when 'fanatic'
+          if current_player.nil? || (!current_player.can_whisper && current_player.sid != 9)
+            keep = false
+          end
+        end
+      end
+
+      if keep
+        event_copy = e.dup
+        if masked_content
+          event_copy[:content] = masked_content
+        end
+        filtered_events << event_copy
+      end
+    end
+
+    print "Content-Type: application/json; charset=UTF-8\n\n"
+    print filtered_events.to_json
   end
 end
 

@@ -1,0 +1,12 @@
+server:
+  url: "http://localhost:8063"
+  vid: 1
+
+user:
+  userid: "anman_ai"
+  password: "password123"
+
+llm:
+  api_key: "ollama"
+  base_url: "http://172.31.128.1:11434/v1"
+  model: "qwen2.5:latest"

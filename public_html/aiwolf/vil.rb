@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+require 'time'
 require 'login'
 require 'player'
 require 'util'
@@ -341,10 +342,111 @@ class Vil
 		%Q(<a class="say" href="?vid=#{@vid}&date=#{dt}&log=all##{t}#{nm}"#{pop}>#{m}</a>)
 	end
 
+	def events
+		@events ||= []
+	end
+
 	def addlog(msg)
 		File.open("db/log#{(@vid - 1) / 100}/#{@vid}_#{@date}.html", 'a') do |of|
 			of.flock(File::LOCK_EX)
 			of.print(msg)
+		end
+
+		begin
+			record_event(msg)
+		rescue => e
+			STDERR.puts "[addlog Error] #{e.class}: #{e.message}"
+			STDERR.puts e.backtrace.join("\n")
+		end
+	end
+
+	def record_event(msg)
+		@events ||= []
+		next_id = @events.empty? ? 1 : @events.last[:id] + 1
+		now_str = Time.now.strftime("%Y/%m/%d %H:%M:%S")
+
+		strip_html = lambda do |html|
+			return "" if html.nil?
+			text = html.gsub(/<br\s*\/?>/i, "\n").gsub(/<[^>]+>/, '')
+			text.gsub!(/&lt;/, '<')
+			text.gsub!(/&gt;/, '>')
+			text.gsub!(/&amp;/, '&')
+			text.gsub!(/&quot;/, '"')
+			text.strip
+		end
+
+		# 1. Normal chat messages, thinks, whispers, groans, etc.
+		if msg =~ /<!--(say|think|whisper|groan|fanatic|spirit|whisperhowl)(\d*)-->\s*<table class="message">.*?target="_blank">(.*?)<\/a>.*?<span class="time">(.*?)<\/span>.*?<div class="mes_(?:say|think|whisper|groan|fanatic|spirit|whisperhowl)_body1">(.*?)<\/div>.*?<\/table>/m
+			type_code = $1
+			speaker_id = $2.empty? ? nil : $2.to_i
+			speaker = $3
+			time_str = $4
+			content_html = $5
+
+			@events << {
+				id: next_id,
+				type: 'message',
+				type_code: type_code,
+				speaker_id: speaker_id,
+				speaker: speaker,
+				time: time_str,
+				content: strip_html.call(content_html),
+				day: @date
+			}
+			STDERR.puts "[record_event] Recorded message: #{strip_html.call(content_html)}"
+
+		# 1b. Masked howl
+		elsif msg =~ /<table class="message">.*?<td colspan="2" class="howl">狼の遠吠え<\/td>.*?<div class="mes_whisper_body1">(.*?)<\/div>.*?<\/table>/m
+			content_html = $1
+			@events << {
+				id: next_id,
+				type: 'message',
+				type_code: 'whisperhowl',
+				speaker_id: nil,
+				speaker: 'システム',
+				time: now_str,
+				content: "狼の遠吠え: " + strip_html.call(content_html),
+				day: @date
+			}
+			STDERR.puts "[record_event] Recorded howl: #{strip_html.call(content_html)}"
+
+		# 2. System announcements
+		elsif msg =~ /<!--(say|think|whisper|groan|fanatic|spirit|whisperhowl)?(\d*)-->\s*<div class="announce.*?">(.*?)<\/div>/m
+			tag_type = $1
+			target_id = $2.empty? ? nil : $2.to_i
+			content_html = $3
+			
+			event_type_code = if (tag_type.nil? || tag_type == 'say') && target_id.nil?
+				'announce'
+			else
+				tag_type || 'announce'
+			end
+
+			@events << {
+				id: next_id,
+				type: 'system',
+				type_code: event_type_code,
+				speaker_id: target_id,
+				time: now_str,
+				content: strip_html.call(content_html),
+				day: @date
+			}
+			STDERR.puts "[record_event] Recorded announce: #{strip_html.call(content_html)}"
+
+		# 3. Time advances or state changes
+		elsif msg =~ /<(?:div|span) class="(?:time_announce|alllog_announce)">(.*?)<\/(?:div|span)>/m
+			content_html = $1
+			@events << {
+				id: next_id,
+				type: 'state_change',
+				type_code: 'time',
+				time: now_str,
+				content: strip_html.call(content_html),
+				day: @date
+			}
+			STDERR.puts "[record_event] Recorded time change: #{strip_html.call(content_html)}"
+		else
+			STDERR.puts "[record_event] Unmatched message pattern: #{msg[0..60]}..."
 		end
 	end
 
@@ -1409,8 +1511,7 @@ class Vil
 				up_upreset_time
 				if (DEBUG)
 					@players.each_value do |p|
-						s = "#{p.name}の役職は#{Skill.skills[p.sid].name}です。"
-						addlog(announce(s))
+						STDERR.puts "[DEBUG_ROLE] #{p.name}の役職は#{Skill.skills[p.sid].name}です。"
 					end
 				end
 				return
@@ -1420,8 +1521,7 @@ class Vil
 			@wide_comps = nil
 			if (DEBUG)
 				@players.each_value do |p|
-					s = "#{p.name}の役職は#{Skill.skills[p.sid].name}です。"
-					addlog(announce(s))
+					STDERR.puts "[DEBUG_ROLE] #{p.name}の役職は#{Skill.skills[p.sid].name}です。"
 				end
 			end
 		end

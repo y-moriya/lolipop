@@ -1,0 +1,51 @@
+[
+  {
+    "vid": 1,
+    "role": "不明",
+    "result": "敗北 (Lost)",
+    "key_findings": [],
+    "timestamp": "2026/06/04 19:24:12"
+  },
+  {
+    "vid": 1,
+    "role": "村人",
+    "result": "敗北 (Lost)",
+    "key_findings": [],
+    "timestamp": "2026/06/04 19:25:21"
+  },
+  {
+    "vid": 1,
+    "role": "村人",
+    "result": "勝利 (Won)",
+    "key_findings": [],
+    "timestamp": "2026/06/04 19:25:59"
+  },
+  {
+    "vid": 1,
+    "role": "占い師",
+    "result": "敗北 (Lost)",
+    "key_findings": [],
+    "timestamp": "2026/06/04 19:29:07"
+  },
+  {
+    "vid": 1,
+    "role": "村人",
+    "result": "勝利 (Won)",
+    "key_findings": [],
+    "timestamp": "2026/06/04 19:29:43"
+  },
+  {
+    "vid": 1,
+    "role": "村人",
+    "result": "敗北 (Lost)",
+    "key_findings": [],
+    "timestamp": "2026/06/04 19:31:41"
+  },
+  {
+    "vid": 1,
+    "role": "占い師",
+    "result": "勝利 (Won)",
+    "key_findings": [],
+    "timestamp": "2026/06/04 19:34:19"
+  }
+]

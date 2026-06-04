@@ -5,6 +5,7 @@ require 'net/http'
 require 'uri'
 require 'pstore'
 require 'json'
+require 'time'
 
 # CGIのロードパスを設定し、クラス定義を読み込む
 CGI_DIR = File.expand_path('../public_html/aiwolf', __dir__)
@@ -348,6 +349,124 @@ if res.body.include?("人間のようです") || res.body.include?("人狼のよ
   errors += 1
 else
   puts "[OK] 他人の占い結果は村人には表示されていません。"
+end
+
+
+# ----------------------------------------------------
+# 検証 5: 村一覧のフィルタリング検証
+# ----------------------------------------------------
+puts "\n--- 検証 5: 村一覧のフィルタリング検証 ---"
+# 1. 進行中 (playing) の村一覧を取得 -> 今回作成した村 (vid) が含まれるはず
+res = villager_session.get_api('cmd' => 'vils', 'state' => 'playing')
+vils_json = JSON.parse(res.body)
+if vils_json.any? { |v| v['vid'] == vid }
+  puts "[OK] 進行中でフィルタした村一覧に、作成した村が含まれています。"
+else
+  puts "[ERROR] 進行中でフィルタした村一覧に、作成した村が含まれていません。"
+  errors += 1
+end
+
+# 2. 募集中 (recruiting) の村一覧を取得 -> 今回作成した村 (vid) は含まれないはず
+res = villager_session.get_api('cmd' => 'vils', 'state' => 'recruiting')
+vils_json = JSON.parse(res.body)
+if vils_json.any? { |v| v['vid'] == vid }
+  puts "[ERROR] 募集中でフィルタした村一覧に、進行中の村が含まれてしまっています。"
+  errors += 1
+else
+  puts "[OK] 募集中でフィルタした村一覧に、進行中の村は含まれていません。"
+end
+
+
+# ----------------------------------------------------
+# 検証 6: チャットログの時間指定フィルタリング検証
+# ----------------------------------------------------
+puts "\n--- 検証 6: チャットログの時間指定フィルタリング検証 ---"
+# 通常発言を投稿（時間指定前メッセージ）
+villager_session.send_msg!(vid, "時間指定テストメッセージ（前）")
+
+# 一度ログを取得して、投稿されたメッセージのタイムスタンプを取得し、それに1秒足した時刻をborder_timeとする
+res_pre = villager_session.get_api('cmd' => 'log', 'vid' => vid.to_s, 'date' => '3')
+time_match = res_pre.body.match(/\[(.*?)\] .*?: 時間指定テストメッセージ（前）/)
+if time_match
+  pre_time_str = time_match[1]
+  border_time = (Time.parse(pre_time_str) + 1).strftime("%Y/%m/%d %H:%M:%S")
+else
+  border_time = Time.now.strftime("%Y/%m/%d %H:%M:%S")
+end
+
+sleep 2.0
+
+# 二つ目のメッセージを投稿（時間指定後メッセージ）
+villager_session.send_msg!(vid, "時間指定テストメッセージ（後）")
+
+# 基準時刻以降のログを取得する
+res = villager_session.get_api('cmd' => 'log', 'vid' => vid.to_s, 'date' => '3', 'since' => border_time)
+
+if res.body.include?("時間指定テストメッセージ（後）") && !res.body.include?("時間指定テストメッセージ（前）")
+  puts "[OK] 時間指定フィルタが正しく動作し、指定時刻以降のログのみが返却されました。"
+else
+  puts "[ERROR] 時間指定フィルタが正しく動作していません。"
+  puts "  -> ログ内容:\n#{res.body}"
+  errors += 1
+end
+
+
+# ----------------------------------------------------
+# 検証 7: ロングポーリングによるリアルタイムイベント配信の検証
+# ----------------------------------------------------
+puts "\n--- 検証 7: ロングポーリングによるリアルタイムイベント配信の検証 ---"
+
+# 最新のイベントIDを把握するために一度 events を取得する
+res_init = villager_session.get_api('cmd' => 'events', 'vid' => vid.to_s, 'since' => '0')
+init_events = JSON.parse(res_init.body)
+latest_id = init_events.empty? ? 0 : init_events.last['id']
+
+# 7-1. 非同期ロングポーリング待機中のイベント検知
+poll_thread = Thread.new do
+  # 最新IDを指定してロングポーリングを開始（次のイベントを待つ）
+  villager_session.get_api('cmd' => 'events', 'vid' => vid.to_s, 'since' => latest_id.to_s)
+end
+
+# 少し待ってから、別セッション（人狼）で発言を投稿してイベントを発生させる
+sleep 0.5
+werewolf_session.send_msg!(vid, "イベントテスト用の通常発言")
+
+# スレッドの終了を待つ（ロングポーリングがイベントを検知して即時に返るはず）
+poll_res = poll_thread.value
+
+events_after = JSON.parse(poll_res.body)
+if events_after.any? { |e| e['content'] == "イベントテスト用の通常発言" }
+  puts "[OK] ロングポーリング待機中に投稿されたイベントをリアルタイムに検知しました。"
+else
+  puts "[ERROR] ロングポーリング待機中にイベントを検知できませんでした。"
+  puts "  -> 受信イベント: #{events_after.inspect}"
+  errors += 1
+end
+
+# 7-2. 権限フィルタリングの検証（人狼のささやき）
+latest_id = events_after.empty? ? latest_id : events_after.last['id']
+
+# 人狼がささやきを投稿
+werewolf_session.send_msg!(vid, "人狼用のささやきイベント", 'whisper' => 'on')
+
+# 村人がイベントを取得（ささやきは見えないはず）
+res_villager = villager_session.get_api('cmd' => 'events', 'vid' => vid.to_s, 'since' => latest_id.to_s)
+events_villager = JSON.parse(res_villager.body)
+
+# 人狼がイベントを取得（ささやきが見えるはず）
+res_wolf = werewolf_session.get_api('cmd' => 'events', 'vid' => vid.to_s, 'since' => latest_id.to_s)
+events_wolf = JSON.parse(res_wolf.body)
+
+has_whisper_villager = events_villager.any? { |e| e['type_code'] == 'whisper' }
+has_whisper_wolf = events_wolf.any? { |e| e['type_code'] == 'whisper' && e['content'] == "人狼用のささやきイベント" }
+
+if !has_whisper_villager && has_whisper_wolf
+  puts "[OK] イベント配信においても、人狼のささやきは適切に権限フィルタリングされています。"
+else
+  puts "[ERROR] イベントの権限フィルタリングに失敗しました。"
+  puts "  -> 村人の受信イベント: #{events_villager.inspect}"
+  puts "  -> 人狼の受信イベント: #{events_wolf.inspect}"
+  errors += 1
 end
 
 
