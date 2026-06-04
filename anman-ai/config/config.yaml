@@ -1,5 +1,5 @@
 server:
-  url: "http://localhost:8063"
+  url: "https://wolften.secret.jp"
   vid: 1
 
 user:
