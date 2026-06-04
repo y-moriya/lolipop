@@ -175,7 +175,7 @@ module AnmanAI
       greeting = generate_character_greeting(chosen_char_name)
       puts "[System] Generated entry greeting: \"#{greeting}\""
       
-      vil_pass = @config.dig('server', 'pass') || 'vilpass'
+      vil_pass = @config.dig('server', 'pass') || ''
       post(
         'cmd' => 'entry',
         'pid' => chosen_pid.to_s,

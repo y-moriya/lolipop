@@ -113,6 +113,7 @@ puts "\n--- 3. AIクライアントの起動 (監視・自動エントリー開�
 ai_client = AnmanAI::Client.new('anman-ai/config/config.yaml', 'anman-ai')
 # vid を nil に上書きして自動監視モードを強制する
 ai_client.instance_variable_set(:@vid, nil)
+ai_client.instance_variable_get(:@config)['server']['pass'] = 'vilpass'
 
 ai_thread = Thread.new do
   begin
