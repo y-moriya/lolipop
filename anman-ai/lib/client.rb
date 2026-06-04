@@ -59,7 +59,6 @@ module AnmanAI
           set_cookie_header = res['Set-Cookie']
           if set_cookie_header
             @cookie = set_cookie_header.split(';').first
-            @cookie = CGI.unescape(@cookie) if @cookie
           end
           puts "[System DEBUG] Logged in successfully to #{@url} as #{@userid}."
           puts "[System DEBUG] Set-Cookie header: #{set_cookie_header.inspect}"
