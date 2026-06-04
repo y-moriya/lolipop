@@ -3,7 +3,7 @@ server:
   vid: 1
 
 user:
-  userid: "anman_ai"
+  userid: "anman_bot"
   password: "password123"
 
 llm:

@@ -4,6 +4,7 @@ require 'uri'
 require 'json'
 require 'yaml'
 require 'thread'
+require 'cgi'
 require_relative 'game_state'
 require_relative 'llm_client'
 require_relative 'prompt_manager'
@@ -58,8 +59,11 @@ module AnmanAI
           set_cookie_header = res['Set-Cookie']
           if set_cookie_header
             @cookie = set_cookie_header.split(';').first
+            @cookie = CGI.unescape(@cookie) if @cookie
           end
-          puts "[System] Logged in successfully to #{@url} as #{@userid}."
+          puts "[System DEBUG] Logged in successfully to #{@url} as #{@userid}."
+          puts "[System DEBUG] Set-Cookie header: #{set_cookie_header.inspect}"
+          puts "[System DEBUG] Parsed @cookie: #{@cookie.inspect}"
           true
         else
           raise "Login failed: #{res.code} - #{res.body}"
@@ -77,9 +81,17 @@ module AnmanAI
       req.set_form_data(params.merge('vid' => @vid.to_s))
       
       begin
-        Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') { |http| http.request(req) }
+        res = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') { |http| http.request(req) }
+        if res
+          body_snippet = res.body ? res.body[0...300].gsub(/\s+/, ' ') : ''
+          puts "[System DEBUG] Post action #{params['cmd']} response: #{res.code} - #{body_snippet}..."
+        else
+          puts "[System DEBUG] Post action #{params['cmd']} response: nil"
+        end
+        res
       rescue => e
         puts "[System] Error posting action #{params['cmd']}: #{e.message}"
+        nil
       end
     end
     
