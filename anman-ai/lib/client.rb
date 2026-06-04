@@ -53,7 +53,7 @@ module AnmanAI
       req.set_form_data('cmd' => 'login', 'userid' => @userid, 'pass' => @password)
       
       begin
-        res = Net::HTTP.start(uri.host, uri.port) { |http| http.request(req) }
+        res = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') { |http| http.request(req) }
         if res.code == '200' || res.code == '302'
           set_cookie_header = res['Set-Cookie']
           if set_cookie_header
@@ -77,7 +77,7 @@ module AnmanAI
       req.set_form_data(params.merge('vid' => @vid.to_s))
       
       begin
-        Net::HTTP.start(uri.host, uri.port) { |http| http.request(req) }
+        Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') { |http| http.request(req) }
       rescue => e
         puts "[System] Error posting action #{params['cmd']}: #{e.message}"
       end
@@ -91,7 +91,7 @@ module AnmanAI
       req['Cookie'] = @cookie if @cookie
       
       begin
-        res = Net::HTTP.start(uri.host, uri.port) { |http| http.request(req) }
+        res = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') { |http| http.request(req) }
         res.body.force_encoding('UTF-8') if res && res.body
         res
       rescue => e
