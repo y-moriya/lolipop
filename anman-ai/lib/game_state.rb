@@ -49,8 +49,8 @@ module AnmanAI
       # システムメッセージから生死などを判別
       if e['type'] == 'system' && e['type_code'] == 'announce'
         content = e['content']
-        # 処刑： "XXX が処刑されました。"
-        if content =~ /^(.*?) が処刑されました。/
+        # 処刑： "投票の結果、XXX が処刑されました。"
+        if content =~ /^(?:投票の結果、)?(.*?) が処刑されました。/
           mark_as_dead($1)
         # 襲撃： "XXX が無残な姿で発見されました。"
         elsif content =~ /^(.*?) が無残な姿で発見されました。/
