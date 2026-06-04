@@ -1,13 +1,26 @@
+# -*- coding: utf-8 -*-
 require 'net/http'
 require 'uri'
 require 'json'
 require 'yaml'
+require 'thread'
 require_relative 'game_state'
 require_relative 'llm_client'
 require_relative 'prompt_manager'
 require_relative 'learning_system'
 
+# ロードパスに CGI 側のパスを追加して Charset を require できるようにする
+$LOAD_PATH.unshift(File.expand_path('../../public_html/aiwolf', __dir__))
+begin
+  require 'charset'
+rescue LoadError
+  # ロードできない場合はテスト環境外とみなす
+end
+
 module AnmanAI
+  STDOUT.sync = true
+  STDERR.sync = true
+
   class Client
     def initialize(config_path, root_dir)
       @root_dir = root_dir
@@ -27,6 +40,7 @@ module AnmanAI
       @acted_tonight = {}  # { day => bool }
       @whispered_tonight = {} # { day => bool }
       @last_say_time = Time.at(0)
+      @last_chat_logs_size = 0
     end
     
     # 接続・ログイン (Cookieの取得)
@@ -83,6 +97,113 @@ module AnmanAI
       end
     end
     
+    # 募集中の村を監視し、自動でエントリーする
+    def auto_entry_loop!
+      puts "[System] Scoping recruiting villages..."
+      loop do
+        begin
+          res = get_api('cmd' => 'vils', 'state' => 'recruiting')
+          if res && res.code == '200'
+            vils = JSON.parse(res.body)
+            # 募集中の村を探す
+            recruiting_vil = vils.find { |v| v['state'].to_i == 0 }
+            if recruiting_vil
+              @vid = recruiting_vil['vid'].to_i
+              puts "[System] Found recruiting village: #{@vid} (#{recruiting_vil['name']})"
+              
+              # 入村処理を実行
+              if entry_to_village!
+                puts "[System] Successfully entered village #{@vid}."
+                break
+              else
+                puts "[System] Failed to enter village. Retrying..."
+              end
+            end
+          end
+        rescue => e
+          puts "[System Error] Error in auto_entry_loop: #{e.message}"
+        end
+        sleep 5
+      end
+    end
+
+    # キャラクターを選択し、LLMによる自己紹介を添えて入村する
+    def entry_to_village!
+      # 1. 村の詳細情報を取得
+      res_vil = get_api('cmd' => 'vil')
+      return false unless res_vil && res_vil.code == '200'
+      vil_info = JSON.parse(res_vil.body)
+      char_set_id = vil_info['char'].to_i
+      
+      # 2. 現在の入村プレイヤーを取得
+      res_players = get_api('cmd' => 'players')
+      return false unless res_players && res_players.code == '200'
+      players_json = JSON.parse(res_players.body)
+      
+      # 既に自分がエントリー済みなら成功とみなす
+      if players_json.any? { |p| p['userid'] == @userid }
+        return true
+      end
+      
+      # 3. 空いているキャラクターID (pid) を選択する
+      charset = Charset.charsets[char_set_id] rescue nil
+      return false unless charset
+      
+      used_names = players_json.map { |p| p['name'] }
+      
+      available_pids = []
+      charset.char_names.each_with_index do |name, pid|
+        next if pid == 0 # 予約IDは避ける
+        unless used_names.include?(name)
+          available_pids << pid
+        end
+      end
+      
+      chosen_pid = available_pids.sample || rand(1...charset.char_names.size)
+      chosen_char_name = charset.char_names[chosen_pid]
+      
+      puts "[System] Chosen character: #{chosen_char_name} (ID: #{chosen_pid})"
+      
+      # 4. LLM を使って、キャラクターらしい挨拶メッセージを生成
+      greeting = generate_character_greeting(chosen_char_name)
+      puts "[System] Generated entry greeting: \"#{greeting}\""
+      
+      # 5. エントリーをポスト
+      vil_pass = @config.dig('server', 'pass') || 'vilpass'
+      post(
+        'cmd' => 'entry',
+        'pid' => chosen_pid.to_s,
+        'pass' => vil_pass,
+        'message' => greeting,
+        'j_data' => 'あ'
+      )
+      
+      # エントリー成功したか再確認
+      sleep 1.0
+      res_players = get_api('cmd' => 'players')
+      if res_players && res_players.code == '200'
+        players_json = JSON.parse(res_players.body)
+        return players_json.any? { |p| p['userid'] == @userid }
+      end
+      
+      false
+    end
+
+    def generate_character_greeting(char_name)
+      system_prompt = "あなたは人狼ゲームのキャラクター「#{char_name}」です。そのキャラクターになりきって、入村時の挨拶メッセージを1行で作成してください。挨拶以外のメタ発言や余計な解説、マークダウン記法（ダブルクォーテーションや```等）は一切含めてはいけません。"
+      user_prompt = "人狼ゲームの村の集会所に入りました。他のプレイヤーたちに、自己紹介を兼ねて挨拶してください。"
+      
+      begin
+        response = @llm.chat(system_prompt, user_prompt, temperature: 0.8)
+        response.gsub!(/^["'「]+/, "")
+        response.gsub!(/["'」]+$/, "")
+        response.strip
+      rescue => e
+        puts "[System Error] Failed to generate greeting: #{e.message}"
+        "よろしくお願いします。"
+      end
+    end
+    
     # ゲーム情報の初期化 (cmd=playersから役職やプレイヤー名のマッピング)
     def init_game_state!
       res_players = get_api('cmd' => 'players')
@@ -100,53 +221,117 @@ module AnmanAI
     # メインループ
     def start_loop!
       puts "[System] Starting event monitoring loop..."
+      events_queue = Queue.new
       since_id = 0
+      
+      # 1. バックグラウンドでイベントをロングポーリング受信するスレッド
+      event_thread = Thread.new do
+        loop do
+          begin
+            res = get_api('cmd' => 'events', 'since' => since_id.to_s)
+            if res && res.code == '200'
+              events = JSON.parse(res.body)
+              events.each do |e|
+                events_queue << e
+                since_id = [since_id, e['id'].to_i].max
+              end
+            end
+          rescue => e
+            puts "[Event Thread Error] #{e.class} - #{e.message}"
+          end
+          sleep 1
+        end
+      end
+      
+      # 2. メインの監視・自律意思決定制御ループ (メインスレッド)
+      last_vil_check = Time.at(0)
+      update_time = 0
+      game_state_val = 1 # 1=進行中
       
       loop do
         begin
-          res = get_api('cmd' => 'events', 'since' => since_id.to_s)
-          puts "[DEBUG] get_api(events, since: #{since_id}) code: #{res ? res.code : 'nil'}"
-          if res && res.code == '200'
-            events = JSON.parse(res.body)
-            puts "[DEBUG] Received #{events.size} events"
-            events.each do |e|
-              puts "[DEBUG] Event: ID=#{e['id']}, type=#{e['type']}, type_code=#{e['type_code']}"
-              @game_state.process_event(e)
-              since_id = [since_id, e['id'].to_i].max
+          # キューから溜まっているイベントをすべて処理して GameState を更新
+          has_new_events = false
+          while !events_queue.empty?
+            e = events_queue.pop(true)
+            puts "[DEBUG] Event: ID=#{e['id']}, type=#{e['type']}, type_code=#{e['type_code']}"
+            @game_state.process_event(e)
+            has_new_events = true
+            
+            # ゲーム終了の検知などは即座に行う
+            handle_event_action_instantly(e)
+          end
+          
+          # 3秒に1回、村の全体ステータス (残り時間など) を API から取得・同期
+          if Time.now - last_vil_check >= 3
+            res_vil = get_api('cmd' => 'vil')
+            if res_vil && res_vil.code == '200'
+              vil_info = JSON.parse(res_vil.body)
+              update_time = vil_info['update_time'].to_i
+              game_state_val = vil_info['state'].to_i
               
-              # イベントごとのアクションハンドリング
-              handle_event_action(e)
+              # GameState にも同期
+              @game_state.current_day = vil_info['date'].to_i
+              @game_state.is_night = vil_info['night']
+            end
+            last_vil_check = Time.now
+          end
+          
+          # ゲームが終了（決着）した場合はメインループを抜ける
+          if game_state_val >= 2
+            puts "[System] Game is over. Exiting loop."
+            break
+          end
+          
+          # 昼夜の状態に応じた自律アクション判断
+          day = @game_state.current_day
+          remain_sec = update_time - Time.now.to_i
+          
+          if @game_state.is_night
+            # 夜フェーズ
+            # 1. 人狼のささやき（夜の初めに1回）
+            if @game_state.my_role == "人狼" && !@whispered_tonight[day]
+              trigger_whisper
             end
             
-            # イベントがあった場合のみ発言判定を行う
-            if !events.empty?
-              puts "[DEBUG] Triggering check_and_say"
-              check_and_say
+            # 2. 夜アクションの実行（占い、人狼襲撃、護衛など）
+            # 夜フェーズへ移行後、少しだけ時間（3秒）を置いてからアクションを実行
+            if !@acted_tonight[day]
+              trigger_night_action
+            end
+          else
+            # 昼フェーズ
+            # 1. 他人の新しい通常発言があれば、反応して発言を検討する
+            # 前回の発言から15秒以上空いている場合に実行
+            if Time.now - @last_say_time >= 15
+              current_chat_size = @game_state.chat_logs.size
+              if current_chat_size > @last_chat_logs_size
+                # 新しい発言を検知した
+                check_and_say
+                @last_chat_logs_size = current_chat_size
+              end
+            end
+            
+            # 2. 更新時間が近づいたら投票を行う (残り時間15秒以下、かつ未投票)
+            if !@voted_today[day] && remain_sec > 0 && remain_sec <= 15
+              puts "[System] Deadline approaching (#{remain_sec}s remaining). Triggering vote."
+              trigger_vote
             end
           end
-        rescue Interrupt
-          puts "[System] Interrupt received. Stopping client..."
-          break
+          
         rescue => e
-          puts "[System] Error in main loop: #{e.class} - #{e.message}"
-          sleep 5 # エラー時のスリープ
+          puts "[System Error] Error in main loop: #{e.class} - #{e.message}"
+          puts e.backtrace.join("\n")
         end
+        sleep 1
       end
+      
+      # ループを抜けたらイベント受信スレッドを停止
+      Thread.kill(event_thread) rescue nil
     end
     
-    # イベントに応じた自動アクションのトリガー
-    def handle_event_action(e)
-      # 1. 投票フェーズへの移行検知
-      if e['type'] == 'system' && e['type_code'] == 'announce' && e['content'].include?("投票を行うことにしました")
-        trigger_vote
-      end
-      
-      # 2. 夜フェーズへの移行検知
-      if e['type'] == 'state_change' && e['type_code'] == 'time' && e['content'].include?("夜になりました")
-        trigger_night_action
-      end
-      
-      # 3. 勝敗決定（ゲーム終了）の検知
+    # 勝敗決定（ゲーム終了）の即時検知
+    def handle_event_action_instantly(e)
       if e['type'] == 'system' && e['type_code'] == 'announce' && e['content'].include?("の勝利です！")
         trigger_reflection(e['content'])
       end
@@ -154,14 +339,8 @@ module AnmanAI
     
     # 昼の発言処理
     def check_and_say
-      puts "[DEBUG] check_and_say - is_night: #{@game_state.is_night}, day: #{@game_state.current_day}"
       return if @game_state.is_night
       return if @game_state.current_day < 1
-      
-      # 発言頻度コントロール (10秒に1回以上は発言しない)
-      time_diff = Time.now - @last_say_time
-      puts "[DEBUG] Time since last say: #{time_diff}s"
-      return if time_diff < 10
       
       puts "\n[Thinking] Evaluating chat response (using LLM: #{@llm.model})..."
       
@@ -243,7 +422,6 @@ module AnmanAI
           @voted_today[day] = true
         else
           puts "[Action] AI target name '#{target_name}' is invalid or dead. Fallback to random voting."
-          # 生存している自分以外のプレイヤーにランダム投票
           fallback_target = @game_state.players.select { |name, p| p[:dead] == 0 && name != @userid }.values.sample
           if fallback_target
             post(
@@ -263,64 +441,113 @@ module AnmanAI
     def trigger_night_action
       day = @game_state.current_day
       
-      # 人狼の夜会話（ささやき）
-      if @game_state.my_role == "人狼" && !@whispered_tonight[day]
-        trigger_whisper
-      end
-      
-      # 占い能力の行使
-      return if @acted_tonight[day]
-      return unless @game_state.my_role == "占い師"
-      
-      puts "\n[Thinking] Deciding who to scan tonight..."
-      
-      vars = {
-        'current_day' => day,
-        'my_name' => @game_state.my_name,
-        'my_role' => @game_state.my_role,
-        'surviving_players' => @game_state.surviving_players_list,
-        'action_results' => @game_state.formatted_action_results,
-        'my_reasoning_notes' => @game_state.my_reasoning_notes,
-        'chat_logs' => @game_state.formatted_chat_logs,
-        'learning_memory' => @learning.load_memory_text,
-        'role_instructions' => @prompts.load_camp_prompt(camp_from_role)
-      }
-      
-      system_prompt = "あなたは人狼ゲームの占い師です。必ず指定されたJSONフォーマットで回答してください。JSON以外の文章は一切含めてはいけません。"
-      user_prompt = @prompts.build_prompt('fortune', vars)
-      
-      begin
-        response = @llm.chat(system_prompt, user_prompt, temperature: 0.2)
-        clean_res = response.gsub(/^```json\s*/, "").gsub(/```\s*$/, "").strip
-        parsed = JSON.parse(clean_res)
+      # 人狼と占い師のアクション
+      case @game_state.my_role
+      when "占い師"
+        puts "\n[Thinking] Deciding who to scan tonight..."
+        vars = {
+          'current_day' => day,
+          'my_name' => @game_state.my_name,
+          'my_role' => @game_state.my_role,
+          'surviving_players' => @game_state.surviving_players_list,
+          'action_results' => @game_state.formatted_action_results,
+          'my_reasoning_notes' => @game_state.my_reasoning_notes,
+          'chat_logs' => @game_state.formatted_chat_logs,
+          'learning_memory' => @learning.load_memory_text,
+          'role_instructions' => @prompts.load_camp_prompt(camp_from_role)
+        }
         
-        target_name = parsed['fortune_target']
-        target_player = @game_state.players[target_name]
+        system_prompt = "あなたは人狼ゲームの占い師です。必ず指定されたJSONフォーマットで回答してください。JSON以外の文章は一切含めてはいけません。"
+        user_prompt = @prompts.build_prompt('fortune', vars)
         
-        if target_player && target_player[:dead] == 0 && target_name != @userid
-          puts "[Action] AI decided to scan (fortune): #{target_name} (ID: #{target_player[:num_id]})"
-          post(
-            'cmd' => 'skill',
-            'target_id' => target_player[:num_id].to_s,
-            'set_date' => day.to_s
-          )
-          @acted_tonight[day] = true
-          @game_state.action_results << "#{day}日目夜: #{target_name} を占い対象としてセットしました。"
-        else
-          # フォールバック（まだ占っていない生存プレイヤーへランダム占い）
-          fallback_target = @game_state.players.select { |name, p| p[:dead] == 0 && name != @userid }.values.sample
-          if fallback_target
-            puts "[Action] Fallback scanning (fortune): (ID: #{fallback_target[:num_id]})"
+        begin
+          response = @llm.chat(system_prompt, user_prompt, temperature: 0.2)
+          clean_res = response.gsub(/^```json\s*/, "").gsub(/```\s*$/, "").strip
+          parsed = JSON.parse(clean_res)
+          
+          target_name = parsed['fortune_target']
+          target_player = @game_state.players[target_name]
+          
+          if target_player && target_player[:dead] == 0 && target_name != @userid
+            puts "[Action] AI decided to scan (fortune): #{target_name} (ID: #{target_player[:num_id]})"
             post(
               'cmd' => 'skill',
-              'target_id' => fallback_target[:num_id].to_s,
+              'target_id' => target_player[:num_id].to_s,
               'set_date' => day.to_s
             )
             @acted_tonight[day] = true
+            @game_state.action_results << "#{day}日目夜: #{target_name} を占い対象としてセットしました。"
+          else
+            fallback_target = @game_state.players.select { |name, p| p[:dead] == 0 && name != @userid }.values.sample
+            if fallback_target
+              puts "[Action] Fallback scanning (fortune): (ID: #{fallback_target[:num_id]})"
+              post(
+                'cmd' => 'skill',
+                'target_id' => fallback_target[:num_id].to_s,
+                'set_date' => day.to_s
+              )
+              @acted_tonight[day] = true
+            end
           end
+        rescue => e
+          puts "[System Error] Failed in trigger_night_action: #{e.message}"
         end
-      rescue => e
-        puts "[System Error] Failed in trigger_night_action: #{e.message}"
+        
+      when "人狼"
+        puts "\n[Thinking] Deciding who to attack tonight..."
+        # 襲撃先を決定する (狂信ささやきや人狼ささやきのログを踏まえて決定)
+        vars = {
+          'current_day' => day,
+          'my_name' => @game_state.my_name,
+          'my_role' => @game_state.my_role,
+          'surviving_players' => @game_state.surviving_players_list,
+          'my_reasoning_notes' => @game_state.my_reasoning_notes,
+          'chat_logs' => @game_state.formatted_chat_logs,
+          'learning_memory' => @learning.load_memory_text,
+          'role_instructions' => @prompts.load_camp_prompt('werewolf')
+        }
+        
+        # 投票用プロンプトを流用するか、もしくは占いプロンプトに似た襲撃用プロンプトを作る。
+        # 簡易的に占いプロンプト（fortune）の変数構成を流用し、モデルに「襲撃先」を選ばせる。
+        system_prompt = "あなたは人狼です。今夜襲撃する市民を1人選択してください。必ず指定されたJSONフォーマットで回答してください。JSON以外の文章は一切含めてはいけません。"
+        # プロンプトの構築（fortune 用のテンプレートを利用しつつ、指示を襲撃に読み替え）
+        # もしくは、JSONのキーを "fortune_target" としてパースする。
+        user_prompt = @prompts.build_prompt('fortune', vars).gsub("占い対象", "襲撃対象").gsub("fortune_target", "attack_target")
+        
+        begin
+          response = @llm.chat(system_prompt, user_prompt, temperature: 0.2)
+          clean_res = response.gsub(/^```json\s*/, "").gsub(/```\s*$/, "").strip
+          parsed = JSON.parse(clean_res)
+          
+          target_name = parsed['attack_target'] || parsed['fortune_target']
+          target_player = @game_state.players[target_name]
+          
+          # 自分以外の生存プレイヤーを襲撃
+          if target_player && target_player[:dead] == 0 && target_name != @userid
+            puts "[Action] AI decided to attack: #{target_name} (ID: #{target_player[:num_id]})"
+            post(
+              'cmd' => 'skill',
+              'target_id' => target_player[:num_id].to_s,
+              'set_date' => day.to_s
+            )
+            @acted_tonight[day] = true
+          else
+            # 生存している自分以外の非人狼プレイヤー（可能なら）からランダム襲撃
+            targets = @game_state.players.select { |name, p| p[:dead] == 0 && name != @userid && !@game_state.werewolf_partners.include?(name) }
+            fallback_target = targets.values.sample || @game_state.players.select { |name, p| p[:dead] == 0 && name != @userid }.values.sample
+            if fallback_target
+              puts "[Action] Fallback attacking: (ID: #{fallback_target[:num_id]})"
+              post(
+                'cmd' => 'skill',
+                'target_id' => fallback_target[:num_id].to_s,
+                'set_date' => day.to_s
+              )
+              @acted_tonight[day] = true
+            end
+          end
+        rescue => e
+          puts "[System Error] Failed in werewolf attack action: #{e.message}"
+        end
       end
     end
     
@@ -355,7 +582,7 @@ module AnmanAI
         msg = parsed['message']
         if msg && !msg.empty?
           puts "[Action] AI decided to whisper: \"#{msg}\""
-          post('cmd' => 'msg', 'message' => msg, 'whisper' => 'on', 'j_data' => 'あ')
+          post('cmd' => 'msg', 'message' => msg, 'whisper' => 'on', 'j_data' => 'a')
         end
         @whispered_tonight[day] = true
       rescue => e
@@ -377,7 +604,6 @@ module AnmanAI
     def trigger_reflection(win_announcement)
       puts "\n=== [System] Game Finished: Running reflection and learning ==="
       
-      # 勝敗判定
       won = false
       if win_announcement.include?("村人の勝利") && camp_from_role == "villager"
         won = true
@@ -385,7 +611,6 @@ module AnmanAI
         won = true
       end
       
-      # API経由で終了した村の全ログを日付順に回収
       all_logs_text = ""
       begin
         (1..@game_state.current_day).each do |day|
@@ -399,7 +624,6 @@ module AnmanAI
         all_logs_text = @game_state.formatted_chat_logs
       end
       
-      # 反省を実行して記録
       success = @learning.run_reflection(@vid, @game_state.my_role, won, all_logs_text)
       if success
         puts "[System] Reflection finished and saved to memory."
