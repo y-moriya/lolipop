@@ -18,36 +18,19 @@ class Login
 		cookie = cgi.cookies['login']
 		@login = false
 
-		debug_info = []
-		debug_info << "Cookie: #{cookie ? cookie.inspect : 'nil'}"
-
 		if (cookie && cookie.size == 1)
 			val_str = CGI.unescape(cookie[0].to_s)
-			debug_info << "Cookie unescaped: #{val_str.inspect}"
 			vals = val_str.split(/,/)
       		@userid = vals[0]
 			@pass = vals[1]
-			debug_info << "Parsed user: #{@userid.inspect}, pass: #{@pass.inspect}"
 
 			userdb.transaction do
-				debug_info << "User in DB: #{userdb.root?(@userid)}"
 				if (userdb.root?(@userid))
-					db_pass = userdb[@userid]['pass']
-					debug_info << "DB pass: #{db_pass.inspect}, input pass: #{@pass.inspect}"
-					if (@pass == db_pass)
+					if (@pass == userdb[@userid]['pass'])
 						@login = true
 					end
 				end
 			end
-		end
-		debug_info << "Login status: #{@login}"
-
-		begin
-			File.open('db/login_debug.log', 'a') do |f|
-				f.puts "[#{Time.now}] #{debug_info.join(' | ')}"
-			end
-		rescue => e
-			# ignore
 		end
 
 		if(@login == true)
