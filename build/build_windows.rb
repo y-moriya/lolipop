@@ -5,6 +5,24 @@
 
 require 'fileutils'
 
+# Generate version file dynamically from Git
+git_commit = `git rev-parse --short HEAD`.strip rescue 'unknown'
+git_tag = `git describe --tags --exact-match 2>/dev/null`.strip rescue nil
+version_str = git_tag ? git_tag : "1.2.0-snapshot (#{git_commit})"
+build_time = Time.now.strftime('%Y-%m-%d %H:%M:%S JST')
+
+version_content = <<~RUBY
+  # -*- coding: utf-8 -*-
+  # Generated dynamically by build script. Do not commit.
+  module AnmanAI
+    VERSION = #{version_str.inspect}
+    BUILD_TIME = #{build_time.inspect}
+  end
+RUBY
+
+File.write('anman-ai/lib/version.rb', version_content)
+puts "Generated version.rb with VERSION=#{version_str}, BUILD_TIME=#{build_time}"
+
 entry_point = 'anman-ai/bin/anman-ai'
 output_exe  = 'dist/anman-ai.exe'
 

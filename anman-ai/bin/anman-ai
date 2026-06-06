@@ -34,6 +34,7 @@ require 'log_manager'
 AnmanAI.setup_logger(exe_dir, config)
 
 require 'client'
+require 'version'
 
 # OCRANビルドの依存関係ロード用：ビルド中であれば即終了
 if defined?(Ocran)
@@ -42,8 +43,8 @@ if defined?(Ocran)
 end
 
 puts "=== Starting anman-ai Autonomous Werewolf Client ==="
-puts "Version:        1.2.0-snapshot (Resuming & WAF Fix)"
-puts "Build Time:     2026-06-06 20:58"
+puts "Version:        #{AnmanAI::VERSION}"
+puts "Build Time:     #{AnmanAI::BUILD_TIME}"
 puts "Root Directory: #{exe_dir}"
 puts "Config File:    #{config_path}"
 puts "===================================================="
