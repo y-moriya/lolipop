@@ -18,8 +18,8 @@ COLORS = {
 
 COLORS.each do |prefix, color|
   # 00.jpg (ツノ画像 16x20)
-  # 背景は黒、右向きの三角形（メッセージに向かって伸びるツノ）
-  cmd_00 = "convert -size 16x20 xc:black -fill \"#{color}\" -draw \"polygon 0,4 0,16 16,10\" \"#{IMG_DIR}/#{prefix}00.jpg\""
+  # 背景は黒、左向きの三角形（アバター側に向かって伸びるツノ）
+  cmd_00 = "convert -size 16x20 xc:black -fill \"#{color}\" -draw \"polygon 16,4 16,16 0,10\" \"#{IMG_DIR}/#{prefix}00.jpg\""
   system(cmd_00)
 
   # 05.jpg (上部角丸枠 464x8)
