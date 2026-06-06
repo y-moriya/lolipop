@@ -277,49 +277,77 @@ table.message td a:visited.say, table.message td a:link.say, .popsay {
 td span.cut a:visited.say, td span.cut a:link.say, .cut {
     color: #cc9
 }.mes_say {
-    padding: 8px 0 0;
+    padding: 0;
     width: 16px;
-    background: url(../img/say00.jpg) no-repeat center
+    height: 16px;
+    background: none;
+    border-style: solid;
+    border-width: 8px 16px 8px 0;
+    border-color: transparent #ffffff transparent transparent;
+    margin: 12px 0 0 auto;
 }.mes_say_body0 {
-    padding: 8px 0 0;
-    background: #fff url(../img/say05.jpg) no-repeat top
+    padding: 0;
+    background: none;
 }.mes_say_body1 {
-    padding: 0 12px 8px;
-    background: #fff url(../img/say06.jpg) no-repeat bottom;
-    color: #000
+    padding: 10px 12px;
+    background: #ffffff;
+    color: #000000;
+    border-radius: 8px;
+    border: 1px solid #dddddd;
 }.mes_whisper {
-    padding: 8px 0 0;
+    padding: 0;
     width: 16px;
-    background: url(../img/whisper00.jpg) no-repeat center
+    height: 16px;
+    background: none;
+    border-style: solid;
+    border-width: 8px 16px 8px 0;
+    border-color: transparent #ff7777 transparent transparent;
+    margin: 12px 0 0 auto;
 }.mes_whisper_body0 {
-    padding: 8px 0 0;
-    background: #f77 url(../img/whisper05.jpg) no-repeat top
+    padding: 0;
+    background: none;
 }.mes_whisper_body1 {
-    padding: 0 12px 8px;
-    background: #f77 url(../img/whisper06.jpg) no-repeat bottom;
-    color: #000
+    padding: 10px 12px;
+    background: #ff7777;
+    color: #000000;
+    border-radius: 8px;
+    border: 1px solid #ff5555;
 }.mes_groan {
-    padding: 8px 0 0;
+    padding: 0;
     width: 16px;
-    background: url(../img/groan00.jpg) no-repeat center
+    height: 16px;
+    background: none;
+    border-style: solid;
+    border-width: 8px 16px 8px 0;
+    border-color: transparent #9fb7cf transparent transparent;
+    margin: 12px 0 0 auto;
 }.mes_groan_body0 {
-    padding: 8px 0 0;
-    background: #9fb7cf url(../img/groan05.jpg) no-repeat top
+    padding: 0;
+    background: none;
 }.mes_groan_body1 {
-    padding: 0 12px 8px;
-    background: #9fb7cf url(../img/groan06.jpg) no-repeat bottom;
-    color: #000
+    padding: 10px 12px;
+    background: #9fb7cf;
+    color: #000000;
+    border-radius: 8px;
+    border: 1px solid #8fa7bf;
 }.mes_think {
-    padding: 8px 0 0;
+    padding: 0;
     width: 16px;
-    background: url(../img/think00.jpg) no-repeat center
+    height: 16px;
+    background: none;
+    border-style: solid;
+    border-width: 8px 16px 8px 0;
+    border-color: transparent #939393 transparent transparent;
+    margin: 12px 0 0 auto;
 }.mes_think_body0 {
-    padding: 8px 0 0;
-    background: #939393 url(../img/think05.jpg) no-repeat top
+    padding: 0;
+    background: none;
 }.mes_think_body1 {
-    padding: 0 12px 8px;
-    background: #939393 url(../img/think06.jpg) no-repeat bottom;
-    color: #000
+    padding: 10px 12px;
+    background: #939393;
+    color: #000000;
+    border-radius: 8px;
+    border: 1px solid #838383;
 }.action_box {
     border-collapse: collapse;
     margin: 20px 0;
