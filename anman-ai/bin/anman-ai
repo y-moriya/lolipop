@@ -51,26 +51,33 @@ begin
   client.login!
   
   vid = client.instance_variable_get(:@vid)
-  if vid.nil? || vid == 0
-    unless client.find_active_joined_village
-      client.auto_entry_loop!
-    end
+  
+  # Check if we are already in an active/in-progress village
+  already_joined = client.find_active_joined_village
+  
+  if already_joined
+    puts "[System] Already joined active village ID: #{client.instance_variable_get(:@vid)}. Resuming gameplay..."
   else
-    puts "[System] Target village ID: #{vid}. Checking entry status..."
-    # If not yet entered, try entering and wait if the village does not exist yet
-    entry_ok = false
-    30.times do |i|
-      if client.entry_to_village!
-        entry_ok = true
-        break
-      end
-      puts "  Waiting for village ID #{vid} to be created or available... (#{i+1}/30)"
-      sleep 5
-    end
-    unless entry_ok
-      puts "[System] Active entry failed. Falling back to auto-entry monitoring..."
-      client.instance_variable_set(:@vid, nil)
+    if vid.nil? || vid == 0
       client.auto_entry_loop!
+    else
+      client.instance_variable_set(:@vid, vid)
+      puts "[System] Target village ID: #{vid}. Checking entry status..."
+      # If not yet entered, try entering and wait if the village does not exist yet
+      entry_ok = false
+      30.times do |i|
+        if client.entry_to_village!
+          entry_ok = true
+          break
+        end
+        puts "  Waiting for village ID #{vid} to be created or available... (#{i+1}/30)"
+        sleep 5
+      end
+      unless entry_ok
+        puts "[System] Active entry failed. Falling back to auto-entry monitoring..."
+        client.instance_variable_set(:@vid, nil)
+        client.auto_entry_loop!
+      end
     end
   end
   

@@ -278,6 +278,8 @@ module AnmanAI
       update_time = 0
       game_state_val = 1 # 1=進行中
       
+      is_catching_up = true
+      
       loop do
         begin
           # キューから溜まっているイベントをすべて処理して GameState を更新
@@ -290,6 +292,13 @@ module AnmanAI
             
             # ゲーム終了の検知などは即座に行う
             handle_event_action_instantly(e)
+          end
+          
+          if is_catching_up
+            is_catching_up = false
+            @last_chat_logs_size = @game_state.chat_logs.size
+            @last_say_time = Time.now
+            puts "[System] Catchup completed. Synchronized chat logs size: #{@last_chat_logs_size}."
           end
           
           # 3秒に1回、村の全体ステータス (残り時間など) を API から取得・同期
@@ -395,8 +404,21 @@ module AnmanAI
             # 更新時間が近づいたら投票を行う (残り時間25秒以下、かつ未投票、生存時のみ)
             unless is_dead
               if !@voted_today[day] && remain_sec > 0 && remain_sec <= 25
-                puts "[System] Deadline approaching (#{remain_sec}s remaining). Triggering vote."
-                trigger_vote
+                # Sync vote status from server first
+                res_players = get_api('cmd' => 'players')
+                if res_players && res_players.code == '200'
+                  players_json = JSON.parse(res_players.body)
+                  me = players_json.find { |p| p['userid'] == @userid }
+                  if me && me['voted'] == true
+                    @voted_today[day] = true
+                    puts "[System] Synchronized vote status: already voted today."
+                  end
+                end
+
+                if !@voted_today[day]
+                  puts "[System] Deadline approaching (#{remain_sec}s remaining). Triggering vote."
+                  trigger_vote
+                end
               end
             end
           end
