@@ -28,6 +28,16 @@ llm:
   temperature: 0.7
   max_tokens: 2048
 
+# --- フォールバック設定 (任意) ---
+# メインのLLM（上記 llm セクション）がタイムアウトやエラーで接続失敗した場合に、
+# 代替として接続を試みるLLMの設定です。
+# llm_fallback:
+#   provider: "openai_compat"
+#   base_url: "https://api.openai.com"
+#   api_key: "sk-..."
+#   model: "gpt-4o-mini"
+#   temperature: 0.7
+
 log:
   max_size_mb: 10    # ローテーション上限（MB）
   keep_files: 5      # 保持世代数
