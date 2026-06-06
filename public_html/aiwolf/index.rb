@@ -191,7 +191,7 @@ class CWolf
 			return if (vil.players.key?(@login.userid))
 			return if (vil.state != 0)
 			return if (vil.players.size >= vil.entry_max)
-			return if (vil.pass != pass)
+			return if (vil.pass.to_s != pass.to_s)
 
 			ps = vil.players.values.select {|p| p.pid == pid}
 

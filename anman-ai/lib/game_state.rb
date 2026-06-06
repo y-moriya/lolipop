@@ -37,7 +37,7 @@ module AnmanAI
 
       if current_player_json
         @my_name = current_player_json['name']
-        @my_role = current_player_json['role'] || "村人"
+        @my_role = current_player_json['role'] || "未決定"
 
         # 自分が人狼の場合、他の人狼メンバーを探す
         if current_player_json['can_whisper']

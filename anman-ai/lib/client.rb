@@ -468,15 +468,19 @@ module AnmanAI
               end
               
               # 2. 夜アクションの実行（占い、人狼襲撃、護衛など）
-              if !@acted_tonight[day]
-                trigger_night_action
+              if role_has_night_action?
+                if !@acted_tonight[day]
+                  trigger_night_action
+                end
+              else
+                @acted_tonight[day] = true
               end
             end
           else
             # 昼フェーズ
-            # 更新時間が近づいたら投票を行う (残り時間25秒以下、かつ未投票、生存時のみ)
+            # 更新時間が近づいたら投票を行う (残り時間45秒以下、かつ未投票、生存時のみ)
             unless is_dead
-              if !@voted_today[day] && remain_sec > 0 && remain_sec <= 25
+              if !@voted_today[day] && remain_sec > 0 && remain_sec <= 45
                 # Sync vote status from server first
                 res_players = get_api('cmd' => 'players')
                 if res_players && res_players.code == '200'
@@ -489,8 +493,13 @@ module AnmanAI
                 end
 
                 if !@voted_today[day]
-                  puts "[System] Deadline approaching (#{remain_sec}s remaining). Triggering vote."
-                  trigger_vote
+                  if remain_sec <= 7
+                    puts "[System WARNING] Very close to voting deadline (#{remain_sec}s remaining). Skipping LLM and executing quick fallback vote."
+                    trigger_quick_fallback_vote!
+                  else
+                    puts "[System] Deadline approaching (#{remain_sec}s remaining). Triggering vote."
+                    trigger_vote
+                  end
                 end
               end
             end
@@ -744,127 +753,187 @@ module AnmanAI
           @voted_today[day] = true
           @game_state.mark_logs_sent!
         else
-          puts "[Action] AI target name '#{target_name}' is invalid or dead. Fallback to random voting."
-          fallback_target = @game_state.players.select { |name, p| p[:dead] == 0 && name != @game_state.my_name }.values.sample
-          if fallback_target
-            post(
-              'cmd' => 'vote', 
-              'vote_id' => fallback_target[:num_id].to_s, 
-              'set_date' => day.to_s
-            )
-            @voted_today[day] = true
-            @game_state.mark_logs_sent!
-          end
+          puts "[Action] AI target name '#{target_name}' is invalid or dead. Fallback to quick voting."
+          trigger_quick_fallback_vote!
         end
       rescue => e
-        puts "[System Error] Failed in trigger_vote: #{e.message}"
+        puts "[System Error] Failed in trigger_vote: #{e.message}. Running quick fallback."
+        trigger_quick_fallback_vote!
       end
     end
-    
+
+    def trigger_quick_fallback_vote!
+      day = @game_state.current_day
+      return if @voted_today[day]
+      
+      fallback_target = @game_state.players.select { |name, p| p[:dead] == 0 && name != @game_state.my_name }.values.sample
+      if fallback_target
+        puts "[Action] Fallback voting for: #{fallback_target[:name]} (ID: #{fallback_target[:num_id]})"
+        post(
+          'cmd' => 'vote', 
+          'vote_id' => fallback_target[:num_id].to_s, 
+          'set_date' => day.to_s
+        )
+        @voted_today[day] = true
+        @game_state.mark_logs_sent!
+      end
+    end
+
     # 夜アクション（占い・護衛・人狼ささやきなど）の実行
     def trigger_night_action
       day = @game_state.current_day
+      role = @game_state.my_role
       
-      case @game_state.my_role
-      when "占い師"
-        puts "\n[Thinking] Deciding who to scan tonight..."
-        vars = {
-          'current_day'        => day,
-          'my_name'            => @game_state.my_name,
-          'my_role'            => @game_state.my_role,
-          'surviving_players'  => @game_state.surviving_players_list,
-          'action_results'     => @game_state.formatted_action_results,
-          'my_reasoning_notes' => @game_state.my_reasoning_notes,
-          'chat_logs'          => build_log_context,
-          'learning_memory'    => @learning.load_memory_text,
-          'role_instructions'  => @prompts.load_camp_prompt(camp_from_role)
-        }
-        
-        system_prompt = "あなたは人狼ゲームの占い師です。必ず指定されたJSONフォーマットで回答してください。JSON以外の文章は一切含めてはいけません。"
-        user_prompt = @prompts.build_prompt('fortune', vars)
-        
-        begin
-          response = @llm.chat(system_prompt, user_prompt, temperature: 0.2)
-          parsed = parse_llm_json(response)
-          
-          target_name = parsed['fortune_target']
-          target_player = @game_state.players[target_name]
-          
-          if target_player && target_player[:dead] == 0 && target_name != @game_state.my_name
-            puts "[Action] AI decided to scan (fortune): #{target_name} (ID: #{target_player[:num_id]})"
-            post(
-              'cmd' => 'skill',
-              'target_id' => target_player[:num_id].to_s,
-              'set_date' => day.to_s
-            )
-            @acted_tonight[day] = true
-            @game_state.action_results << "#{day}日目夜: #{target_name} を占い対象としてセットしました。"
-            @game_state.mark_logs_sent!
-          else
-            fallback_target = @game_state.players.select { |name, p| p[:dead] == 0 && name != @game_state.my_name }.values.sample
-            if fallback_target
-              puts "[Action] Fallback scanning (fortune): (ID: #{fallback_target[:num_id]})"
-              post(
-                'cmd' => 'skill',
-                'target_id' => fallback_target[:num_id].to_s,
-                'set_date' => day.to_s
-              )
-              @acted_tonight[day] = true
-            end
-          end
-        rescue => e
-          puts "[System Error] Failed in trigger_night_action: #{e.message}"
-        end
-        
-      when "人狼"
-        puts "\n[Thinking] Deciding who to attack tonight..."
-        vars = {
-          'current_day'        => day,
-          'my_name'            => @game_state.my_name,
-          'my_role'            => @game_state.my_role,
-          'surviving_players'  => @game_state.surviving_players_list,
-          'my_reasoning_notes' => @game_state.my_reasoning_notes,
-          'chat_logs'          => build_log_context,
-          'learning_memory'    => @learning.load_memory_text,
-          'role_instructions'  => @prompts.load_camp_prompt('werewolf')
-        }
-        
-        system_prompt = "あなたは人狼です。今夜襲撃する市民を1人選択してください。必ず指定されたJSONフォーマットで回答してください。JSON以外の文章は一切含めてはいけません。"
-        user_prompt = @prompts.build_prompt('fortune', vars).gsub("占い対象", "襲撃対象").gsub("fortune_target", "attack_target")
-        
-        begin
-          response = @llm.chat(system_prompt, user_prompt, temperature: 0.2)
-          parsed = parse_llm_json(response)
-          
-          target_name = parsed['attack_target'] || parsed['fortune_target']
-          target_player = @game_state.players[target_name]
-          
-          if target_player && target_player[:dead] == 0 && target_name != @game_state.my_name
-            puts "[Action] AI decided to attack: #{target_name} (ID: #{target_player[:num_id]})"
-            post(
-              'cmd' => 'skill',
-              'target_id' => target_player[:num_id].to_s,
-              'set_date' => day.to_s
-            )
-            @acted_tonight[day] = true
-            @game_state.mark_logs_sent!
-          else
-            targets = @game_state.players.select { |name, p| p[:dead] == 0 && name != @game_state.my_name && !@game_state.werewolf_partners.include?(name) }
-            fallback_target = targets.values.sample || @game_state.players.select { |name, p| p[:dead] == 0 && name != @game_state.my_name }.values.sample
-            if fallback_target
-              puts "[Action] Fallback attacking: (ID: #{fallback_target[:num_id]})"
-              post(
-                'cmd' => 'skill',
-                'target_id' => fallback_target[:num_id].to_s,
-                'set_date' => day.to_s
-              )
-              @acted_tonight[day] = true
-            end
-          end
-        rescue => e
-          puts "[System Error] Failed in werewolf attack action: #{e.message}"
-        end
+      # Determine action parameters based on role
+      action_name = nil
+      target_key = nil
+      role_label = nil
+      verb = nil
+      
+      case role
+      when "占い師", "中身占い師"
+        action_name = "fortune"
+        target_key = "fortune_target"
+        role_label = "占い師"
+        verb = "占い"
+      when "人狼", "絶対人狼"
+        action_name = "attack"
+        target_key = "attack_target"
+        role_label = "人狼"
+        verb = "襲撃"
+      when "狩人", "風来狩人"
+        action_name = "guard"
+        target_key = "guard_target"
+        role_label = "狩人"
+        verb = "護衛"
+      when "求愛者"
+        action_name = "woo"
+        target_key = "woo_target"
+        role_label = "求愛者"
+        verb = "求愛"
+      when "邪魔狂人"
+        action_name = "jam"
+        target_key = "jam_target"
+        role_label = "邪魔狂人"
+        verb = "邪魔"
+      when "キューピッド"
+        trigger_cupid_action
+        return
+      else
+        @acted_tonight[day] = true
+        return
       end
+      
+      puts "\n[Thinking] Deciding who to #{verb} tonight..."
+      
+      vars = {
+        'current_day'        => day,
+        'my_name'            => @game_state.my_name,
+        'my_role'            => role,
+        'surviving_players'  => @game_state.surviving_players_list,
+        'action_results'     => @game_state.formatted_action_results,
+        'my_reasoning_notes' => @game_state.my_reasoning_notes,
+        'chat_logs'          => build_log_context,
+        'learning_memory'    => @learning.load_memory_text,
+        'role_instructions'  => @prompts.load_camp_prompt(camp_from_role)
+      }
+      
+      system_prompt = "あなたは人狼ゲームの#{role_label}です。必ず指定されたJSONフォーマットで回答してください。JSON以外の文章は一切含めてはいけません。"
+      
+      # Build the prompt by taking fortune.txt and replacing templates
+      user_prompt = @prompts.build_prompt('fortune', vars)
+      if action_name != "fortune"
+        user_prompt = user_prompt
+          .gsub("占い師", role_label)
+          .gsub("正体を占う", "正体を#{verb}する")
+          .gsub("占い対象", "#{verb}対象")
+          .gsub("fortune_target", target_key)
+      end
+      
+      begin
+        response = @llm.chat(system_prompt, user_prompt, temperature: 0.2)
+        parsed = parse_llm_json(response)
+        
+        target_name = parsed[target_key] || parsed['fortune_target']
+        target_player = @game_state.players[target_name]
+        
+        # Validation: target must be alive and not myself (and not partners if werewolf)
+        is_valid = target_player && target_player[:dead] == 0 && target_name != @game_state.my_name
+        if role.include?("人狼") && target_name && @game_state.werewolf_partners.include?(target_name)
+          is_valid = false # Don't attack partners
+        end
+        
+        if is_valid
+          puts "[Action] AI decided to #{verb}: #{target_name} (ID: #{target_player[:num_id]})"
+          post(
+            'cmd' => 'skill',
+            'target_id' => target_player[:num_id].to_s,
+            'set_date' => day.to_s
+          )
+          @acted_tonight[day] = true
+          @game_state.action_results << "#{day}日目夜: #{target_name} を#{verb}対象としてセットしました。"
+          @game_state.mark_logs_sent!
+        else
+          puts "[System Warning] LLM returned invalid target '#{target_name}'. Running fallback."
+          trigger_quick_fallback_night_action!
+        end
+      rescue => e
+        puts "[System Error] Failed in trigger_night_action: #{e.message}. Running fallback."
+        trigger_quick_fallback_night_action!
+      end
+    end
+
+    def trigger_quick_fallback_night_action!
+      day = @game_state.current_day
+      return if @acted_tonight[day]
+
+      targets = @game_state.players.select { |name, p| p[:dead] == 0 && name != @game_state.my_name }
+      if @game_state.my_role.include?("人狼")
+        # 人狼は仲間の人狼以外を襲撃する
+        targets = targets.select { |name, p| !@game_state.werewolf_partners.include?(name) }
+      end
+
+      fallback_target = targets.values.sample || @game_state.players.select { |name, p| p[:dead] == 0 && name != @game_state.my_name }.values.sample
+      if fallback_target
+        puts "[Action] Quick fallback night action target selected: #{fallback_target[:name]} (ID: #{fallback_target[:num_id]})"
+        post(
+          'cmd' => 'skill',
+          'target_id' => fallback_target[:num_id].to_s,
+          'set_date' => day.to_s
+        )
+        @acted_tonight[day] = true
+      end
+    end
+
+    def trigger_cupid_action
+      day = @game_state.current_day
+      return if @acted_tonight[day]
+      
+      # Cupid selects 2 different surviving players (excluding itself)
+      others = @game_state.players.select { |name, p| p[:dead] == 0 && name != @game_state.my_name }.values
+      if others.size >= 2
+        targets = others.sample(2)
+        puts "[Action] Cupid selecting: #{targets[0][:name]} and #{targets[1][:name]}"
+        post(
+          'cmd' => 'skill',
+          'target_id' => targets[0][:num_id].to_s,
+          'target_id2' => targets[1][:num_id].to_s,
+          'set_date' => day.to_s
+        )
+      elsif others.size == 1
+        puts "[Action] Cupid selecting single target: #{others[0][:name]}"
+        post(
+          'cmd' => 'skill',
+          'target_id' => others[0][:num_id].to_s,
+          'target_id2' => "-1",
+          'set_date' => day.to_s
+        )
+      end
+      @acted_tonight[day] = true
+    end
+
+    def role_has_night_action?
+      ["占い師", "中身占い師", "人狼", "絶対人狼", "狩人", "風来狩人", "求愛者", "邪魔狂人", "キューピッド"].include?(@game_state.my_role)
     end
     
     # 人狼のささやきの実行
