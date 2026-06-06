@@ -120,7 +120,7 @@ s = ''
 @player = @vil.player(@login)
 @vil.survivors.each do |p|
 	f_name = "#{Charset.charsets[@vil.char].file_name}_s#{two(p.pid)}"
-	s += %Q(<tr><td width="38" height="49"><img src="img/#{f_name}.png"></td>)
+	s += %Q(<tr><td width="76" height="98"><img src="img/#{f_name}.png"></td>)
 	s += %Q(<td><a href="?vid=#{@vid}&date=#{date}&id=#{exidplus}#{p.num_id}#{typehref}" target="_blank">#{p.name}</a>)
 	if (@vil.state > 1 || @vil.open_id || (@vil.open_skill && @player && @player.dead != 0))
 		s += %Q(<br>ID: <a href="?cmd=user&uid=#{CGI.escape(p.userid)}">#{p.userid}</a>)
@@ -186,7 +186,7 @@ s
 s = ''
 @vil.victims.each do |p|
 	f_name = "#{Charset.charsets[@vil.char].file_name}_s#{two(p.pid)}"
-	s += %Q(<tr><td width="38"  height="49"><img src="img/#{f_name}.png"></td>)
+	s += %Q(<tr><td width="76"  height="98"><img src="img/#{f_name}.png"></td>)
 	s += %Q(<td><a href="?vid=#{@vid}&date=#{date}&id=#{exidplus}#{p.num_id}#{typehref}" target="_blank">#{p.name}</a>)
 	if (@vil.state > 1 || @vil.open_id || (@vil.open_skill && @player && @player.dead != 0))
 		s += %Q(<br>ID: <a href="?cmd=user&uid=#{CGI.escape(p.userid)}">#{p.userid}</a>)
@@ -228,7 +228,7 @@ s
 s = ''
 @vil.executions.each do |p|
 	f_name = "#{Charset.charsets[@vil.char].file_name}_s#{two(p.pid)}"
-	s += %Q(<tr><td width="38" height="49"><img src="img/#{f_name}.png"></td>)
+	s += %Q(<tr><td width="76" height="98"><img src="img/#{f_name}.png"></td>)
 	s += %Q(<td><a href="?vid=#{@vid}&date=#{date}&id=#{exidplus}#{p.num_id}#{typehref}" target="_blank">#{p.name}</a>)
 	if (@vil.state > 1 || @vil.open_id || (@vil.open_skill && @player && @player.dead != 0))
 		s += %Q(<br>ID: <a href="?cmd=user&uid=#{CGI.escape(p.userid)}">#{p.userid}</a>)

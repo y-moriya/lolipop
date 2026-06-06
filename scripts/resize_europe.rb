@@ -9,10 +9,10 @@ IMG_DIR = File.join(BASE_DIR, 'img')
 EUROPE_DIR = File.join(IMG_DIR, 'europe')
 
 # リサイズサイズ定義
-SMALL_WIDTH  = 38
-SMALL_HEIGHT = 49
-LARGE_WIDTH  = 50
-LARGE_HEIGHT = 64
+SMALL_WIDTH  = 76
+SMALL_HEIGHT = 98
+LARGE_WIDTH  = 100
+LARGE_HEIGHT = 128
 
 # 元画像ファイル名番号 (XX) から、charset.rb の元配列でのインデックス (dest_idx) へのマッピング
 # 名前を正として、img_filename_replace.md に基づく

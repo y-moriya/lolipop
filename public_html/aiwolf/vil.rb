@@ -213,7 +213,7 @@ class Vil
 		timestr = day.strftime("%Y/%m/%d %X")
 		typehead = 'say'
 		s += %Q(<a href="?#{link}" target="_blank">#{name}</a> <span class="time">#{timestr}</span>)
-		s2 = %Q(<!--#{typehead}#{id}--><table class="message"><tr><td width="50" rowspan="2"><img src="img/#{pid}.png"></td><td colspan="2">#{s}</td></tr><tr><td><div class="mes_#{type}"></div></td><td width="464"><div class="mes_#{type}_body0"><div class="mes_#{type}_body1">#{msg}</div></div></td></tr></table>\n)
+		s2 = %Q(<!--#{typehead}#{id}--><table class="message"><tr><td width="100" rowspan="2"><img src="img/#{pid}.png"></td><td colspan="2">#{s}</td></tr><tr><td><div class="mes_#{type}"></div></td><td width="464"><div class="mes_#{type}_body0"><div class="mes_#{type}_body1">#{msg}</div></div></td></tr></table>\n)
 		s2
 	end
 
@@ -266,7 +266,7 @@ class Vil
 		typehead = (@night && type == 'whisper') ? 'whisperhowl' : type
 
 		s += %Q(<a href="?#{link}" target="_blank">#{name}</a> <span class="time">#{timestr}</span>)
-		s2 = %Q(<!--#{typehead}#{id}--><table class="message"><tr><td width="50" rowspan="2"><img src="img/#{pid}.png"></td><td colspan="2">#{s}</td></tr><tr><td><div class="mes_#{type}"></div></td><td width="464"><div class="mes_#{type}_body0"><div class="mes_#{type}_body1">#{msg}</div></div></td></tr></table>\n)
+		s2 = %Q(<!--#{typehead}#{id}--><table class="message"><tr><td width="100" rowspan="2"><img src="img/#{pid}.png"></td><td colspan="2">#{s}</td></tr><tr><td><div class="mes_#{type}"></div></td><td width="464"><div class="mes_#{type}_body0"><div class="mes_#{type}_body1">#{msg}</div></div></td></tr></table>\n)
 		s2
 	end
 
@@ -1343,7 +1343,7 @@ class Vil
 		s = ''
 		players.each do |p|
 			f_name = "#{Charset.charsets[@char].file_name}_s#{two(p.pid)}"
-			s += %Q(<tr><td width="38" height="49"><img src="../img/#{f_name}.png"></td>)
+			s += %Q(<tr><td width="76" height="98"><img src="../img/#{f_name}.png"></td>)
 			s += %Q(<td>#{p.name})
 			s += %Q(<br>ID: <a href="../?cmd=user&uid=#{CGI.escape(p.userid)}">#{p.userid}</a><br>#{Skill.skills[p.sid].name})
 			if (p.lovers.size != 0)
