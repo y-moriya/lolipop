@@ -11,3 +11,11 @@ public_html/aiwolf/db/*
 # Backups
 backup/
 
+# Windows build artifacts and runtime output
+dist/*.exe
+dist/*.zip
+dist/anman-ai-*-windows/
+log/
+anman-ai/log/
+memory/
+anman-ai/memory/

@@ -1,6 +1,6 @@
 server:
   url: "https://wolften.secret.jp"
-  vid: 1
+  vid: 0
 
 user:
   userid: "anman_bot"

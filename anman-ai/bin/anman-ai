@@ -4,15 +4,20 @@
 # lib ディレクトリをロードパスに追加
 $LOAD_PATH.unshift(File.expand_path('../lib', __dir__))
 
-require 'client'
-
 def print_usage
   puts "Usage: #{$0} [config_path]"
   puts "Default config_path is config/config.yaml"
 end
 
-root_dir = File.expand_path('..', __dir__)
-config_path = ARGV[0] || File.join(root_dir, 'config', 'config.yaml')
+# OCRANの実行パス解決
+exe_dir = if defined?(OCRAN_EXECUTABLE)
+  File.dirname(OCRAN_EXECUTABLE)
+else
+  File.expand_path('..', __dir__)
+end
+
+internal_root_dir = File.expand_path('..', __dir__)
+config_path = ARGV[0] || File.join(exe_dir, 'config', 'config.yaml')
 
 unless File.exist?(config_path)
   puts "Error: Config file not found at #{config_path}"
@@ -20,18 +25,30 @@ unless File.exist?(config_path)
   exit 1
 end
 
+# ログ設定を反映するため先に config をロード
+require 'yaml'
+config = YAML.load_file(config_path)
+
+# Loggerのセットアップ
+require 'log_manager'
+AnmanAI.setup_logger(exe_dir, config)
+
+require 'client'
+
 puts "=== Starting anman-ai Autonomous Werewolf Client ==="
-puts "Root Directory: #{root_dir}"
+puts "Root Directory: #{exe_dir}"
 puts "Config File:    #{config_path}"
 puts "===================================================="
 
 begin
-  client = AnmanAI::Client.new(config_path, root_dir)
+  client = AnmanAI::Client.new(config_path, exe_dir, internal_root_dir)
   client.login!
   
   vid = client.instance_variable_get(:@vid)
   if vid.nil? || vid == 0
-    client.auto_entry_loop!
+    unless client.find_active_joined_village
+      client.auto_entry_loop!
+    end
   else
     puts "[System] Target village ID: #{vid}. Checking entry status..."
     # If not yet entered, try entering and wait if the village does not exist yet

@@ -2,13 +2,18 @@ require 'yaml'
 
 module AnmanAI
   class PromptManager
-    def initialize(root_dir)
-      @root_dir = root_dir
+    def initialize(exe_dir, internal_root_dir)
+      @exe_dir = exe_dir
+      @internal_root_dir = internal_root_dir
       reload_personality
     end
 
     def reload_personality
-      personality_path = File.join(@root_dir, 'config', 'personality.yaml')
+      personality_path = File.join(@exe_dir, 'config', 'personality.yaml')
+      unless File.exist?(personality_path)
+        personality_path = File.join(@internal_root_dir, 'config', 'personality.yaml')
+      end
+
       if File.exist?(personality_path)
         @personality = YAML.load_file(personality_path)
       else
@@ -24,13 +29,13 @@ module AnmanAI
 
     # 陣営に応じた基本思考ガイドを読み込む (camp: 'villager' または 'werewolf')
     def load_camp_prompt(camp)
-      file_path = File.join(@root_dir, 'prompts', 'base', "#{camp}.txt")
+      file_path = File.join(@internal_root_dir, 'prompts', 'base', "#{camp}.txt")
       File.exist?(file_path) ? File.read(file_path) : ""
     end
 
     # 状況別プロンプトの読み込みとプレースホルダ置換
     def build_prompt(situation, variables)
-      template_path = File.join(@root_dir, 'prompts', 'situations', "#{situation}.txt")
+      template_path = File.join(@internal_root_dir, 'prompts', 'situations', "#{situation}.txt")
       raise "Prompt template not found for situation: #{situation}" unless File.exist?(template_path)
 
       prompt = File.read(template_path)

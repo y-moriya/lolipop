@@ -3,10 +3,10 @@ require 'fileutils'
 
 module AnmanAI
   class LearningSystem
-    def initialize(root_dir, llm_client)
-      @root_dir = root_dir
+    def initialize(exe_dir, llm_client)
+      @exe_dir = exe_dir
       @llm_client = llm_client
-      @store_path = File.join(root_dir, 'memory', 'learning_store.json')
+      @store_path = File.join(@exe_dir, 'memory', 'learning_store.json')
       FileUtils.mkdir_p(File.dirname(@store_path))
     end
 
@@ -58,7 +58,7 @@ module AnmanAI
         出力は必ず以下のJSONフォーマットのみとし、マークダウンのコードブロック（```json ... ```）等も使用せず、プレーンなJSONオブジェクト1件のみを出力してください。余計な説明や挨拶は含めないでください。
         {
           "key_findings": [
-            "（得られた知見や反省点、次回への改善アクション。箇ラ書きで3〜5件程度）"
+            "（得られた知見や反省点、次回への改善アクション。箇条書きで3〜5件程度）"
           ]
         }
       EOF

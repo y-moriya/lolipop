@@ -551,6 +551,12 @@ class Api
           event_copy[:speaker]    = 'システム'
           event_copy[:speaker_id] = nil
         end
+        # 自分の発言フラグの付与
+        if current_player && e[:speaker_id] == current_player.num_id
+          event_copy[:is_mine] = true
+        else
+          event_copy[:is_mine] = false
+        end
         filtered_events << event_copy
       end
     end

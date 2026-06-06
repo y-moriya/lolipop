@@ -1,0 +1,90 @@
+name: Build and Release (Windows EXE)
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows-exe:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up variables
+        id: vars
+        shell: bash
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION="${{ github.ref_name }}"
+            echo "version=${VERSION}" >> $GITHUB_OUTPUT
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+            echo "tag_name=${VERSION}" >> $GITHUB_OUTPUT
+            echo "release_name=anman-ai ${VERSION}" >> $GITHUB_OUTPUT
+            echo "body_title=anman-ai ${VERSION}" >> $GITHUB_OUTPUT
+          else
+            echo "version=snapshot" >> $GITHUB_OUTPUT
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+            echo "tag_name=snapshot" >> $GITHUB_OUTPUT
+            echo "release_name=anman-ai Snapshot Build" >> $GITHUB_OUTPUT
+            echo "body_title=anman-ai Snapshot Build" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.4'
+
+      - name: Install OCRAN
+        run: gem install ocran
+
+      - name: Build EXE
+        run: ruby build/build_windows.rb
+        shell: bash
+
+      - name: Create Release Package
+        shell: bash
+        run: |
+          VERSION="${{ steps.vars.outputs.version }}"
+          PKG="anman-ai-${VERSION}-windows"
+          mkdir -p "${PKG}/config" "${PKG}/log"
+
+          cp dist/anman-ai.exe   "${PKG}/"
+          cp dist/start.bat      "${PKG}/"
+          cp dist/start_wt.bat   "${PKG}/"
+          cp dist/README_JA.txt  "${PKG}/"
+          cp dist/config.yaml.example "${PKG}/config/config.yaml"
+
+          7z a "${PKG}.zip" "${PKG}/"
+          echo "PKG_ZIP=${PKG}.zip" >> $GITHUB_ENV
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.vars.outputs.tag_name }}
+          name: ${{ steps.vars.outputs.release_name }}
+          draft: false
+          prerelease: ${{ steps.vars.outputs.is_prerelease == 'true' }}
+          files: ${{ env.PKG_ZIP }}
+          body: |
+            ## ${{ steps.vars.outputs.body_title }}
+            ${{ steps.vars.outputs.is_prerelease == 'true' && 'このリリースは `main` ブランチへのプッシュ毎に自動で上書き更新されるテスト用ビルド（Snapshot）です。' || '正式リリース版です。' }}
+
+            ### インストール方法
+            1. ZIP をダウンロードして任意のフォルダに解凍
+            2. `config\config.yaml` をテキストエディタで開いて設定
+            3. `start.bat` をダブルクリックして起動
+
+            ### ⚠️ SmartScreen 警告について
+            初回起動時に Windows Defender SmartScreen が警告を出す場合があります。
+            「詳細情報」→「実行」をクリックして続行してください。
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

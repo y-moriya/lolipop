@@ -290,6 +290,8 @@ class CWolf
 			return if (d != vil.date)
 			player = vil.player(@login)
 			return if (!player)
+			# 自分自身への投票を禁止する
+			return if (v != -1 && v == player.num_id)
 			player.vote = v
 			if (v == -1)
 				str = "#{player.name} が投票を取り消しました。"
@@ -320,6 +322,8 @@ class CWolf
 			return if(player.dead != 0)
 			target_p = vil.player_p(t)
 			return if(t != -1 && (!target_p || target_p.dead != 0) && player.sid != 4)
+			# sid=4(狂人)以外は自分自身をターゲットにできない
+			return if (t != -1 && t == player.num_id && player.sid != 4)
 			if (player.sid == 12)
 				t2 = @cgi['target_id2'].to_i
 				if (t == t2 || t == -1 || t2 == -1)

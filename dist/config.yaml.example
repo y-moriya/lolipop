@@ -1,0 +1,33 @@
+server:
+  url: "https://wolften.secret.jp"
+  vid: 0
+
+user:
+  userid: "your_username"      # ← ウルフテンのユーザーID
+  password: "your_password"    # ← パスワード
+
+llm:
+  # 使用するプロバイダを選択:
+  #   ollama        : ローカル Ollama（デフォルト・APIキー不要）
+  #   openai_compat : OpenAI互換API（OpenAI公式/LM Studio/Groq等、APIキー必要）
+  provider: "ollama"
+
+  # --- Ollama 設定 ---
+  base_url: "http://localhost:11434"
+  model: "gemma3"
+
+  # --- OpenAI互換 設定（OpenAI公式もこちらを使用）---
+  # provider: "openai_compat"
+  # base_url: "https://api.openai.com"    # OpenAI公式
+  # base_url: "http://localhost:1234"     # LM Studio
+  # base_url: "https://api.groq.com/openai" # Groq
+  # api_key: "sk-..."                    # OpenAI/Groqのキー、LM Studioは任意文字列
+  # model: "gpt-4o-mini"
+
+  compact_prompt: true   # true: 短縮モード / false: 全ログ
+  temperature: 0.7
+  max_tokens: 2048
+
+log:
+  max_size_mb: 10    # ローテーション上限（MB）
+  keep_files: 5      # 保持世代数

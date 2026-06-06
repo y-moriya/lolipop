@@ -23,8 +23,9 @@ module AnmanAI
   STDERR.sync = true
 
   class Client
-    def initialize(config_path, root_dir)
-      @root_dir = root_dir
+    def initialize(config_path, exe_dir, internal_root_dir)
+      @exe_dir = exe_dir
+      @internal_root_dir = internal_root_dir
       @config = YAML.load_file(config_path)
       @url = @config['server']['url']
       @vid = @config['server']['vid']
@@ -34,8 +35,8 @@ module AnmanAI
       @cookie = nil
       @game_state = GameState.new(@userid)
       @llm = LLMClient.new(@config)
-      @prompts = PromptManager.new(root_dir)
-      @learning = LearningSystem.new(root_dir, @llm)
+      @prompts = PromptManager.new(exe_dir, internal_root_dir)
+      @learning = LearningSystem.new(exe_dir, @llm)
 
       # コンパクトプロンプトモード: サマリー＋差分ログのみLLMに渡す（長大プロンプト防止）
       @compact_prompt = @config.dig('llm', 'compact_prompt') != false
@@ -115,6 +116,27 @@ module AnmanAI
       end
     end
     
+    # 既に参加済みの進行中・募集中の村を探し、あればその vid をセットして true を返す
+    # 存在しなければ false を返す
+    def find_active_joined_village
+      res = get_api('cmd' => 'vils')
+      return false unless res && res.code == '200'
+      vils = JSON.parse(res.body)
+      # 自分が参加済みの村（state=0:募集中 / state=1:進行中）を探す
+      active = vils.find do |v|
+        v['state'].to_i <= 1 && v['joined'] == true
+      end
+      if active
+        @vid = active['vid'].to_i
+        puts "[System] Found already-joined village: vid=#{@vid} (#{active['name']}, state=#{active['state']})"
+        return true
+      end
+      false
+    rescue => e
+      puts "[System Error] find_active_joined_village failed: #{e.message}"
+      false
+    end
+
     # 募集中の村を監視し、自動でエントリーする
     def auto_entry_loop!
       puts "[System] Scoping recruiting villages..."
@@ -293,6 +315,12 @@ module AnmanAI
           if game_state_val >= 2
             unless @reflected_and_greeting
               puts "[System] Game is over. Running reflection and posting epilogue chat..."
+              # 勝敗メッセージをインスタンス変数に保存（check_and_say_epilogue でも参照）
+              @epilogue_win_msg = case game_state_val
+                                  when 2 then "村人の勝利です！"
+                                  when 3 then "人狼の勝利です！"
+                                  else "ゲームが終了しました。"
+                                  end
               trigger_reflection_and_epilogue(game_state_val)
               @reflected_and_greeting = true
               @epilogue_start_time = Time.now
@@ -310,9 +338,10 @@ module AnmanAI
             if time_since_last_say >= 10
               current_chat_size = @game_state.chat_logs.size
               if (current_chat_size > @last_chat_logs_size)
-                # 新しい発言が自分自身のものでないか確認
+                # is_mine フラグ（サーバー付与）を優先し、なければ speaker 名で判定
                 last_log = @game_state.chat_logs.last
-                if last_log && last_log['speaker'] != @game_state.my_name
+                is_others_msg = last_log && (last_log['is_mine'] == false || last_log['speaker'] != @game_state.my_name)
+                if is_others_msg
                   check_and_say_epilogue
                 end
                 @last_chat_logs_size = current_chat_size
@@ -338,9 +367,11 @@ module AnmanAI
           time_since_last_say = Time.now - @last_say_time
           if time_since_last_say >= 15
             current_chat_size = @game_state.chat_logs.size
-            # 条件A: 新しいチャットがあった（反応発言）
+            # 条件A: 新しいチャットがあった（反応発言）かつ最新ログが自分のものでない
             # 条件B: 前回の発言から30秒経過しており、誰も発言していない（能動的発言）
-            if (current_chat_size > @last_chat_logs_size) || (time_since_last_say >= 30)
+            last_log = @game_state.chat_logs.last
+            others_spoke = (current_chat_size > @last_chat_logs_size) && last_log && !last_log['is_mine']
+            if others_spoke || (time_since_last_say >= 30)
               check_and_say
               @last_chat_logs_size = current_chat_size
             end
@@ -608,7 +639,7 @@ module AnmanAI
         target_name = parsed['vote_target']
         target_player = @game_state.players[target_name]
         
-        if target_player && target_player[:dead] == 0 && target_name != @userid
+        if target_player && target_player[:dead] == 0 && target_name != @game_state.my_name
           puts "[Action] AI decided to vote for: #{target_name} (ID: #{target_player[:num_id]})"
           post(
             'cmd' => 'vote', 
@@ -619,7 +650,7 @@ module AnmanAI
           @game_state.mark_logs_sent!
         else
           puts "[Action] AI target name '#{target_name}' is invalid or dead. Fallback to random voting."
-          fallback_target = @game_state.players.select { |name, p| p[:dead] == 0 && name != @userid }.values.sample
+          fallback_target = @game_state.players.select { |name, p| p[:dead] == 0 && name != @game_state.my_name }.values.sample
           if fallback_target
             post(
               'cmd' => 'vote', 
@@ -664,7 +695,7 @@ module AnmanAI
           target_name = parsed['fortune_target']
           target_player = @game_state.players[target_name]
           
-          if target_player && target_player[:dead] == 0 && target_name != @userid
+          if target_player && target_player[:dead] == 0 && target_name != @game_state.my_name
             puts "[Action] AI decided to scan (fortune): #{target_name} (ID: #{target_player[:num_id]})"
             post(
               'cmd' => 'skill',
@@ -675,7 +706,7 @@ module AnmanAI
             @game_state.action_results << "#{day}日目夜: #{target_name} を占い対象としてセットしました。"
             @game_state.mark_logs_sent!
           else
-            fallback_target = @game_state.players.select { |name, p| p[:dead] == 0 && name != @userid }.values.sample
+            fallback_target = @game_state.players.select { |name, p| p[:dead] == 0 && name != @game_state.my_name }.values.sample
             if fallback_target
               puts "[Action] Fallback scanning (fortune): (ID: #{fallback_target[:num_id]})"
               post(
@@ -713,7 +744,7 @@ module AnmanAI
           target_name = parsed['attack_target'] || parsed['fortune_target']
           target_player = @game_state.players[target_name]
           
-          if target_player && target_player[:dead] == 0 && target_name != @userid
+          if target_player && target_player[:dead] == 0 && target_name != @game_state.my_name
             puts "[Action] AI decided to attack: #{target_name} (ID: #{target_player[:num_id]})"
             post(
               'cmd' => 'skill',
@@ -723,8 +754,8 @@ module AnmanAI
             @acted_tonight[day] = true
             @game_state.mark_logs_sent!
           else
-            targets = @game_state.players.select { |name, p| p[:dead] == 0 && name != @userid && !@game_state.werewolf_partners.include?(name) }
-            fallback_target = targets.values.sample || @game_state.players.select { |name, p| p[:dead] == 0 && name != @userid }.values.sample
+            targets = @game_state.players.select { |name, p| p[:dead] == 0 && name != @game_state.my_name && !@game_state.werewolf_partners.include?(name) }
+            fallback_target = targets.values.sample || @game_state.players.select { |name, p| p[:dead] == 0 && name != @game_state.my_name }.values.sample
             if fallback_target
               puts "[Action] Fallback attacking: (ID: #{fallback_target[:num_id]})"
               post(
@@ -781,6 +812,33 @@ module AnmanAI
       end
     end
     
+    # エピローグ用: 全員の配役リストと勝敗を文字列化するヘルパー
+    def build_epilogue_context(win_msg)
+      lines = []
+      lines << "【ゲーム結果】#{win_msg}"
+      lines << "【あなたの役職】#{@game_state.my_role}"
+      lines << "【あなたが勝ったか】#{camp_from_role == 'villager' ? win_msg.include?('村人') : win_msg.include?('人狼') ? '勝利' : '敗北'}"
+      lines << "【全員の配役（ゲーム終了後公開）】"
+      # API から最新のプレイヤー情報（役職付き）を取得
+      begin
+        res = get_api('cmd' => 'players')
+        if res && res.code == '200'
+          players_json = JSON.parse(res.body)
+          players_json.each do |p|
+            role = p['role'] || '不明'
+            dead_str = p['dead'].to_i == 1 ? '（死亡）' : '（生存）'
+            lines << "  - #{p['name']} : #{role} #{dead_str}"
+          end
+        end
+      rescue => e
+        puts "[System Error] Failed to fetch players for epilogue: #{e.message}"
+        @game_state.players.each do |name, p|
+          lines << "  - #{name} : #{p[:role]} #{p[:dead] == 1 ? '（死亡）' : '（生存）'}"
+        end
+      end
+      lines.join("\n")
+    end
+
     # ゲーム終了時の反省・感想戦メッセージ送信
     def trigger_reflection_and_epilogue(state_val)
       win_msg = case state_val
@@ -792,12 +850,16 @@ module AnmanAI
       # 1. 反省と自己学習を実行
       trigger_reflection(win_msg)
       
-      # 2. LLM で感想戦メッセージを生成
+      # 2. 配役コンテキスト生成
+      epilogue_ctx = build_epilogue_context(win_msg)
+      
+      # 3. LLM で感想戦メッセージを生成
       puts "\n[Thinking] Drafting epilogue message..."
       system_prompt = "人狼ゲームが決着しました（#{win_msg}）。ゲーム終了後の感想戦（エピローグ）です。あなたのキャラクター「#{@game_state.my_name}」になりきって、ゲームを終えての感想、楽しかった点、他のプレイヤーへの労いの言葉などを「1文〜2文（合計30〜80文字以内）」で短く自然に発言してください。\n" \
+                      "【重要】実際にゲームで起きた出来事や、特定プレイヤーの配役（例:「○○さんが人狼だったとは！」「占い師として頑張りました」など）に具体的に言及してください。抽象的な感想だけでなく、具体的な配役・場面に触れることを強く推奨します。\n" \
                       "【超重要・NGワード】「データ、エミュレーション、システム、共通認識、論理的、変数、感情論、前提、整合性、分析、パラメータ、定量化」などの機械的・論文調・メタ的な言葉は絶対に排除してください。普通の人間として親しみやすく楽しげな感想（例:『楽しかった！』『次は勝ちたいな』など）にしてください。\n" \
                       "発言の冒頭に「#{@game_state.my_name}:」や「#{@game_state.my_name}」などの名前を含めないでください。発言本文のみを出力してください。メタ説明やマークダウン記法、余計な解説は一切含めてはいけません。"
-      user_prompt = "ゲームが終了しました。感想戦チャットに最初のメッセージを投稿してください。あなたの役職は #{@game_state.my_role} でした。"
+      user_prompt = "ゲームが終了しました。感想戦チャットに最初のメッセージを投稿してください。\n\n#{epilogue_ctx}"
       
       begin
         response = @llm.chat(system_prompt, user_prompt, temperature: 0.8)
@@ -814,7 +876,12 @@ module AnmanAI
     # 感想戦中の雑談・対話
     def check_and_say_epilogue
       puts "\n[Thinking] Reacting to epilogue chat..."
+      # 配役コンテキストを動的に生成（感想戦中も毎回参照）
+      # win_msg はインスタンス変数で保持していないため、chat_logs から推定
+      win_msg = @epilogue_win_msg || "ゲームが終了しました。"
+      epilogue_ctx = build_epilogue_context(win_msg)
       system_prompt = "人狼ゲームが終了した後の感想戦（エピローグ）の雑談です。あなたはキャラクター「#{@game_state.my_name}」です。必ず「#{@game_state.my_name}」なりきって発言してください。\n" \
+                      "【重要】会話の流れに合わせて、ゲーム中の具体的な出来事や特定プレイヤーの配役（例:「○○さんが人狼だったんですね！」など）に言及してください。以下に全員の配役が記載されています。\n#{epilogue_ctx}\n\n" \
                       "【超重要・発言文字数の制限】1回の返答は必ず「30〜80文字以内（最大でも2文）」で短く簡潔に発言してください。\n" \
                       "【超重要・NGワード】「データ、エミュレーション、システム、共通認識、論理的、変数、感情論、前提、整合性、分析、パラメータ、定量化、発話」といった機械的・システム論的な言葉は絶対に使わないでください。他の参加者とフレンドリーで普通の日常の言葉使い（例:『●●さん強かったですね！』『あの時の投票は〜』など）で雑談してください。\n" \
                       "【重要】発言の冒頭に「#{@game_state.my_name}:」や「#{@game_state.my_name}」などの名前プレフィックスを絶対に含めないでください。会話の発言本文のみを出力してください。【重要】チャットログ内の「#{@game_state.my_name}:」で始まる発言はあなた自身の発言です。自分の発言に対して『#{@game_state.my_name}さんの〜』や『#{@game_state.my_name}さんが言うように〜』といったように、第三者として言及することは絶対に避けてください。他の参加者の発言にのみ反応して、返答・雑談をしてください。"
