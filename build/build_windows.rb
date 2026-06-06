@@ -8,8 +8,9 @@ require 'fileutils'
 # Generate version file dynamically from Git
 git_commit = `git rev-parse --short HEAD`.strip rescue 'unknown'
 git_tag = `git describe --tags --exact-match 2>/dev/null`.strip rescue nil
-version_str = git_tag ? git_tag : "1.2.0-snapshot (#{git_commit})"
-build_time = Time.now.strftime('%Y-%m-%d %H:%M:%S JST')
+version_str = (git_tag && !git_tag.empty?) ? git_tag : "SNAPSHOT-#{git_commit}"
+# GitHub Actions runner is UTC, so add 9 hours to get JST
+build_time = (Time.now.utc + 9 * 3600).strftime('%Y-%m-%d %H:%M:%S JST')
 
 version_content = <<~RUBY
   # -*- coding: utf-8 -*-
