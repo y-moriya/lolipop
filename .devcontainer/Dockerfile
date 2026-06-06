@@ -31,5 +31,6 @@ RUN mkdir -p /usr/local/lib/ruby/site_ruby/rubygems/defaults && \
 # Apacheの設定ファイルを配置
 COPY lolipop-cgi.conf /etc/apache2/sites-available/000-default.conf
 
-# デフォルトのコマンドで Apache をフォアグラウンド実行
-CMD ["apache2ctl", "-D", "FOREGROUND"]
+# デフォルトのコマンドで Apache をフォアグラウンド実行（古いPIDやソケットを削除してから起動）
+CMD ["/bin/sh", "-c", "rm -f /var/run/apache2/apache2.pid /var/run/apache2/socks/* && exec apache2ctl -D FOREGROUND"]
+

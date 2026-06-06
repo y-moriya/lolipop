@@ -362,11 +362,42 @@ class CWolf
 		@vil = get_vil_lock(@vid)
 		if (@vil.state == 0 && @vil.players.size >= @vil.entry_min && @vil.players.size <= @vil.entry_max)
 			if(@vil.composition != WIDE_CUSTOM || @vil.wide_comps[@vil.players.size])
+				# 進行中の村が既にある場合は開始を拒否する（MASTER/ADMINは除外）
+				if (@login.userid != MASTER && @login.userid != ADMIN)
+					vldb_check = PStore.new('db/vil.db')
+					in_progress = vldb_check.transaction(true) do
+						recent_vid = vldb_check['recent_vid'].to_i
+						min = (recent_vid - 100 > 1) ? recent_vid - 100 : 1
+						(min..recent_vid).any? do |i|
+							vild = vldb_check["root#{i}"]
+							vild && vild['state'] == 1
+						end
+					end
+					if (in_progress)
+						raise ErrorMsg.new("現在進行中の村があります。進行中の村が終了してから開始してください。")
+					end
+				end
+
 				@vildb.transaction do
 					@vil = get_vil(@vid)
 					return if (@vil.userid != @login.userid && @login.userid != MASTER && @login.userid != ADMIN)
 					if (@vil.state == 0 && @vil.players.size >= @vil.entry_min && @vil.players.size <= @vil.entry_max)
 						if(@vil.composition != WIDE_CUSTOM || @vil.wide_comps[@vil.players.size])
+							# トランザクション内でも再チェック（競合防止）
+							if (@login.userid != MASTER && @login.userid != ADMIN)
+								vldb2 = PStore.new('db/vil.db')
+								in_progress2 = vldb2.transaction(true) do
+									recent_vid = vldb2['recent_vid'].to_i
+									min = (recent_vid - 100 > 1) ? recent_vid - 100 : 1
+									(min..recent_vid).any? do |i|
+										next if i == @vid
+										vild = vldb2["root#{i}"]
+										vild && vild['state'] == 1
+									end
+								end
+								return if (in_progress2)
+							end
+
 							@vil.update
 							vldb = PStore.new('db/vil.db')
 							vldb.transaction do
@@ -1239,8 +1270,8 @@ class CWolf
 				print head + "\r\n"
 			end
 			print "<pre>\n"
-			print CGI.escapeHTML("#{$!.to_s}\n")
-			print CGI.escapeHTML("#{$!.backtrace.join("\n")}\n")
+			print "#{$!.to_s}\n"
+			print "#{$!.backtrace.join("\n")}\n"
 			print "</pre>\n"
 		end
 	end

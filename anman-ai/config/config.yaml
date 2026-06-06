@@ -9,4 +9,5 @@ user:
 llm:
   api_key: "ollama"
   base_url: "http://172.31.128.1:11434/v1"
-  model: "qwen2.5:latest"
+  model: "gemma4:latest"
+  compact_prompt: true   # true: サマリー+差分ログのみ送信（短縮モード）/ false: 全ログ送信

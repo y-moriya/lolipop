@@ -153,11 +153,42 @@
 <br>
 <br>
 <% if (@vil.state == 0) %>
+<%
+# 進行中の村が既にあるか確認（MASTER/ADMIN以外）
+_edvil_in_progress = nil
+if (@login.userid != MASTER && @login.userid != ADMIN)
+  require 'pstore'
+  _db_file = 'db/vil.db'
+  if File.exist?(_db_file)
+    _vldb_ev = PStore.new(_db_file)
+    _vldb_ev.transaction(true) do
+      _recent = _vldb_ev['recent_vid'].to_i
+      _min = (_recent - 100 > 1) ? _recent - 100 : 1
+      (_min.._recent).each do |i|
+        _vd = _vldb_ev["root#{i}"]
+        if _vd && _vd['state'] == 1
+          _edvil_in_progress = _vd
+          break
+        end
+      end
+    end
+  end
+end
+%>
+<% if _edvil_in_progress %>
+<p style="color:red; font-weight:bold;">⚠ 現在「<%= CGI.escapeHTML(_edvil_in_progress['name'].to_s) %>」が進行中のため、村を開始できません。<br>進行中の村が終了してから開始してください。</p>
+<form action="index.cgi" method="post">
+<input type="hidden" name="cmd" value="upstart">
+<input type="hidden" name="vid" value="<%= @vil.vid %>">
+<input type="submit" value="村開始" class="submit" disabled style="opacity:0.4; cursor:not-allowed;">
+</form>
+<% else %>
 <form action="index.cgi" method="post" onSubmit="return confirm('村を開始しますか？')">
 <input type="hidden" name="cmd" value="upstart">
 <input type="hidden" name="vid" value="<%= @vil.vid %>">
 <input type="submit" value="村開始" class="submit">
 </form>
+<% end %>
 <% end %>
 <br>
 <br>

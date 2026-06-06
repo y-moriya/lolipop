@@ -414,7 +414,13 @@ class Api
               end
             end
 
-            print "[#{time_str}] #{speaker}#{type_label}: #{text_content}\n"
+            # ゲーム進行中のwhisperhowlは発言者も匿名化して出力（二重防御）
+            if vil_state < 2 && type_code == 'whisperhowl' &&
+               (current_player.nil? || (!current_player.can_whisper && (!open_skill || current_player.dead == 0)))
+              print "[#{time_str}] [システム] 狼の遠吠え: わおーん\n"
+            else
+              print "[#{time_str}] #{speaker}#{type_label}: #{text_content}\n"
+            end
 
           # 1b. 狼の遠吠え (直接書き出されている場合)
           elsif line =~ /<table class="message">.*?<td colspan="2" class="howl">狼の遠吠え<\/td>.*?<div class="mes_whisper_body1">(.*?)<\/div>.*?<\/table>/
@@ -539,7 +545,11 @@ class Api
       if keep
         event_copy = e.dup
         if masked_content
-          event_copy[:content] = masked_content
+          # ささやきをマスクする際は内容だけでなく発言者情報も匿名化する
+          # （誰が発言したかを推測できないよう speaker / speaker_id も隠す）
+          event_copy[:content]    = masked_content
+          event_copy[:speaker]    = 'システム'
+          event_copy[:speaker_id] = nil
         end
         filtered_events << event_copy
       end

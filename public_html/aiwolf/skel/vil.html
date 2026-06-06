@@ -22,7 +22,7 @@ end
 all = (@cgi['log'] == 'all') ? true : false
 part = (@cgi['log'] == 'part') ? true : false
 anc = (@cgi['log'] == 'anc') ? true : false
-exids = @cgi['id']
+exids = @cgi['id'].to_s
 exidplus = ''
 exidhref = ''
 if exids != ''
@@ -32,7 +32,7 @@ if exids != ''
 else
 	exid = []
 end
-type = @cgi['type']
+type = @cgi['type'].to_s
 if type != ''
 	typehref = '&type='+type
 else
@@ -401,29 +401,54 @@ end
 	<% end %>
 
 	<% if ((@vil.userid == @login.userid || @login.userid == MASTER || @login.userid == ADMIN) && @vil.state == 0) %>
-			<div align="right">
-				<form action="index.cgi" method="post">
-				<input type="hidden" name="cmd" value="tenko">
-				<input type="hidden" name="vid" value="<%= @vid %>">
-				<select name="tenko_value">
-				<%=
-				s = ''
-				if (@vil.tenko == -1)
-					s += "<option value = -1>点呼をしない *"
-					s += "\n"
-					s += "<option value = 0>点呼開始"
-				else
-					s += "<option value = 0>再点呼開始"
-					s += "\n"
-					s += "<option value = -1>点呼をやめる"
-				end
+		<div align="right">
+<%
+# 進行中の村が既にあるか確認（MASTER/ADMIN以外）
+in_progress_vil = nil
+if (@login.userid != MASTER && @login.userid != ADMIN)
+  require 'pstore'
+  db_file = 'db/vil.db'
+  if File.exist?(db_file)
+    vldb_ui = PStore.new(db_file)
+    vldb_ui.transaction(true) do
+      recent_vid = vldb_ui['recent_vid'].to_i
+      min = (recent_vid - 100 > 1) ? recent_vid - 100 : 1
+      (min..recent_vid).each do |i|
+        vild = vldb_ui["root#{i}"]
+        if vild && vild['state'] == 1
+          in_progress_vil = vild
+          break
+        end
+      end
+    end
+  end
+end
+%>
+<% if in_progress_vil %>
+<p style="color:red; font-weight:bold;">⚠ 現在「<%= CGI.escapeHTML(in_progress_vil['name'].to_s) %>」が進行中です。<br>進行中の村が終了してから開始してください。</p>
+<% end %>
+			<form action="index.cgi" method="post">
+			<input type="hidden" name="cmd" value="tenko">
+			<input type="hidden" name="vid" value="<%= @vid %>">
+			<select name="tenko_value">
+			<%=
+			s = ''
+			if (@vil.tenko == -1)
+				s += "<option value = -1>点呼をしない *"
 				s += "\n"
-				s
-				%>
-				</select>
-				<input type="submit" value="発言確認" class="submit">
-			</div>
-		</form>
+				s += "<option value = 0>点呼開始"
+			else
+				s += "<option value = 0>再点呼開始"
+				s += "\n"
+				s += "<option value = -1>点呼をやめる"
+			end
+			s += "\n"
+			s
+			%>
+			</select>
+			<input type="submit" value="発言確認" class="submit">
+		</div>
+	</form>
 	<% end %>
 
 	<% if (DEBUG) %>

@@ -36,13 +36,17 @@ module AnmanAI
       @llm = LLMClient.new(@config)
       @prompts = PromptManager.new(root_dir)
       @learning = LearningSystem.new(root_dir, @llm)
-      
-      @voted_today = {}    # { day => bool }
-      @acted_tonight = {}  # { day => bool }
+
+      # コンパクトプロンプトモード: サマリー＋差分ログのみLLMに渡す（長大プロンプト防止）
+      @compact_prompt = @config.dig('llm', 'compact_prompt') != false
+      puts "[System] Compact prompt mode: #{@compact_prompt ? 'ON（サマリー+差分ログ）' : 'OFF（全ログ）'}"
+
+      @voted_today = {}       # { day => bool }
+      @acted_tonight = {}     # { day => bool }
       @whispered_tonight = {} # { day => bool }
       @last_say_time = Time.at(0)
       @last_chat_logs_size = 0
-      
+
       @reflected_and_greeting = false
       @epilogue_start_time = nil
     end
@@ -195,15 +199,13 @@ module AnmanAI
     end
 
     def generate_character_greeting(char_name)
-      system_prompt = "あなたは人狼ゲームのキャラクター「#{char_name}」です。そのキャラクターになりきって、入村時の挨拶メッセージを1行で作成してください。挨拶以外のメタ発言や余計な解説、マークダウン記法（ダブルクォーテーションや```等）は一切含めてはいけません。"
-      user_prompt = "人狼ゲームの村の集会所に入りました。他のプレイヤーたちに、自己紹介を兼ねて挨拶してください。"
+      system_prompt = "あなたは人狼ゲームのキャラクター「#{char_name}」です。そのキャラクターになりきって、入村時の挨拶メッセージを1行で作成してください。発言の冒頭に「#{char_name}:」などの名前を含めないでください。発言本文のみを出力してください。まだ村が開始される前のエントリー段階ですので、誰が何の役職になるかは分かりません。そのため、役職に関する言及やゲームの議論・推理などは一切含めず、純粋な挨拶と自己紹介のみを行ってください。挨拶以外のメタ発言や余計な解説、マークダウン記法（ダブルクォーテーションや```等）は一切含めてはいけません。"
+      user_prompt = "人狼ゲームの村のエントリー（点呼）に参加しました。他のプレイヤーたちに、自己紹介を兼ねて入村の挨拶をしてください。"
       
       begin
         @last_say_time = Time.now
         response = @llm.chat(system_prompt, user_prompt, temperature: 0.8)
-        response.gsub!(/^["'「]+/, "")
-        response.gsub!(/["'」]+$/, "")
-        response.strip
+        clean_llm_message(response, char_name)
       rescue => e
         puts "[System Error] Failed to generate greeting: #{e.message}"
         "よろしくお願いします。"
@@ -278,6 +280,11 @@ module AnmanAI
               
               @game_state.current_day = vil_info['date'].to_i
               @game_state.is_night = vil_info['night']
+
+              # 村のステータスが進行中(1)以上であればゲーム開始済みとみなす
+              if game_state_val >= 1
+                @game_state.game_started = true
+              end
             end
             last_vil_check = Time.now
           end
@@ -298,12 +305,16 @@ module AnmanAI
               break
             end
             
-            # 感想戦中も、他人の新着メッセージがあれば反応発言するか、一定時間発言がなければ自発的に発言する
+            # 感想戦中は、他の参加者からの新着メッセージがあった場合のみ反応して発言する（一人の連投を防ぐ）
             time_since_last_say = Time.now - @last_say_time
-            if time_since_last_say >= 15
+            if time_since_last_say >= 10
               current_chat_size = @game_state.chat_logs.size
-              if (current_chat_size > @last_chat_logs_size) || (time_since_last_say >= 30)
-                check_and_say_epilogue
+              if (current_chat_size > @last_chat_logs_size)
+                # 新しい発言が自分自身のものでないか確認
+                last_log = @game_state.chat_logs.last
+                if last_log && last_log['speaker'] != @game_state.my_name
+                  check_and_say_epilogue
+                end
                 @last_chat_logs_size = current_chat_size
               end
             end
@@ -312,6 +323,9 @@ module AnmanAI
             next
           end
           
+          # ゲームが開始されるまでは、以降の自律アクション（発言・投票・夜行動など）は行わない
+          next unless @game_state.game_started
+
           # 昼夜の状態に応じた自律アクション判断
           day = @game_state.current_day
           remain_sec = update_time - Time.now.to_i
@@ -347,9 +361,9 @@ module AnmanAI
             end
           else
             # 昼フェーズ
-            # 更新時間が近づいたら投票を行う (残り時間15秒以下、かつ未投票、生存時のみ)
+            # 更新時間が近づいたら投票を行う (残り時間25秒以下、かつ未投票、生存時のみ)
             unless is_dead
-              if !@voted_today[day] && remain_sec > 0 && remain_sec <= 15
+              if !@voted_today[day] && remain_sec > 0 && remain_sec <= 25
                 puts "[System] Deadline approaching (#{remain_sec}s remaining). Triggering vote."
                 trigger_vote
               end
@@ -377,9 +391,101 @@ module AnmanAI
       end
     end
     
+    # コンパクトモード切り替え: chat_logsに渡す内容を決定するヘルパー
+    # compact_prompt=true  → 「ゲームサマリー + 新着差分ログのみ」を返す
+    # compact_prompt=false → 「全チャットログ」を返す
+    def build_log_context
+      if @compact_prompt
+        summary = @game_state.game_summary
+        incremental = @game_state.incremental_chat_logs
+        "#{summary}\n\n【新着チャット（前回送信以降）】\n#{incremental}"
+      else
+        @game_state.formatted_chat_logs
+      end
+    end
+
+    # LLMレスポンスをJSONとしてパースするヘルパー
+    # JSONが完全な場合は通常パース、途中切れの場合はregexでフィールドを個別抽出する
+    def parse_llm_json(raw_response)
+      # Markdownコードブロック除去
+      clean = raw_response.gsub(/\A```json\s*/m, "").gsub(/\A```\s*/m, "").gsub(/```\s*\z/m, "").strip
+
+      # 通常パースを試みる
+      begin
+        return JSON.parse(clean)
+      rescue JSON::ParserError
+        # フォールバック: 各フィールドをregexで個別抽出
+        STDERR.puts "[LLM Warning] JSON incomplete, attempting field extraction..."
+        result = {}
+
+        # message フィールド抽出
+        if clean =~ /"message"\s*:\s*"((?:[^"\\]|\\.)*)"/m
+          result['message'] = $1.gsub(/\\"/, '"').gsub(/\\n/, "\n")
+        end
+        # vote_target フィールド抽出
+        if clean =~ /"vote_target"\s*:\s*"((?:[^"\\]|\\.)*)"/m
+          result['vote_target'] = $1
+        end
+        # fortune_target フィールド抽出
+        if clean =~ /"fortune_target"\s*:\s*"((?:[^"\\]|\\.)*)"/m
+          result['fortune_target'] = $1
+        end
+        # reasoning_update フィールド抽出
+        if clean =~ /"reasoning_update"\s*:\s*"((?:[^"\\]|\\.)*)"/m
+          result['reasoning_update'] = $1.gsub(/\\"/, '"')
+        end
+        # thought フィールド抽出（任意）
+        if clean =~ /"thought"\s*:\s*"((?:[^"\\]|\\.)*)"/m
+          result['thought'] = $1
+        end
+
+        # 何も抽出できなければ例外を再発生
+        raise JSON::ParserError, "Could not extract any fields from LLM response" if result.empty?
+        result
+      end
+    end
+
+    # LLMの応答テキストから、不要なクォーテーション、括弧、名前プレフィックスを取り除く
+    def clean_llm_message(text, name = nil)
+      return "" unless text
+      cleaned = text.strip
+      
+      # 1. 括弧や引用符で全体が囲まれている場合はペアで剥ぎ取る
+      while cleaned =~ /\A(["'「『])(.*)(["'」』])\z/m
+        cleaned = $2.strip
+      end
+      
+      # 2. 名前プレフィックス（例：「学士 ノエル: 」など）をトリムする
+      if name
+        name_no_space = name.gsub(/\s+/, '')
+        # 「学士 ノエル」のようにスペースが含まれる場合のパターン
+        # コロンは半角・全角の両方に対応
+        pat = /^(?:#{Regexp.escape(name)}|#{Regexp.escape(name_no_space)})\s*[:：]\s*/i
+        cleaned.sub!(pat, '')
+      end
+      
+      # 3. 再度、全体を囲む括弧などがあれば削る（「学士 ノエル: 楽しかった」 -> 「楽しかった」 対策）
+      while cleaned =~ /\A(["'「『])(.*)(["'」』])\z/m
+        cleaned = $2.strip
+      end
+      
+      # 4. 残った先頭・末尾 of ゴミ記号を個別に除去する
+      cleaned.gsub!(/\A["'「『]+/, "")
+      cleaned.gsub!(/["'」』]+\z/, "")
+      
+      # 5. もう一度名前プレフィックス除去（念のため）
+      if name
+        name_no_space = name.gsub(/\s+/, '')
+        pat = /^(?:#{Regexp.escape(name)}|#{Regexp.escape(name_no_space)})\s*[:：]\s*/i
+        cleaned.sub!(pat, '')
+      end
+      
+      cleaned.strip
+    end
+
     # 自律的・反応的な発言・思考発信処理（生存/死亡、昼/夜に応じてメッセージ種別を切り替える）
     def check_and_say
-      return if @game_state.current_day < 1
+      return unless @game_state.game_started
       
       my_player = @game_state.players[@game_state.my_name]
       is_dead = my_player && my_player[:dead] != 0
@@ -402,15 +508,16 @@ module AnmanAI
       puts "\n[Thinking] Evaluating response (is_dead: #{is_dead}, is_night: #{is_night}, msg_type: #{msg_type})..."
       
       vars = {
-        'current_day' => @game_state.current_day,
-        'my_name' => @game_state.my_name,
-        'my_role' => @game_state.my_role,
-        'surviving_players' => @game_state.surviving_players_list,
-        'dead_players' => @game_state.dead_players_list,
+        'current_day'      => @game_state.current_day,
+        'my_name'          => @game_state.my_name,
+        'my_role'          => @game_state.my_role,
+        'surviving_players'=> @game_state.surviving_players_list,
+        'dead_players'     => @game_state.dead_players_list,
         'my_reasoning_notes' => @game_state.my_reasoning_notes,
-        'chat_logs' => @game_state.formatted_chat_logs,
-        'learning_memory' => @learning.load_memory_text,
-        'role_instructions' => @prompts.load_camp_prompt(camp_from_role)
+        'my_recent_says'   => @game_state.my_recent_says,
+        'chat_logs'        => build_log_context,
+        'learning_memory'  => @learning.load_memory_text,
+        'role_instructions'=> @prompts.load_camp_prompt(camp_from_role)
       }
       
       # 前回の発言から28秒以上経過している場合は、能動的発信（沈黙タイムアウト）とみなす
@@ -441,14 +548,14 @@ module AnmanAI
       
       begin
         response = @llm.chat(system_prompt, user_prompt)
-        clean_res = response.gsub(/^```json\s*/, "").gsub(/```\s*$/, "").strip
-        parsed = JSON.parse(clean_res)
+        parsed = parse_llm_json(response)
         
         if parsed['reasoning_update'] && !parsed['reasoning_update'].empty?
           @game_state.my_reasoning_notes = parsed['reasoning_update']
         end
         
         msg = parsed['message']
+        msg = clean_llm_message(msg, @game_state.my_name) if msg
         if msg && !msg.empty?
           case msg_type
           when 'groan'
@@ -465,6 +572,7 @@ module AnmanAI
         else
           puts "[Action] AI decided to skip speaking (pass)."
         end
+        @game_state.mark_logs_sent!
       rescue => e
         puts "[System Error] Failed in check_and_say: #{e.message}"
       end
@@ -478,13 +586,13 @@ module AnmanAI
       puts "\n[Thinking] Deciding who to vote for today..."
       
       vars = {
-        'current_day' => day,
-        'my_name' => @game_state.my_name,
-        'my_role' => @game_state.my_role,
+        'current_day'       => day,
+        'my_name'           => @game_state.my_name,
+        'my_role'           => @game_state.my_role,
         'surviving_players' => @game_state.surviving_players_list,
-        'my_reasoning_notes' => @game_state.my_reasoning_notes,
-        'chat_logs' => @game_state.formatted_chat_logs,
-        'learning_memory' => @learning.load_memory_text,
+        'my_reasoning_notes'=> @game_state.my_reasoning_notes,
+        'chat_logs'         => build_log_context,
+        'learning_memory'   => @learning.load_memory_text,
         'role_instructions' => @prompts.load_camp_prompt(camp_from_role)
       }
       
@@ -493,8 +601,7 @@ module AnmanAI
       
       begin
         response = @llm.chat(system_prompt, user_prompt, temperature: 0.2)
-        clean_res = response.gsub(/^```json\s*/, "").gsub(/```\s*$/, "").strip
-        parsed = JSON.parse(clean_res)
+        parsed = parse_llm_json(response)
         
         target_name = parsed['vote_target']
         target_player = @game_state.players[target_name]
@@ -507,6 +614,7 @@ module AnmanAI
             'set_date' => day.to_s
           )
           @voted_today[day] = true
+          @game_state.mark_logs_sent!
         else
           puts "[Action] AI target name '#{target_name}' is invalid or dead. Fallback to random voting."
           fallback_target = @game_state.players.select { |name, p| p[:dead] == 0 && name != @userid }.values.sample
@@ -517,6 +625,7 @@ module AnmanAI
               'set_date' => day.to_s
             )
             @voted_today[day] = true
+            @game_state.mark_logs_sent!
           end
         end
       rescue => e
@@ -532,15 +641,15 @@ module AnmanAI
       when "占い師"
         puts "\n[Thinking] Deciding who to scan tonight..."
         vars = {
-          'current_day' => day,
-          'my_name' => @game_state.my_name,
-          'my_role' => @game_state.my_role,
-          'surviving_players' => @game_state.surviving_players_list,
-          'action_results' => @game_state.formatted_action_results,
+          'current_day'        => day,
+          'my_name'            => @game_state.my_name,
+          'my_role'            => @game_state.my_role,
+          'surviving_players'  => @game_state.surviving_players_list,
+          'action_results'     => @game_state.formatted_action_results,
           'my_reasoning_notes' => @game_state.my_reasoning_notes,
-          'chat_logs' => @game_state.formatted_chat_logs,
-          'learning_memory' => @learning.load_memory_text,
-          'role_instructions' => @prompts.load_camp_prompt(camp_from_role)
+          'chat_logs'          => build_log_context,
+          'learning_memory'    => @learning.load_memory_text,
+          'role_instructions'  => @prompts.load_camp_prompt(camp_from_role)
         }
         
         system_prompt = "あなたは人狼ゲームの占い師です。必ず指定されたJSONフォーマットで回答してください。JSON以外の文章は一切含めてはいけません。"
@@ -548,8 +657,7 @@ module AnmanAI
         
         begin
           response = @llm.chat(system_prompt, user_prompt, temperature: 0.2)
-          clean_res = response.gsub(/^```json\s*/, "").gsub(/```\s*$/, "").strip
-          parsed = JSON.parse(clean_res)
+          parsed = parse_llm_json(response)
           
           target_name = parsed['fortune_target']
           target_player = @game_state.players[target_name]
@@ -563,6 +671,7 @@ module AnmanAI
             )
             @acted_tonight[day] = true
             @game_state.action_results << "#{day}日目夜: #{target_name} を占い対象としてセットしました。"
+            @game_state.mark_logs_sent!
           else
             fallback_target = @game_state.players.select { |name, p| p[:dead] == 0 && name != @userid }.values.sample
             if fallback_target
@@ -582,14 +691,14 @@ module AnmanAI
       when "人狼"
         puts "\n[Thinking] Deciding who to attack tonight..."
         vars = {
-          'current_day' => day,
-          'my_name' => @game_state.my_name,
-          'my_role' => @game_state.my_role,
-          'surviving_players' => @game_state.surviving_players_list,
+          'current_day'        => day,
+          'my_name'            => @game_state.my_name,
+          'my_role'            => @game_state.my_role,
+          'surviving_players'  => @game_state.surviving_players_list,
           'my_reasoning_notes' => @game_state.my_reasoning_notes,
-          'chat_logs' => @game_state.formatted_chat_logs,
-          'learning_memory' => @learning.load_memory_text,
-          'role_instructions' => @prompts.load_camp_prompt('werewolf')
+          'chat_logs'          => build_log_context,
+          'learning_memory'    => @learning.load_memory_text,
+          'role_instructions'  => @prompts.load_camp_prompt('werewolf')
         }
         
         system_prompt = "あなたは人狼です。今夜襲撃する市民を1人選択してください。必ず指定されたJSONフォーマットで回答してください。JSON以外の文章は一切含めてはいけません。"
@@ -597,8 +706,7 @@ module AnmanAI
         
         begin
           response = @llm.chat(system_prompt, user_prompt, temperature: 0.2)
-          clean_res = response.gsub(/^```json\s*/, "").gsub(/```\s*$/, "").strip
-          parsed = JSON.parse(clean_res)
+          parsed = parse_llm_json(response)
           
           target_name = parsed['attack_target'] || parsed['fortune_target']
           target_player = @game_state.players[target_name]
@@ -611,6 +719,7 @@ module AnmanAI
               'set_date' => day.to_s
             )
             @acted_tonight[day] = true
+            @game_state.mark_logs_sent!
           else
             targets = @game_state.players.select { |name, p| p[:dead] == 0 && name != @userid && !@game_state.werewolf_partners.include?(name) }
             fallback_target = targets.values.sample || @game_state.players.select { |name, p| p[:dead] == 0 && name != @userid }.values.sample
@@ -636,14 +745,14 @@ module AnmanAI
       puts "\n[Thinking] Drafting werewolf whisper chat..."
       
       vars = {
-        'current_day' => day,
-        'my_name' => @game_state.my_name,
-        'surviving_players' => @game_state.surviving_players_list,
-        'werewolf_partners' => @game_state.werewolf_partners.join(", "),
+        'current_day'        => day,
+        'my_name'            => @game_state.my_name,
+        'surviving_players'  => @game_state.surviving_players_list,
+        'werewolf_partners'  => @game_state.werewolf_partners.join(", "),
         'my_reasoning_notes' => @game_state.my_reasoning_notes,
-        'chat_logs' => @game_state.formatted_chat_logs,
-        'learning_memory' => @learning.load_memory_text,
-        'role_instructions' => @prompts.load_camp_prompt('werewolf')
+        'chat_logs'          => build_log_context,
+        'learning_memory'    => @learning.load_memory_text,
+        'role_instructions'  => @prompts.load_camp_prompt('werewolf')
       }
       
       system_prompt = "あなたは人狼です。必ず指定されたJSONフォーマットで回答してください。JSON以外の文章は一切含めてはいけません。"
@@ -651,19 +760,20 @@ module AnmanAI
       
       begin
         response = @llm.chat(system_prompt, user_prompt)
-        clean_res = response.gsub(/^```json\s*/, "").gsub(/```\s*$/, "").strip
-        parsed = JSON.parse(clean_res)
+        parsed = parse_llm_json(response)
         
         if parsed['reasoning_update'] && !parsed['reasoning_update'].empty?
           @game_state.my_reasoning_notes = parsed['reasoning_update']
         end
         
         msg = parsed['message']
+        msg = clean_llm_message(msg, @game_state.my_name) if msg
         if msg && !msg.empty?
           puts "[Action] AI decided to whisper: \"#{msg}\""
           post('cmd' => 'msg', 'message' => msg, 'whisper' => 'on', 'j_data' => 'a')
         end
         @whispered_tonight[day] = true
+        @game_state.mark_logs_sent!
       rescue => e
         puts "[System Error] Failed in trigger_whisper: #{e.message}"
       end
@@ -682,14 +792,12 @@ module AnmanAI
       
       # 2. LLM で感想戦メッセージを生成
       puts "\n[Thinking] Drafting epilogue message..."
-      system_prompt = "人狼ゲームが決着しました（#{win_msg}）。ゲーム終了後の感想戦（エピローグ）です。あなたのキャラクター「#{@game_state.my_name}」になりきって、ゲームを終えての感想、楽しかった点、他のプレイヤーへの労いの言葉などを1行で発言してください。メタ説明やマークダウン記法、余計な解説は一切含めてはいけません。"
+      system_prompt = "人狼ゲームが決着しました（#{win_msg}）。ゲーム終了後の感想戦（エピローグ）です。あなたのキャラクター「#{@game_state.my_name}」になりきって、ゲームを終えての感想、楽しかった点、他のプレイヤーへの労いの言葉などを1行で発言してください。発言の冒頭に「#{@game_state.my_name}:」や「#{@game_state.my_name}」などの名前を含めないでください。発言本文のみを出力してください。メタ説明やマークダウン記法、余計な解説は一切含めてはいけません。"
       user_prompt = "ゲームが終了しました。感想戦チャットに最初のメッセージを投稿してください。あなたの役職は #{@game_state.my_role} でした。"
       
       begin
         response = @llm.chat(system_prompt, user_prompt, temperature: 0.8)
-        response.gsub!(/^["'「]+/, "")
-        response.gsub!(/["'」]+$/, "")
-        msg = response.strip
+        msg = clean_llm_message(response, @game_state.my_name)
         
         puts "[Action] AI decided to post epilogue message: \"#{msg}\""
         post('cmd' => 'msg', 'message' => msg, 'j_data' => 'a')
@@ -702,14 +810,12 @@ module AnmanAI
     # 感想戦中の雑談・対話
     def check_and_say_epilogue
       puts "\n[Thinking] Reacting to epilogue chat..."
-      system_prompt = "人狼ゲームが終了した後の感想戦（エピローグ）の雑談です。あなたのキャラクターになりきって、これまでの他のプレイヤーの発言に対して返答、雑談、あるいは軽い感想を1行で発言してください。余計なマークダウンやメタ解説は一切含めてはいけません。"
+      system_prompt = "人狼ゲームが終了した後の感想戦（エピローグ）の雑談です。あなたはキャラクター「#{@game_state.my_name}」です。必ず「#{@game_state.my_name}」なりきって発言してください。【重要】発言の冒頭に「#{@game_state.my_name}:」や「#{@game_state.my_name}」などの名前プレフィックスを絶対に含めないでください。会話の発言本文のみを出力してください。【重要】チャットログ内の「#{@game_state.my_name}:」で始まる発言はあなた自身の発言です。自分の発言に対して『#{@game_state.my_name}さんの〜』や『#{@game_state.my_name}さんが言うように〜』といったように、第三者として言及することは絶対に避けてください。他の参加者の発言にのみ反応して、1行（100〜150文字程度）で返答・雑談をしてください。"
       user_prompt = "これまでの感想戦チャットログを踏まえて発言してください。\n#{@game_state.formatted_chat_logs}"
       
       begin
         response = @llm.chat(system_prompt, user_prompt, temperature: 0.8)
-        response.gsub!(/^["'「]+/, "")
-        response.gsub!(/["'」]+$/, "")
-        msg = response.strip
+        msg = clean_llm_message(response, @game_state.my_name)
         
         puts "[Action] AI decided to post epilogue chat: \"#{msg}\""
         post('cmd' => 'msg', 'message' => msg, 'j_data' => 'a')
