@@ -35,6 +35,12 @@ AnmanAI.setup_logger(exe_dir, config)
 
 require 'client'
 
+# OCRANビルドの依存関係ロード用：ビルド中であれば即終了
+if defined?(Ocran)
+  puts "OCRAN build mode detected. Exiting successfully after dependencies loaded."
+  exit 0
+end
+
 puts "=== Starting anman-ai Autonomous Werewolf Client ==="
 puts "Root Directory: #{exe_dir}"
 puts "Config File:    #{config_path}"
