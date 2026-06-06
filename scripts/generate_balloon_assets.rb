@@ -22,14 +22,14 @@ COLORS.each do |prefix, color|
   cmd_00 = "convert -size 16x20 xc:black -fill \"#{color}\" -draw \"polygon 16,4 16,16 0,10\" \"#{IMG_DIR}/#{prefix}00.jpg\""
   system(cmd_00)
 
-  # 05.jpg (上部角丸枠 464x8)
-  # 464x16の角丸長方形を描いて上半分を切り取る
-  cmd_05 = "convert -size 464x16 xc:black -fill \"#{color}\" -draw \"roundrectangle 0,0 463,15 8,8\" -crop 464x8+0+0 \"#{IMG_DIR}/#{prefix}05.jpg\""
+  # 05.jpg (上部角丸枠 584x8)
+  # 584x16の角丸長方形を描いて上半分を切り取る
+  cmd_05 = "convert -size 584x16 xc:black -fill \"#{color}\" -draw \"roundrectangle 0,0 583,15 8,8\" -crop 584x8+0+0 \"#{IMG_DIR}/#{prefix}05.jpg\""
   system(cmd_05)
 
-  # 06.jpg (下部角丸枠 464x8)
-  # 464x16の角丸長方形を描いて下半分を切り取る
-  cmd_06 = "convert -size 464x16 xc:black -fill \"#{color}\" -draw \"roundrectangle 0,0 463,15 8,8\" -crop 464x8+0+8 \"#{IMG_DIR}/#{prefix}06.jpg\""
+  # 06.jpg (下部角丸枠 584x8)
+  # 584x16の角丸長方形を描いて下半分を切り取る
+  cmd_06 = "convert -size 584x16 xc:black -fill \"#{color}\" -draw \"roundrectangle 0,0 583,15 8,8\" -crop 584x8+0+8 \"#{IMG_DIR}/#{prefix}06.jpg\""
   system(cmd_06)
 end
 

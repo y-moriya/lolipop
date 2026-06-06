@@ -239,7 +239,7 @@ h2 {
 
 table.message {
     margin: 0 0 10px;
-    width: 530px;
+    width: 700px;
     border-collapse: collapse;
     border-spacing: 0
 }.ajax {
@@ -331,7 +331,7 @@ td span.cut a:visited.say, td span.cut a:link.say, .cut {
 }.action_box {
     border-collapse: collapse;
     margin: 20px 0;
-    width: 530px
+    width: 700px
 }.action_body {
     padding: 2px;
     color: #000

@@ -213,7 +213,7 @@ class Vil
 		timestr = day.strftime("%Y/%m/%d %X")
 		typehead = 'say'
 		s += %Q(<a href="?#{link}" target="_blank">#{name}</a> <span class="time">#{timestr}</span>)
-		s2 = %Q(<!--#{typehead}#{id}--><table class="message"><tr><td width="100" rowspan="2"><img src="img/#{pid}.png"></td><td colspan="2">#{s}</td></tr><tr><td><div class="mes_#{type}"></div></td><td width="464"><div class="mes_#{type}_body0"><div class="mes_#{type}_body1">#{msg}</div></div></td></tr></table>\n)
+		s2 = %Q(<!--#{typehead}#{id}--><table class="message"><tr><td width="100" rowspan="2"><img src="img/#{pid}.png"></td><td colspan="2">#{s}</td></tr><tr><td><div class="mes_#{type}"></div></td><td width="584"><div class="mes_#{type}_body0"><div class="mes_#{type}_body1">#{msg}</div></div></td></tr></table>\n)
 		s2
 	end
 
@@ -266,7 +266,7 @@ class Vil
 		typehead = (@night && type == 'whisper') ? 'whisperhowl' : type
 
 		s += %Q(<a href="?#{link}" target="_blank">#{name}</a> <span class="time">#{timestr}</span>)
-		s2 = %Q(<!--#{typehead}#{id}--><table class="message"><tr><td width="100" rowspan="2"><img src="img/#{pid}.png"></td><td colspan="2">#{s}</td></tr><tr><td><div class="mes_#{type}"></div></td><td width="464"><div class="mes_#{type}_body0"><div class="mes_#{type}_body1">#{msg}</div></div></td></tr></table>\n)
+		s2 = %Q(<!--#{typehead}#{id}--><table class="message"><tr><td width="100" rowspan="2"><img src="img/#{pid}.png"></td><td colspan="2">#{s}</td></tr><tr><td><div class="mes_#{type}"></div></td><td width="584"><div class="mes_#{type}_body0"><div class="mes_#{type}_body1">#{msg}</div></div></td></tr></table>\n)
 		s2
 	end
 
