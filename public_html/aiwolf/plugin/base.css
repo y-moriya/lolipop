@@ -277,9 +277,11 @@ table.message td a:visited.say, table.message td a:link.say, .popsay {
 td span.cut a:visited.say, td span.cut a:link.say, .cut {
     color: #cc9
 }.mes_say {
-    padding: 8px 0 0;
+    padding: 0;
     width: 16px;
-    background: url(../img/say00.jpg) no-repeat center;
+    height: 20px;
+    background: url(../img/say00.jpg) no-repeat top center;
+    margin: 8px 0 0 auto;
 }.mes_say_body0 {
     padding: 0;
     background: none;
@@ -290,9 +292,11 @@ td span.cut a:visited.say, td span.cut a:link.say, .cut {
     border-radius: 8px;
     border: 1px solid #dddddd;
 }.mes_whisper {
-    padding: 8px 0 0;
+    padding: 0;
     width: 16px;
-    background: url(../img/whisper00.jpg) no-repeat center;
+    height: 20px;
+    background: url(../img/whisper00.jpg) no-repeat top center;
+    margin: 8px 0 0 auto;
 }.mes_whisper_body0 {
     padding: 0;
     background: none;
@@ -303,9 +307,11 @@ td span.cut a:visited.say, td span.cut a:link.say, .cut {
     border-radius: 8px;
     border: 1px solid #ff5555;
 }.mes_groan {
-    padding: 8px 0 0;
+    padding: 0;
     width: 16px;
-    background: url(../img/groan00.jpg) no-repeat center;
+    height: 20px;
+    background: url(../img/groan00.jpg) no-repeat top center;
+    margin: 8px 0 0 auto;
 }.mes_groan_body0 {
     padding: 0;
     background: none;
@@ -316,9 +322,11 @@ td span.cut a:visited.say, td span.cut a:link.say, .cut {
     border-radius: 8px;
     border: 1px solid #8fa7bf;
 }.mes_think {
-    padding: 8px 0 0;
+    padding: 0;
     width: 16px;
-    background: url(../img/think00.jpg) no-repeat center;
+    height: 20px;
+    background: url(../img/think00.jpg) no-repeat top center;
+    margin: 8px 0 0 auto;
 }.mes_think_body0 {
     padding: 0;
     background: none;
