@@ -81,12 +81,12 @@ function actToggle(obj_id, obj_t_id) {
 	if(elm_t){
 		if(elm.style.display == 'none'){
 			elm.style.display = "block";
-			elm_t.innerHTML = '¢•';
+			elm_t.innerHTML = '‚ñ≤';
 			actAcd = '0';
 		}
 		else{
 			elm.style.display = "none";
-			elm_t.innerHTML = '¢ß';
+			elm_t.innerHTML = '‚ñº';
 			actAcd = '1';
 		}
 		writeCookie();
@@ -232,7 +232,7 @@ function setAjaxEvent(target){
 			$.get(href,{},function(data){
 				var mes = $(data).find(".message");
 				var time = $(mes).find(".time");
-				var close = $("<span class=\"close\">°ﬂ</span>");
+				var close = $("<span class=\"close\">√ó</span>");
 				mes.addClass("ajax").css('display','none');
 				setAjaxEvent(mes);
 				time.after(close);
@@ -241,7 +241,7 @@ function setAjaxEvent(target){
 				ajaxitems.push(mes);
 				closeWindow();
 				var topm    = mouse.pageY +  16;
-				var leftm   = mouse.pageX - 50; // ∑Ë§·§¶§¡°¢À‹≈ˆ§œ§Ë§Ø§ §§°£
+				var leftm   = mouse.pageX - 50; // Ê±∫„ÇÅ„ÅÜ„Å°„ÄÅÊú¨ÂΩì„ÅØ„Çà„Åè„Å™„ÅÑ„ÄÇ
 				var leftend = $("body").width() - mes.width() - 8;
 				if( leftend < leftm )
 					leftm   = leftend;

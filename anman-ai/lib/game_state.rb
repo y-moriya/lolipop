@@ -196,8 +196,9 @@ module AnmanAI
       case log['type']
       when 'message'
         tc = log['type_code']
-        # クライアント側の安全装置: whisperが万が一届いた場合も発言者をマスク
-        if tc == 'whisper' && log['speaker'] != @my_name
+        # クライアント側の安全装置: 自分が人狼・狂信者等ではない場合、ささやき(whisper/whisperhowl)は常にマスクする
+        is_werewolf_camp = ["人狼", "狂信者"].include?(@my_role) || !@werewolf_partners.empty?
+        if (tc == 'whisper' || tc == 'whisperhowl') && !is_werewolf_camp
           "#{time_part}[システム] 狼の遠吠え: わおーん"
         else
           label = tc == 'say' ? "" : " (#{tc})"
