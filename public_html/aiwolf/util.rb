@@ -206,7 +206,7 @@ def setvote(id, str)
 	%Q(<!--think#{id}--><div class="announce vote">#{str}</div>\n)
 end
 def howl_wolf(howl_filename)
-	%Q(<table class="message"><tr><td width="100" rowspan="2"><img src="img/#{howl_filename}.png"></td><td colspan="2" class="howl">狼の遠吠え</td></tr><tr><td width="16"><img src="img/whisper00.jpg"></td><td width="584"><div class="mes_whisper_body0"><div class="mes_whisper_body1">わおーん</div></div></td></tr></table>\n)
+	%Q(<table class="message"><tr><td width="100" rowspan="2"><img src="img/#{howl_filename}.png"></td><td colspan="2" class="howl">狼の遠吠え</td></tr><tr><td width="16" valign="top"><img src="img/whisper00.jpg"></td><td width="584"><div class="mes_whisper_body0"><div class="mes_whisper_body1">わおーん</div></div></td></tr></table>\n)
 end
 
 def vil_list(v)
