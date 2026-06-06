@@ -34,7 +34,17 @@ module AnmanAI
 
     def build_adapter(llm_config)
       return nil unless llm_config
-      provider = llm_config['provider'] || 'ollama'
+      
+      provider = llm_config['provider']
+      if provider.nil? || provider.to_s.strip.empty?
+        # Auto-detect: If an API key is present (and it's not "ollama"), assume openai_compat
+        api_key = llm_config['api_key']
+        if api_key && !api_key.to_s.strip.empty? && api_key != 'ollama'
+          provider = 'openai_compat'
+        else
+          provider = 'ollama'
+        end
+      end
 
       # Adapters expect config.dig('llm', ...), so construct a pseudo config hash
       pseudo_config = { 'llm' => llm_config }

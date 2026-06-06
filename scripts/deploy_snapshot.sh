@@ -48,9 +48,16 @@ mkdir -p "$WINDOWS_WORKSPACE"
 cp -r "$TEMP_DIR/extracted/anman-ai-snapshot-windows"/* "$WINDOWS_WORKSPACE/"
 
 echo "=== 5. 設定ファイル (config.yaml) の引き継ぎコピー ==="
-if [ -f "$ROOT_DIR/anman-ai/config/config.yaml" ]; then
-  echo "Copying config.yaml from local project development setup..."
-  cp "$ROOT_DIR/anman-ai/config/config.yaml" "$WINDOWS_WORKSPACE/config/config.yaml"
+if [ -f "$WINDOWS_WORKSPACE/config/config.yaml" ]; then
+  echo "config.yaml already exists in Windows workspace. Preserving your existing configuration."
+else
+  if [ -f "$ROOT_DIR/anman-ai/config/config.yaml" ]; then
+    echo "Copying config.yaml from local project development setup..."
+    cp "$ROOT_DIR/anman-ai/config/config.yaml" "$WINDOWS_WORKSPACE/config/config.yaml"
+  else
+    echo "Copying config.yaml.example as config.yaml..."
+    cp "$WINDOWS_WORKSPACE/config/config.yaml.example" "$WINDOWS_WORKSPACE/config/config.yaml"
+  fi
 fi
 
 echo "=== デプロイ完了 ==="
