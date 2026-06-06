@@ -19,6 +19,12 @@ end
 internal_root_dir = File.expand_path('..', __dir__)
 config_path = ARGV[0] || File.join(exe_dir, 'config', 'config.yaml')
 
+# OCRANビルド用: もし config.yaml が存在しない場合は config.yaml.example を代用して依存パッケージのロードを通す
+if defined?(Ocran) && !File.exist?(config_path)
+  example_path = File.join(exe_dir, 'config', 'config.yaml.example')
+  config_path = example_path if File.exist?(example_path)
+end
+
 unless File.exist?(config_path)
   puts "Error: Config file not found at #{config_path}"
   print_usage
