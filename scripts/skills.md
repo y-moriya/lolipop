@@ -125,3 +125,22 @@ ruby scripts/remote_db_manager.rb --backup
 | 自己投票・自己占いが起きる | @userid とキャラクター名不一致 | client.rb の比較を `@game_state.my_name` に修正（修正済み） |
 | エピローグで連投ループ | is_mine フラグ未参照 | client.rb の is_mine チェックを確認（修正済み） |
 
+
+---
+
+## 11. Windows配布用Snapshotのデプロイ (Windows検証環境)
+
+コード変更をリモートリポジトリに反映し、GitHub Actions のビルドの完了を待ってから、ホストOS側のWindows環境 (`C:\Users\wellk\workspace\anman-ai-test`) にZIPアセットを自動的にダウンロード・展開・上書きデプロイします。
+
+### 実行手順
+
+1. 通常のプッシュとビルド待機・Windows側デプロイを一気に行う場合:
+   ```bash
+   ./scripts/push_and_deploy.sh
+   ```
+
+2. 既にプッシュ済みで、ビルド待機とデプロイのみを行いたい場合:
+   ```bash
+   ./scripts/deploy_snapshot.sh
+   ```
+
