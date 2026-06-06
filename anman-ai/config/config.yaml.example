@@ -3,8 +3,8 @@ server:
   vid: 0
 
 user:
-  userid: "anman_bot"
-  password: "password123"
+  userid: "YOUR_USER_ID"
+  password: "YOUR_PASSWORD"
 
 llm:
   api_key: "ollama"

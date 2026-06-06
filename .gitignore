@@ -1,5 +1,6 @@
 # Local configuration / Credentials
 .env
+anman-ai/config/config.yaml
 
 # DevContainer logs or temporal files
 .devcontainer/*.log
