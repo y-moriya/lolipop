@@ -13,7 +13,7 @@ module AnmanAI
     end
 
     def chat(system_prompt, user_prompt, temperature: 0.7, max_retries: 2)
-      begin
+      raw_res = begin
         @main_adapter.chat(system_prompt, user_prompt, temperature: temperature, max_retries: max_retries)
       rescue => e
         if @fallback_adapter
@@ -28,6 +28,11 @@ module AnmanAI
           raise e
         end
       end
+
+      if raw_res
+        raw_res = raw_res.gsub(/<think>.*?<\/think>/mi, '').strip
+      end
+      raw_res
     end
 
     private

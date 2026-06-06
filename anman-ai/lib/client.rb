@@ -246,6 +246,60 @@ module AnmanAI
       
       @game_state.init_players(players_json, current_player)
       puts "[System] Game state initialized. Your role: #{@game_state.my_role}."
+
+      # 村の状態を取得して日付を同期
+      res_vil = get_api('cmd' => 'vil')
+      if res_vil && res_vil.code == '200'
+        vil_info = JSON.parse(res_vil.body)
+        @game_state.current_day = vil_info['date'].to_i
+        @game_state.is_night = vil_info['night']
+        if vil_info['state'].to_i >= 1
+          @game_state.game_started = true
+        end
+      end
+      
+      # 初回の状態同期を実行
+      sync_game_status_from_server!
+    end
+
+    # サーバーから投票や夜アクション、ささやき等の実行状態を同期し、
+    # クライアント再起動時や状態変化時に重複して行動を起こさないようにする
+    def sync_game_status_from_server!
+      day = @game_state.current_day
+      
+      # 1. 投票と夜アクションの状態同期
+      res_players = get_api('cmd' => 'players')
+      if res_players && res_players.code == '200'
+        players_json = JSON.parse(res_players.body)
+        me = players_json.find { |p| p['userid'] == @userid }
+        if me
+          if me['voted'] == true
+            unless @voted_today[day]
+              @voted_today[day] = true
+              puts "[System] Synchronized status: Already voted today (Day #{day})."
+            end
+          end
+          if me['acted'] == true
+            unless @acted_tonight[day]
+              @acted_tonight[day] = true
+              puts "[System] Synchronized status: Already acted tonight (Day #{day})."
+            end
+          end
+        end
+      end
+      
+      # 2. 人狼ささやきの状態同期（過去のチャットログに自身のささやきがあるか）
+      if @game_state.my_role == "人狼" && !@whispered_tonight[day]
+        has_whispered = @game_state.chat_logs.any? do |log|
+          log['day'].to_i == day &&
+            (log['type_code'] == 'whisper' || log['type_code'] == 'whisperhowl') &&
+            log['speaker'] == @game_state.my_name
+        end
+        if has_whispered
+          @whispered_tonight[day] = true
+          puts "[System] Synchronized status: Already whispered tonight (Day #{day})."
+        end
+      end
     end
     
     # メインループ
@@ -296,6 +350,20 @@ module AnmanAI
           
           if is_catching_up
             is_catching_up = false
+            # 同期する前に、1回限りの vil 情報取得を行って現在の日付/夜昼を合わせる
+            res_vil = get_api('cmd' => 'vil')
+            if res_vil && res_vil.code == '200'
+              vil_info = JSON.parse(res_vil.body)
+              update_time = vil_info['update_time'].to_i
+              game_state_val = vil_info['state'].to_i
+              @game_state.current_day = vil_info['date'].to_i
+              @game_state.is_night = vil_info['night']
+              @game_state.game_started = true if game_state_val >= 1
+            end
+
+            # サーバーから状態を同期
+            sync_game_status_from_server!
+
             @last_chat_logs_size = @game_state.chat_logs.size
             @last_say_time = Time.now
             puts "[System] Catchup completed. Synchronized chat logs size: #{@last_chat_logs_size}."
@@ -315,6 +383,11 @@ module AnmanAI
               # 村のステータスが進行中(1)以上であればゲーム開始済みとみなす
               if game_state_val >= 1
                 @game_state.game_started = true
+              end
+
+              # 進行中の場合は状態同期を実行
+              if @game_state.game_started && game_state_val == 1
+                sync_game_status_from_server!
               end
             end
             last_vil_check = Time.now

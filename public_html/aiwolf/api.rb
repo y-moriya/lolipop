@@ -237,6 +237,7 @@ class Api
 
           # 投票済みフラグ（生存者のみ）
           voted = player.dead == 0 ? (player.vote != -1) : nil
+          acted = (player.dead == 0 && current_player && current_player.num_id == player.num_id) ? (player.target != -1) : nil
 
           players_list << {
             'userid' => userid,
@@ -244,7 +245,8 @@ class Api
             'dead' => player.dead, # 0=生存, 1=死亡, 2=無残, 3=処刑
             'role' => role_name,   # 進行中は null
             'num_id' => player.num_id,
-            'voted' => voted
+            'voted' => voted,
+            'acted' => acted
           }
         end
       end

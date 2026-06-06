@@ -76,9 +76,20 @@ module AnmanAI
           add_key_event("#{@current_day}日目: #{$1.strip} が突然死しました。")
         # 占い結果（自分が受け取った場合）
         elsif content =~ /(.+?) は、(.+?) を占いました。\n(.+?) は (.+?)のようです。/
-          add_key_event("#{@current_day}日目: 占い結果 — #{$2.strip} は #{$4.strip}")
+          msg = "#{@current_day}日目: 占い結果 — #{$2.strip} は #{$4.strip}"
+          add_key_event(msg)
+          @action_results << msg unless @action_results.include?(msg)
         elsif content.include?("の勝利です")
           add_key_event("ゲーム終了: #{content.strip}")
+        end
+      end
+
+      # 自分の夜アクションのターゲット設定イベントを検知・復元
+      if e['type'] == 'system' && e['type_code'] == 'think' && e['is_mine']
+        content = e['content']
+        if content =~ /占います。/ || content =~ /護衛します。/ || content =~ /襲撃します。/ || content =~ /愛を求めます。/ || content =~ /邪魔をします。/
+          msg = "#{@current_day}日目夜: #{content}"
+          @action_results << msg unless @action_results.include?(msg)
         end
       end
 
