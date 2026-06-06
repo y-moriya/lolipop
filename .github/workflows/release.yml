@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'anman-ai/**'
+      - 'build/**'
+      - '.github/workflows/release.yml'
     tags:
       - 'v*.*.*'
   workflow_dispatch:
