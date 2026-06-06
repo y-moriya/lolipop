@@ -79,13 +79,18 @@ module AnmanAI
                 next
               end
               return content
+            elsif res.code == '429'
+              last_error = "LLM API Error 429 (Rate Limit): #{res.body[0..150]}"
+              wait_sec = 6 * (attempt + 1)
+              STDERR.puts "[LLM Warning] #{last_error}. Retrying in #{wait_sec} seconds..."
+              sleep wait_sec
             else
               raise "LLM API Error: #{res.code} - #{res.body[0..200]}"
             end
           rescue => e
             last_error = e.message
-            raise "LLM Client Connection Error: #{e.message}" unless e.message.include?("empty response")
-            sleep 1
+            raise "LLM Client Connection Error: #{e.message}" unless e.message.include?("empty response") || e.message.include?("429")
+            sleep 2
           end
         end
 
