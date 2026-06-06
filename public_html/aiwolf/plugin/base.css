@@ -36,20 +36,20 @@ a:hover .vid {
 } .lose_res {
     color: #00e
 } .announce {
-    width: 530;
+    width: 700px;
     border: 1px solid #445;
     margin: 6px 0;
     padding: 4px;
     font-size: 90%
 } .alllog_announce {
-    width: 530;
+    width: 700px;
     border: 1px solid #554;
     margin: 6px 0;
     padding: 4px;
     color: #994;
     font-size: 90%
 } .time_announce {
-    width: 530;
+    width: 700px;
     border: 1px solid #644;
     margin: 6px 0;
     padding: 4px;
@@ -222,7 +222,7 @@ p {
 }
 
 h2 {
-    width: 530;
+    width: 700px;
     font-size: 130%;
     padding: 2px 8px;
     margin: 0;
