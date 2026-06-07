@@ -47,16 +47,48 @@ echo "=== 4. Windows ホスト Workspace への上書きコピー ==="
 mkdir -p "$WINDOWS_WORKSPACE"
 cp -r "$TEMP_DIR/extracted/anman-ai-snapshot-windows"/* "$WINDOWS_WORKSPACE/"
 
-echo "=== 5. 設定ファイル (config.yaml) の引き継ぎコピー ==="
-if [ -f "$WINDOWS_WORKSPACE/config/config.yaml" ]; then
-  echo "config.yaml already exists in Windows workspace. Preserving your existing configuration."
+echo "=== 5. 設定ファイル (config.yaml) の復元・マージ ==="
+BACKUP_CONFIG="$WINDOWS_WORKSPACE/config.yaml"
+TARGET_CONFIG="$WINDOWS_WORKSPACE/config/config.yaml"
+
+if [ -f "$BACKUP_CONFIG" ]; then
+  echo "Found backup config.yaml at workspace root. Merging into config/config.yaml..."
+  ruby -ryaml -rfileutils -e '
+    backup_path = ARGV[0]
+    target_path = ARGV[1]
+    
+    backup = YAML.load_file(backup_path) rescue nil
+    target = YAML.load_file(target_path) rescue nil
+    
+    if backup && target
+      def deep_merge(target_hash, source_hash)
+        target_hash.merge(source_hash) do |key, oldval, newval|
+          if oldval.is_a?(Hash) && newval.is_a?(Hash)
+            deep_merge(oldval, newval)
+          else
+            newval
+          end
+        end
+      end
+      
+      merged = deep_merge(target, backup)
+      File.write(target_path, YAML.dump(merged))
+      puts "Successfully merged backup config into config/config.yaml!"
+    else
+      puts "Failed to load backup or target YAML. Overwriting target with backup..."
+      FileUtils.cp(backup_path, target_path) if File.exist?(backup_path)
+    end
+  ' "$BACKUP_CONFIG" "$TARGET_CONFIG"
 else
-  if [ -f "$ROOT_DIR/anman-ai/config/config.yaml" ]; then
-    echo "Copying config.yaml from local project development setup..."
-    cp "$ROOT_DIR/anman-ai/config/config.yaml" "$WINDOWS_WORKSPACE/config/config.yaml"
-  else
-    echo "Copying config.yaml.example as config.yaml..."
-    cp "$WINDOWS_WORKSPACE/config/config.yaml.example" "$WINDOWS_WORKSPACE/config/config.yaml"
+  echo "No backup config.yaml found at workspace root."
+  if [ ! -f "$TARGET_CONFIG" ]; then
+    if [ -f "$ROOT_DIR/anman-ai/config/config.yaml" ]; then
+      echo "Copying config.yaml from local project development setup..."
+      cp "$ROOT_DIR/anman-ai/config/config.yaml" "$TARGET_CONFIG"
+    else
+      echo "Copying config.yaml.example as config.yaml..."
+      cp "$WINDOWS_WORKSPACE/config/config.yaml.example" "$TARGET_CONFIG"
+    fi
   fi
 fi
 
