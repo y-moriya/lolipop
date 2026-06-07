@@ -214,6 +214,8 @@ rescue => e
         my_name = nil
         if user_prompt =~ /あなたのプレイヤー名:\s*(.*)/
           my_name = $1.strip
+        elsif system_prompt =~ /あなたは人狼ゲームのキャラクター「(.*?)」/
+          my_name = $1.strip
         end
         
         if user_prompt.include?("vote_target")
@@ -238,6 +240,15 @@ rescue => e
             "thought" => "怪しいと思われる #{target} を占います。",
             "fortune_target" => target
           }.to_json
+        elsif user_prompt.start_with?("人狼ゲームの村のエントリー")
+          puts "[Mock LLM] Entry greeting action triggered"
+          "よろしくお願いします。"
+        elsif user_prompt.start_with?("これまでの点呼・待機中チャット")
+          puts "[Mock LLM] Recruitment chat action triggered"
+          "ゲーム開始が楽しみですね！よろしくお願いします。"
+        elsif user_prompt.start_with?("ゲームが終了しました。感想戦") || user_prompt.start_with?("これまでの感想戦チャット")
+          puts "[Mock LLM] Epilogue greeting action triggered"
+          "お疲れ様でした。楽しかったです！"
         else
           puts "[Mock LLM] Say action triggered"
           {

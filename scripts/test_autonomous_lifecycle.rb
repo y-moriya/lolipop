@@ -189,6 +189,9 @@ rescue => e
         elsif user_prompt.start_with?("人狼ゲームの村のエントリー")
           puts "[Mock LLM] Entry greeting action triggered"
           "よろしくお願いします。"
+        elsif user_prompt.start_with?("これまでの点呼・待機中チャット")
+          puts "[Mock LLM] Recruitment chat action triggered"
+          "ゲーム開始が楽しみですね！よろしくお願いします。"
         elsif user_prompt.start_with?("ゲームが終了しました。感想戦") || user_prompt.start_with?("これまでの感想戦チャット")
           puts "[Mock LLM] Epilogue greeting action triggered"
           "お疲れ様でした。楽しかったです！"
@@ -297,6 +300,13 @@ user_configs.each_with_index do |cfg, index|
   )
   puts "  エントリー完了: #{cfg[:id]} (pid: #{char_ids[index - 1]})"
 end
+
+# 6.5. ゲーム開始前のチャットの検証
+puts "\n--- 6.5. ゲーム開始前のチャットの検証 ---"
+sessions['villager1'].post('cmd' => 'msg', 'message' => "皆さんよろしくお願いします！", 'j_data' => 'a', 'vid' => vid.to_s)
+puts "  NPCが発言しました: \"皆さんよろしくお願いします！\""
+puts "  AIがゲーム開始前の雑談に反応して発言するのを待ちます..."
+sleep 12.0
 
 # 7. ゲーム開始
 puts "\n--- 7. ゲーム開始 ---"

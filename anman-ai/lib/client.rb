@@ -451,6 +451,25 @@ module AnmanAI
             next
           end
           
+          # ゲーム開始前（募集中・点呼中）の雑談
+          if game_state_val == 0 && @game_state.my_name
+            time_since_last_say = Time.now - @last_say_time
+            if time_since_last_say >= 10
+              current_chat_size = @game_state.chat_logs.size
+              if current_chat_size > @last_chat_logs_size
+                last_log = @game_state.chat_logs.last
+                is_others_msg = last_log && (last_log['is_mine'] == false || last_log['speaker'] != @game_state.my_name)
+                is_player_say = last_log && last_log['type_code'] == 'say'
+                if is_others_msg && is_player_say
+                  check_and_say_recruiting
+                end
+                @last_chat_logs_size = current_chat_size
+              end
+            end
+            sleep 1
+            next
+          end
+          
           # ゲームが開始されるまでは、以降の自律アクション（発言・投票・夜行動など）は行わない
           next unless @game_state.game_started
 
@@ -1079,6 +1098,33 @@ module AnmanAI
         puts "[System Error] Failed to generate epilogue chat: #{e.message}"
       end
     end
+    
+    # ゲーム開始前の点呼・待機中の雑談・対話
+    def check_and_say_recruiting
+      puts "\n[Thinking] Reacting to recruitment chat..."
+      system_prompt = "あなたは人狼ゲームのキャラクター「#{@game_state.my_name}」です。ゲーム開始前の待機中（点呼・募集中）の雑談です。キャラクターになりきって、他の参加者の発言に反応したり、ゲーム開始を楽しみにするようなカジュアルな挨拶・日常会話・短い雑談を行ってください。\n" \
+                      "【重要】まだゲーム開始前（0日目）で、誰が人狼や役職になるかは一切決まっていません。そのため、特定の役職（占い師、霊媒師等）の希望や、人狼の推理・議論、疑いなどは絶対に言及しないでください。役職に関する言及は完全に排除してください。\n" \
+                      "【超重要・発言文字数の制限】1回の返答は必ず「30〜80文字以内（最大でも2文）」で短く簡潔に発言してください。\n" \
+                      "【重要】発言の冒頭に「#{@game_state.my_name}:」や「#{@game_state.my_name}」などの名前プレフィックスを絶対に含めないでください。会話の発言本文のみを出力してください。\n" \
+                      "【重要】チャットログ内の「#{@game_state.my_name}:」で始まる発言はあなた自身の発言です。自分の発言に対して『#{@game_state.my_name}さんの〜』や『#{@game_state.my_name}さんが言うように〜』といったように、第三者として言及することは絶対に避けてください。他の参加者の発言にのみ反応して、返答・雑談をしてください。"
+      user_prompt = "これまでの点呼・待機中チャットログを踏まえて発言してください。\n#{@game_state.formatted_chat_logs}"
+
+      begin
+        response = @llm.chat(system_prompt, user_prompt, temperature: 0.8)
+        msg = clean_llm_message(response, @game_state.my_name)
+
+        if msg && !msg.strip.empty?
+          puts "[Action] AI decided to post recruitment chat: \"#{msg}\""
+          post('cmd' => 'msg', 'message' => msg, 'j_data' => 'a')
+        else
+          puts "[Action] AI skipped recruitment chat (empty response)."
+        end
+        @last_say_time = Time.now
+      rescue => e
+        puts "[System Error] Failed to generate recruitment chat: #{e.message}"
+      end
+    end
+    
     
     # 役職から所属陣営を判別
     def camp_from_role
