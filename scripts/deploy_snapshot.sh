@@ -43,16 +43,27 @@ rm -rf "$TEMP_DIR/extracted"
 mkdir -p "$TEMP_DIR/extracted"
 unzip -o "$TEMP_DIR/anman-ai-snapshot-windows.zip" -d "$TEMP_DIR/extracted"
 
+echo "=== 3.5. 既存設定ファイルの退避 ==="
+BACKUP_CONFIG="/mnt/c/Users/wellk/workspace/config.yaml"
+CURRENT_CONFIG="$WINDOWS_WORKSPACE/config/config.yaml"
+
+if [ -f "$CURRENT_CONFIG" ]; then
+  echo "Backing up current config.yaml to $BACKUP_CONFIG..."
+  mkdir -p "$(dirname "$BACKUP_CONFIG")"
+  cp "$CURRENT_CONFIG" "$BACKUP_CONFIG"
+else
+  echo "No existing config.yaml found to back up."
+fi
+
 echo "=== 4. Windows ホスト Workspace への上書きコピー ==="
 mkdir -p "$WINDOWS_WORKSPACE"
 cp -r "$TEMP_DIR/extracted/anman-ai-snapshot-windows"/* "$WINDOWS_WORKSPACE/"
 
 echo "=== 5. 設定ファイル (config.yaml) の復元・マージ ==="
-BACKUP_CONFIG="$WINDOWS_WORKSPACE/config.yaml"
 TARGET_CONFIG="$WINDOWS_WORKSPACE/config/config.yaml"
 
 if [ -f "$BACKUP_CONFIG" ]; then
-  echo "Found backup config.yaml at workspace root. Merging into config/config.yaml..."
+  echo "Found backup config.yaml at $BACKUP_CONFIG. Merging into config/config.yaml..."
   ruby -ryaml -rfileutils -e '
     backup_path = ARGV[0]
     target_path = ARGV[1]
@@ -81,7 +92,7 @@ if [ -f "$BACKUP_CONFIG" ]; then
     end
   ' "$BACKUP_CONFIG" "$TARGET_CONFIG"
 else
-  echo "No backup config.yaml found at workspace root."
+  echo "No backup config.yaml found at $BACKUP_CONFIG."
   if [ ! -f "$TARGET_CONFIG" ]; then
     if [ -f "$ROOT_DIR/anman-ai/config/config.yaml" ]; then
       echo "Copying config.yaml from local project development setup..."
