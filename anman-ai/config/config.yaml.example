@@ -1,13 +1,94 @@
+# =====================================================================
+# anman-ai Configuration File Example
+# =====================================================================
+# このファイルをコピーして config.yaml を作成し、設定値を調整してください。
+
+# ---------------------------------------------------------------------
+# 1. サーバー設定 (人狼CGIサーバーへの接続設定)
+# ---------------------------------------------------------------------
 server:
+  # 接続対象の人狼CGIサーバーのURL
   url: "https://wolften.secret.jp"
+  
+  # 参戦する村のIDを指定します。
+  # 0を指定（または省略）した場合、新規の募集中（点呼中）の村を自動で巡回監視し、エントリーします。
   vid: 0
 
+  # 村に設定されている入村用パスワード（パスワード保護された村に入る場合に指定）
+  # pass: "village_pass"
+
+  # 感想戦（エピローグ）フェーズでチャットを行い、クライアントを終了するまでの待機時間（秒数。デフォルトは3600秒/1時間）
+  epilogue_timeout: 3600
+
+# ---------------------------------------------------------------------
+# 2. ユーザー認証設定 (ボット用のアカウント情報)
+# ---------------------------------------------------------------------
 user:
+  # CGIサーバーにログインするためのユーザーID
   userid: "YOUR_USER_ID"
+  
+  # CGIサーバーにログインするためのパスワード
   password: "YOUR_PASSWORD"
 
+# ---------------------------------------------------------------------
+# 3. メインLLM設定
+# ---------------------------------------------------------------------
 llm:
+  # --- 各LLM別の設定記載例 ---
+
+  # 例 A: Google AI Studio (Gemini) [推奨]
+  provider: "gemini"
+  api_key: "AIzaSyYourGeminiApiKeyHere"  # あなたのGemini APIキー (※環境変数 GEMINI_API_KEY または ANMAN_GEMINI_API_KEY でも指定可能)
+  model: "gemini-1.5-flash"              # 選択可能なモデル: gemini-1.5-flash, gemini-1.5-pro, gemini-2.5-flash など
+  compact_prompt: true                   # true: サマリー+差分ログのみ送信（コンテキスト節約）/ false: 全チャットログ送信
+
+  # 例 B: Ollama (ローカルLLM)
+  # provider: "ollama"
+  # api_key: "ollama"
+  # base_url: "http://localhost:11434"
+  # model: "gemma4"                      # ローカルで展開しているモデル名
+  # compact_prompt: true
+
+  # 例 C: OpenAI (ChatGPT)
+  # provider: "openai_compat"
+  # api_key: "sk-proj-YourOpenAIApiKey"  # あなたのOpenAI APIキー (※環境変数 ANMAN_LLM_API_KEY でも指定可能)
+  # base_url: "https://api.openai.com/v1"
+  # model: "gpt-4o-mini"
+  # compact_prompt: true
+  # max_tokens: 500                      # 出力トークン数の上限を指定する場合
+
+  # 例 D: DeepSeek
+  # provider: "openai_compat"
+  # api_key: "sk-YourDeepSeekApiKey"
+  # base_url: "https://api.deepseek.com/v1"
+  # model: "deepseek-chat"
+  # compact_prompt: true
+
+  # 例 E: OpenRouter (ClaudeやLlama等へのプロキシ)
+  # provider: "openai_compat"
+  # api_key: "sk-or-v1-YourOpenRouterKey"
+  # base_url: "https://openrouter.ai/api/v1"
+  # model: "anthropic/claude-3.5-sonnet"
+  # compact_prompt: true
+
+# ---------------------------------------------------------------------
+# 4. フォールバックLLM設定 (オプション)
+# ---------------------------------------------------------------------
+# メインのLLMが一時的なレート制限やエラー等で失敗した場合の代替接続先を定義できます。
+# メインLLMと同様の項目を定義します。設定しない場合はフォールバックされません。
+llm_fallback:
+  provider: "ollama"
   api_key: "ollama"
-  base_url: "http://172.31.128.1:11434/v1"
+  base_url: "http://localhost:11434"
   model: "gemma4"
-  compact_prompt: true   # true: サマリー+差分ログのみ送信（短縮モード）/ false: 全ログ送信
+  compact_prompt: true
+
+# ---------------------------------------------------------------------
+# 5. ローカルログ設定 (ローカルファイルへの出力ログ設定)
+# ---------------------------------------------------------------------
+log:
+  # ログファイルがこのサイズ（MB）を超えると、自動的にローテーション（分割）します。
+  max_size_mb: 10
+
+  # ローテーション後に保持するログファイルの世代数
+  keep_files: 5
