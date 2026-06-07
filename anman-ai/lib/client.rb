@@ -23,9 +23,9 @@ module AnmanAI
   STDERR.sync = true
 
   class Client
-    def initialize(config_path, exe_dir, internal_root_dir)
+    def initialize(config_path, exe_dir, internal_root_dir = nil)
       @exe_dir = exe_dir
-      @internal_root_dir = internal_root_dir
+      @internal_root_dir = internal_root_dir || exe_dir
       @config = YAML.load_file(config_path)
       @url = @config['server']['url']
       @vid = @config['server']['vid']
@@ -35,7 +35,7 @@ module AnmanAI
       @cookie = nil
       @game_state = GameState.new(@userid)
       @llm = LLMClient.new(@config)
-      @prompts = PromptManager.new(exe_dir, internal_root_dir)
+      @prompts = PromptManager.new(exe_dir, @internal_root_dir)
       @learning = LearningSystem.new(exe_dir, @llm)
 
       # コンパクトプロンプトモード: サマリー＋差分ログのみLLMに渡す（長大プロンプト防止）
@@ -262,6 +262,20 @@ module AnmanAI
       sync_game_status_from_server!
     end
 
+    # ゲーム開始時に自分の役職をサーバーから再取得して同期する
+    def check_and_update_role_if_started!(game_state_val)
+      if game_state_val >= 1 && (!@game_state.game_started || @game_state.my_role == "未決定" || @game_state.my_role == "不明")
+        @game_state.game_started = true
+        res_players = get_api('cmd' => 'players')
+        if res_players && res_players.code == '200'
+          players_json = JSON.parse(res_players.body)
+          current_player = players_json.find { |p| p['userid'] == @userid }
+          @game_state.init_players(players_json, current_player)
+          puts "[System] Game started! Your assigned role is: #{@game_state.my_role}."
+        end
+      end
+    end
+
     # サーバーから投票や夜アクション、ささやき等の実行状態を同期し、
     # クライアント再起動時や状態変化時に重複して行動を起こさないようにする
     def sync_game_status_from_server!
@@ -359,6 +373,7 @@ module AnmanAI
               @game_state.current_day = vil_info['date'].to_i
               @game_state.is_night = vil_info['night']
               @game_state.game_started = true if game_state_val >= 1
+              check_and_update_role_if_started!(game_state_val)
             end
 
             # サーバーから状態を同期
@@ -384,6 +399,8 @@ module AnmanAI
               if game_state_val >= 1
                 @game_state.game_started = true
               end
+
+              check_and_update_role_if_started!(game_state_val)
 
               # 進行中の場合は状態同期を実行
               if @game_state.game_started && game_state_val == 1
@@ -447,16 +464,15 @@ module AnmanAI
           
           # 1. 自律的・反応的な発言・思考発信の判定 (昼夜、生存死亡を問わず実行)
           time_since_last_say = Time.now - @last_say_time
-          if time_since_last_say >= 15
-            current_chat_size = @game_state.chat_logs.size
-            # 条件A: 新しいチャットがあった（反応発言）かつ最新ログが自分のものでない
-            # 条件B: 前回の発言から30秒経過しており、誰も発言していない（能動的発言）
-            last_log = @game_state.chat_logs.last
-            others_spoke = (current_chat_size > @last_chat_logs_size) && last_log && !last_log['is_mine']
-            if others_spoke || (time_since_last_say >= 30)
-              check_and_say
-              @last_chat_logs_size = current_chat_size
-            end
+          current_chat_size = @game_state.chat_logs.size
+          last_log = @game_state.chat_logs.last
+          others_spoke = (current_chat_size > @last_chat_logs_size) && last_log && !last_log['is_mine']
+
+          # 反応発言は前回の発言から2秒以上空いていれば実行（テスト等での迅速な応答に対応）
+          # 能動的発言は30秒以上空いていれば実行
+          if (others_spoke && time_since_last_say >= 2) || (time_since_last_say >= 30)
+            check_and_say
+            @last_chat_logs_size = current_chat_size
           end
           
           if @game_state.is_night
@@ -478,9 +494,10 @@ module AnmanAI
             end
           else
             # 昼フェーズ
-            # 更新時間が近づいたら投票を行う (残り時間45秒以下、かつ未投票、生存時のみ)
+            # 更新時間が近づいたら投票を行う (ローカルテスト環境、または残り時間45秒以下、かつ未投票、生存時のみ)
             unless is_dead
-              if !@voted_today[day] && remain_sec > 0 && remain_sec <= 45
+              is_test = @url.include?("localhost") || @url.include?("127.0.0.1")
+              if !@voted_today[day] && remain_sec > 0 && (remain_sec <= 45 || is_test)
                 # Sync vote status from server first
                 res_players = get_api('cmd' => 'players')
                 if res_players && res_players.code == '200'

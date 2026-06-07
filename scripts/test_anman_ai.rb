@@ -81,8 +81,12 @@ end
 
 # 2. テスト用ユーザー作成
 puts "\n--- ユーザー作成 & ログイン ---"
+config = YAML.load_file('anman-ai/config/config.yaml')
+ai_userid = config['user']['userid']
+ai_password = config['user']['password']
+
 user_configs = [
-  { id: 'anman_ai', pass: 'password123' },
+  { id: ai_userid, pass: ai_password },
   { id: 'villager1', pass: 'pass1' },
   { id: 'villager2', pass: 'pass2' },
   { id: 'werewolf1', pass: 'pass3' }
@@ -176,7 +180,7 @@ db.transaction(true) do
   vil.players.each do |name, p|
     role_name = Skill.skills[p.sid].name
     puts "役職割り当て: #{name} - #{role_name} (ID: #{p.num_id})"
-    if name == 'anman_ai'
+    if name == ai_userid
       ai_role = role_name
       ai_num_id = p.num_id
       ai_char_name = p.name
@@ -212,7 +216,7 @@ rescue => e
           my_name = $1.strip
         end
         
-        if user_prompt.include?("投票フェーズ")
+        if user_prompt.include?("vote_target")
           puts "[Mock LLM] Vote action triggered"
           target = "werewolf1"
           if user_prompt =~ /生存プレイヤー:\s*(.*)/
@@ -223,7 +227,7 @@ rescue => e
             "thought" => "怪しいと思われる #{target} に投票します。",
             "vote_target" => target
           }.to_json
-        elsif user_prompt.include?("占い師") && user_prompt.include?("夜フェーズ")
+        elsif user_prompt.include?("fortune_target") || (user_prompt.include?("占い師") && user_prompt.include?("夜フェーズ"))
           puts "[Mock LLM] Fortune action triggered"
           target = "werewolf1"
           if user_prompt =~ /生存プレイヤー:\s*(.*)/
@@ -252,6 +256,7 @@ puts "\n--- AIクライアント起動 ---"
 ai_thread = Thread.new do
   begin
     ai_client = AnmanAI::Client.new('anman-ai/config/config.yaml', 'anman-ai')
+    ai_client.instance_variable_set(:@vid, vid)
     ai_client.login!
     ai_client.init_game_state!
     ai_client.start_loop!
@@ -328,7 +333,7 @@ success_vote = false
 15.times do
   db.transaction(true) do |d|
     vil = d['root']
-    ai_player = vil.players['anman_ai']
+    ai_player = vil.players[ai_userid]
     if ai_player && ai_player.vote != -1
       puts "[OK] AIプレイヤーが投票を行いました！ (投票先ID: #{ai_player.vote})"
       success_vote = true
@@ -357,7 +362,7 @@ if ai_role == "占い師"
 
   # AI以外の他プレイヤー全員も投票を完了させ、夜フェーズへ移行させる
   user_configs.each do |cfg|
-    next if cfg[:id] == 'anman_ai'
+    next if cfg[:id] == ai_userid
     sess = sessions[cfg[:id]]
     sess.post('cmd' => 'vote', 'vote_id' => other_pid.to_s, 'set_date' => '2', 'vid' => vid.to_s)
   end
@@ -367,26 +372,12 @@ if ai_role == "占い師"
     d['root'].update_time = Time.now.to_i + 120
   end
 
-  # AIプレイヤーが夜アクション（占い等）を決定・ポストする猶予を待つ
-  sleep 4.0
-  
-  # 締め切りのタイムアウトをトリガー
-  db.transaction do |d|
-    d['root'].update_time = Time.now.to_i - 120
-  end
-  creator.post('vid' => vid.to_s)
-
-  # 朝フェーズへ移行した直後に、次の夕方への自動移行を防ぐため update_time を未来にリセットする
-  db.transaction do |d|
-    d['root'].update_time = Time.now.to_i + 120
-  end
-  
-  # 占い実行の監視
+  # 占い実行の監視 (夜フェーズ中に設定されるのを待つ)
   success_fortune = false
   15.times do
     db.transaction(true) do |d|
       vil = d['root']
-      ai_player = vil.players['anman_ai']
+      ai_player = vil.players[ai_userid]
       if ai_player && ai_player.target && ai_player.target != -1
         puts "[OK] AI占い師が占い先を設定しました！ (占い先ID: #{ai_player.target})"
         success_fortune = true
@@ -400,6 +391,17 @@ if ai_role == "占い師"
     puts "[ERROR] AI占い師が占い能力を行使しませんでした。"
     Thread.kill(ai_thread)
     exit 1
+  end
+
+  # 締め切りのタイムアウトをトリガー
+  db.transaction do |d|
+    d['root'].update_time = Time.now.to_i - 120
+  end
+  creator.post('vid' => vid.to_s)
+
+  # 朝フェーズへ移行した直後に、次の夕方への自動移行を防ぐため update_time を未来にリセットする
+  db.transaction do |d|
+    d['root'].update_time = Time.now.to_i + 120
   end
 else
   puts "\n--- 8. 夜フェーズの占いアクション検証（AIが占い師ではないためスキップ） ---"

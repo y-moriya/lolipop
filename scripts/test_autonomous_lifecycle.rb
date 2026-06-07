@@ -79,8 +79,12 @@ end
 
 # 2. テスト用ユーザー作成 & ログイン
 puts "\n--- 2. テストユーザーの作成とログイン ---"
+config = YAML.load_file('anman-ai/config/config.yaml')
+ai_userid = config['user']['userid']
+ai_password = config['user']['password']
+
 user_configs = [
-  { id: 'anman_ai', pass: 'password123' },
+  { id: ai_userid, pass: ai_password },
   { id: 'villager1', pass: 'pass1' },
   { id: 'villager2', pass: 'pass2' },
   { id: 'werewolf1', pass: 'pass3' },
@@ -108,8 +112,101 @@ user_configs.each do |cfg|
   sessions[cfg[:id]] = sess
 end
 
-# 3. AI クライアントを別スレッドで起動（自動入村監視モード）
-puts "\n--- 3. AIクライアントの起動 (監視・自動エントリー開始) ---"
+# 3. LLM接続確認 & モック差し替え (Ollamaが起動していない場合用)
+puts "\n--- 3. LLM API 接続検証 ---"
+llm_config = YAML.load_file('anman-ai/config/config.yaml')
+begin
+  uri = URI.parse("#{llm_config['llm']['base_url']}/chat/completions")
+  path = uri.path.empty? ? "/v1/chat/completions" : uri.path
+  req = Net::HTTP::Post.new(path, { 'Content-Type' => 'application/json' })
+  req.body = { model: llm_config['llm']['model'], messages: [{ role: 'user', content: 'hello' }] }.to_json
+  
+  res = Net::HTTP.start(uri.host, uri.port, read_timeout: 2, open_timeout: 2) { |http| http.request(req) }
+  if res.code == '200'
+    puts "[System] Ollama API is active. Test will run against the real LLM."
+  else
+    raise "Ollama responded with status: #{res.code}"
+  end
+rescue => e
+  puts "[System] Ollama is inactive or unreachable: #{e.message}"
+  puts "[System] Mocking LLMClient for local integration test stability."
+  
+  # 動的に LLMClient のメソッドをオーバーライド
+  module AnmanAI
+    class LLMClient
+      def chat(system_prompt, user_prompt, temperature: 0.7)
+        my_name = nil
+        if user_prompt =~ /あなたのプレイヤー名:\s*(.*)/
+          my_name = $1.strip
+        elsif system_prompt =~ /あなたは人狼ゲームのキャラクター「(.*?)」/
+          my_name = $1.strip
+        end
+        
+        if user_prompt.include?("vote_target")
+          puts "[Mock LLM] Vote action triggered"
+          target = "werewolf1"
+          if user_prompt =~ /生存プレイヤー:\s*(.*)/
+            survivors = $1.split(/,\s*/).map(&:strip).reject(&:empty?)
+            target = survivors.find { |s| s != my_name } || survivors.first || "werewolf1"
+          end
+          {
+            "thought" => "怪しいと思われる #{target} に投票します。",
+            "vote_target" => target
+          }.to_json
+        elsif user_prompt.include?("fortune_target") || (user_prompt.include?("占い師") && user_prompt.include?("夜フェーズ"))
+          puts "[Mock LLM] Fortune action triggered"
+          target = "werewolf1"
+          if user_prompt =~ /生存プレイヤー:\s*(.*)/
+            survivors = $1.split(/,\s*/).map(&:strip).reject(&:empty?)
+            target = survivors.find { |s| s != my_name } || survivors.first || "werewolf1"
+          end
+          {
+            "thought" => "怪しいと思われる #{target} を占います。",
+            "fortune_target" => target
+          }.to_json
+        elsif user_prompt.include?("attack_target") || (user_prompt.include?("人狼") && user_prompt.include?("夜フェーズ"))
+          puts "[Mock LLM] Attack action triggered"
+          target = "villager1"
+          if user_prompt =~ /生存プレイヤー:\s*(.*)/
+            survivors = $1.split(/,\s*/).map(&:strip).reject(&:empty?)
+            target = survivors.find { |s| s != my_name } || survivors.first || "villager1"
+          end
+          {
+            "thought" => "占い師候補や村人を狙って #{target} を襲撃します。",
+            "attack_target" => target
+          }.to_json
+        elsif user_prompt.include?("guard_target") || (user_prompt.include?("狩人") && user_prompt.include?("夜フェーズ"))
+          puts "[Mock LLM] Guard action triggered"
+          target = "villager1"
+          if user_prompt =~ /生存プレイヤー:\s*(.*)/
+            survivors = $1.split(/,\s*/).map(&:strip).reject(&:empty?)
+            target = survivors.find { |s| s != my_name } || survivors.first || "villager1"
+          end
+          {
+            "thought" => "占い師らしき #{target} を護衛します。",
+            "guard_target" => target
+          }.to_json
+        elsif user_prompt.start_with?("人狼ゲームの村のエントリー")
+          puts "[Mock LLM] Entry greeting action triggered"
+          "よろしくお願いします。"
+        elsif user_prompt.start_with?("ゲームが終了しました。感想戦") || user_prompt.start_with?("これまでの感想戦チャット")
+          puts "[Mock LLM] Epilogue greeting action triggered"
+          "お疲れ様でした。楽しかったです！"
+        else
+          puts "[Mock LLM] Say action triggered"
+          {
+            "thought" => "冷静に状況を分析し、発言を投稿します。",
+            "reasoning_update" => "他のプレイヤーが怪しいと感じています。",
+            "message" => "こんにちは。村人の一人として、皆さんの発言や行動を注視しています。怪しい点があれば論理的に指摘していきます。"
+          }.to_json
+        end
+      end
+    end
+  end
+end
+
+# 3.5. AIクライアントの別スレッド起動
+puts "\n--- 3.5. AIクライアント起動 ---"
 ai_client = AnmanAI::Client.new('anman-ai/config/config.yaml', 'anman-ai')
 # vid を nil に上書きして自動監視モードを強制する
 ai_client.instance_variable_set(:@vid, nil)
@@ -169,7 +266,7 @@ ai_char_name = nil
   res = creator.get_api('cmd' => 'players', 'vid' => vid.to_s)
   if res && res.code == '200'
     players = JSON.parse(res.body)
-    ai_player = players.find { |p| p['userid'] == 'anman_ai' }
+    ai_player = players.find { |p| p['userid'] == ai_userid }
     if ai_player
       ai_char_name = ai_player['name']
       puts "[OK] AIが自動エントリーを検知・入村しました！ キャラクター名: #{ai_char_name}"
@@ -191,7 +288,7 @@ end
 puts "\n--- 6. NPCプレイヤーたちのエントリー ---"
 char_ids = [2, 3, 4, 5]
 user_configs.each_with_index do |cfg, index|
-  next if cfg[:id] == 'anman_ai'
+  next if cfg[:id] == ai_userid
   sess = sessions[cfg[:id]]
   
   sess.post(
@@ -217,7 +314,7 @@ db.transaction(true) do
   vil.players.each do |name, p|
     role_name = Skill.skills[p.sid].name
     puts "  [配役] #{name} - #{role_name} (ID: #{p.num_id})"
-    if name == 'anman_ai'
+    if name == ai_userid
       ai_role = role_name
       ai_num_id = p.num_id
     end
@@ -290,7 +387,7 @@ loop do
       15.times do |i|
         db.transaction(true) do |d|
           vil = d['root']
-          p = vil ? vil.players['anman_ai'] : nil
+          p = vil ? vil.players[ai_userid] : nil
           if p && p.vote != -1
             puts "  [OK] AIプレイヤーが時間切れ直前の自動投票を行いました！ (投票先ID: #{p.vote})"
             ai_voted = true
@@ -303,7 +400,7 @@ loop do
       # NPCは全員AIに投票してAIを処刑する
       puts "  AIを処刑するため、NPC全員がAIに投票します..."
       user_configs.each do |cfg|
-        next if cfg[:id] == 'anman_ai'
+        next if cfg[:id] == ai_userid
         sess = sessions[cfg[:id]]
         sess.post('cmd' => 'vote', 'vote_id' => ai_num_id.to_s, 'set_date' => date.to_s, 'vid' => vid.to_s)
       end
@@ -321,7 +418,7 @@ loop do
         other_pid = vil ? vil.players.values.find { |p| p.num_id != ai_num_id && p.dead == 0 }&.num_id : nil
       end
       user_configs.each do |cfg|
-        next if cfg[:id] == 'anman_ai'
+        next if cfg[:id] == ai_userid
         sess = sessions[cfg[:id]]
         sess.post('cmd' => 'vote', 'vote_id' => other_pid.to_s, 'set_date' => date.to_s, 'vid' => vid.to_s)
       end
@@ -347,7 +444,7 @@ loop do
     is_ai_dead = false
     db.transaction(true) do |d|
       vil = d['root']
-      p = vil ? vil.players['anman_ai'] : nil
+      p = vil ? vil.players[ai_userid] : nil
       is_ai_dead = (p && p.dead != 0)
     end
     
@@ -363,7 +460,7 @@ loop do
       db.transaction(true) do |d|
         vil = d['root']
         if vil
-          ai_player = vil.players['anman_ai']
+          ai_player = vil.players[ai_userid]
           if ai_player && ai_role == "占い師" && ai_player.target != -1
             puts "  [OK] AI占い師が占い先を設定しました！ (対象ID: #{ai_player.target})"
           elsif ai_player && ai_role == "人狼" && ai_player.target != -1
@@ -377,7 +474,7 @@ loop do
       
       db.transaction(true) do |d|
         vil = d['root']
-        ai_player = vil.players['anman_ai']
+        ai_player = vil.players[ai_userid]
         if ai_player && ai_role == "占い師" && ai_player.target != -1
           puts "  [OK] AI占い師が占い先を設定しました！ (対象ID: #{ai_player.target})"
         elsif ai_player && ai_role == "人狼" && ai_player.target != -1
@@ -394,7 +491,7 @@ loop do
     end
     
     surviving_skill_pids.each do |player|
-      next if player.userid == 'anman_ai' || player.userid == 'DUMMY'
+      next if player.userid == ai_userid || player.userid == 'DUMMY'
       
       # 適当な生存ターゲットを選択
       target_id = nil

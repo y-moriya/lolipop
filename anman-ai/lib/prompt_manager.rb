@@ -29,13 +29,19 @@ module AnmanAI
 
     # 陣営に応じた基本思考ガイドを読み込む (camp: 'villager' または 'werewolf')
     def load_camp_prompt(camp)
-      file_path = File.join(@internal_root_dir, 'prompts', 'base', "#{camp}.txt")
+      unless @internal_root_dir
+        puts "[DEBUG] PromptManager: @internal_root_dir is nil! camp = #{camp.inspect}, caller = #{caller[0..3].join(' | ')}"
+      end
+      file_path = File.join(@internal_root_dir || '', 'prompts', 'base', "#{camp}.txt")
       File.exist?(file_path) ? File.read(file_path) : ""
     end
 
     # 状況別プロンプトの読み込みとプレースホルダ置換
     def build_prompt(situation, variables)
-      template_path = File.join(@internal_root_dir, 'prompts', 'situations', "#{situation}.txt")
+      unless @internal_root_dir
+        puts "[DEBUG] PromptManager: @internal_root_dir is nil! situation = #{situation.inspect}, caller = #{caller[0..3].join(' | ')}"
+      end
+      template_path = File.join(@internal_root_dir || '', 'prompts', 'situations', "#{situation}.txt")
       raise "Prompt template not found for situation: #{situation}" unless File.exist?(template_path)
 
       prompt = File.read(template_path)

@@ -25,6 +25,8 @@ class Api
       handle_vils
     when 'players'
       handle_players
+    when 'role', 'my_role'
+      handle_role
     when 'log'
       handle_log
     when 'events'
@@ -231,8 +233,10 @@ class Api
         current_player = @login.login ? vil.player(@login) : nil
         vil.players.each do |userid, player|
           role_name = nil
-          if game_over || (current_player && current_player.num_id == player.num_id)
-            role_name = Skill.skills[player.sid].name
+          if vil.state >= 1
+            if game_over || (current_player && current_player.num_id == player.num_id)
+              role_name = Skill.skills[player.sid].name
+            end
           end
 
           # 投票済みフラグ（生存者のみ）
@@ -254,6 +258,46 @@ class Api
 
     print "Content-Type: application/json; charset=UTF-8\n\n"
     print JSON.generate(players_list)
+  end
+
+  # 2.5. 自分の役職を JSON で取得
+  def handle_role
+    if @vid <= 0
+      print "Content-Type: application/json; charset=UTF-8\nStatus: 400 Bad Request\n\n"
+      print JSON.generate({ 'error' => 'Invalid or missing vid parameter' })
+      return
+    end
+
+    db_path = "db/vil#{(@vid - 1) / 100}/#{@vid}.db"
+    if !File.exist?(db_path)
+      print "Content-Type: application/json; charset=UTF-8\nStatus: 404 Not Found\n\n"
+      print JSON.generate({ 'error' => 'Village not found' })
+      return
+    end
+
+    unless @login.login
+      print "Content-Type: application/json; charset=UTF-8\nStatus: 401 Unauthorized\n\n"
+      print JSON.generate({ 'error' => 'Unauthorized' })
+      return
+    end
+
+    role_name = nil
+    db = PStore.new(db_path)
+    db.transaction(true) do
+      vil = db['root']
+      if vil
+        player = vil.player(@login)
+        if player
+          # ゲームが開始している場合のみ役職を決定
+          if vil.state >= 1
+            role_name = Skill.skills[player.sid].name
+          end
+        end
+      end
+    end
+
+    print "Content-Type: application/json; charset=UTF-8\n\n"
+    print JSON.generate({ 'role' => role_name })
   end
 
   # 3. チャットログをテキストで取得
