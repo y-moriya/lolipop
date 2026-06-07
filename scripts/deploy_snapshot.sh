@@ -75,7 +75,8 @@ if [ -f "$BACKUP_CONFIG" ]; then
       File.write(target_path, YAML.dump(merged))
       puts "Successfully merged backup config into config/config.yaml!"
     else
-      puts "Failed to load backup or target YAML. Overwriting target with backup..."
+      puts "\e[31m[WARNING] config.yaml could not be merged (possibly due to format changes or invalid YAML syntax)!\e[0m"
+      puts "\e[31mOverwriting config/config.yaml with raw backup file to preserve credentials.\e[0m"
       FileUtils.cp(backup_path, target_path) if File.exist?(backup_path)
     end
   ' "$BACKUP_CONFIG" "$TARGET_CONFIG"
