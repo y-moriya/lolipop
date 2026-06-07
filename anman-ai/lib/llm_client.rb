@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 require_relative 'llm/ollama_adapter'
 require_relative 'llm/openai_compat_adapter'
+require_relative 'llm/gemini_adapter'
 
 module AnmanAI
   class LLMClient
@@ -42,10 +43,14 @@ module AnmanAI
       
       provider = llm_config['provider']
       if provider.nil? || provider.to_s.strip.empty?
-        # Auto-detect: If an API key is present (and it's not "ollama"), assume openai_compat
+        # Auto-detect: If an API key is present (and it's not "ollama"), assume openai_compat or gemini
         api_key = llm_config['api_key']
         if api_key && !api_key.to_s.strip.empty? && api_key != 'ollama'
-          provider = 'openai_compat'
+          if api_key.to_s.start_with?('AIzaSy')
+            provider = 'gemini'
+          else
+            provider = 'openai_compat'
+          end
         else
           provider = 'ollama'
         end
@@ -54,11 +59,13 @@ module AnmanAI
       # Adapters expect config.dig('llm', ...), so construct a pseudo config hash
       pseudo_config = { 'llm' => llm_config }
 
-      case provider
+      case provider.to_s.downcase
       when 'ollama'
         LLM::OllamaAdapter.new(pseudo_config)
       when 'openai_compat'
         LLM::OpenAICompatAdapter.new(pseudo_config)
+      when 'gemini', 'google'
+        LLM::GeminiAdapter.new(pseudo_config)
       else
         STDERR.puts "[LLM Warning] Unknown provider '#{provider}', falling back to Ollama adapter."
         LLM::OllamaAdapter.new(pseudo_config)
