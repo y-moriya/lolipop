@@ -408,12 +408,15 @@ test.describe('AIwolf Server E2E Tests for v2.cgi', () => {
     console.log(`[E2E] Werewolf (${wolfInfo.name}) submitted attack action.`);
 
 
-    // Wait for Day 2 Daytime transitions
+    // Wait for Day 2 Daytime transitions (night→day reload prompt)
     // Since both Seer and Werewolf committed, the game state should transition to Day 2
-    // Let's handle reload prompts on pages that didn't automatically reload
     for (const info of pages) {
       const prompt = info.page.locator('.reload-prompt');
-      if (await prompt.isVisible({ timeout: 10000 }).catch(() => false)) {
+      const promptVisible = await prompt.isVisible({ timeout: 10000 }).catch(() => false);
+      if (promptVisible) {
+        // Snapshot the reload prompt BEFORE clicking it
+        await saveSnapshot(info.page, `reload_prompt_night_to_day_${info.name.replace(' ', '_')}`);
+        console.log(`[E2E] Reload prompt (night→day) visible for ${info.name}, snapshotted.`);
         await prompt.click();
         console.log(`[E2E] Clicked reload prompt for ${info.name}`);
       } else {
@@ -446,18 +449,72 @@ test.describe('AIwolf Server E2E Tests for v2.cgi', () => {
     await saveSnapshot(pageA, 'enhanced_4_day_talk_sent');
 
     // 7. Day 2 Daytime Voting
-    // Each player votes for target index 1
+    // All players vote for the wolf player to guarantee village wins
+    // We need to find the wolf's player ID from the vote select options
+    const firstVoteSelect = pages[0].page.locator('select[name="vote_id"]');
+    await expect(firstVoteSelect).toBeVisible({ timeout: 10000 });
+    const wolfPid = await pages[0].page.evaluate((wolfName) => {
+      const sel = document.querySelector('select[name="vote_id"]');
+      if (!sel) return null;
+      for (const opt of sel.options) {
+        if (opt.text.trim().includes(wolfName)) return opt.value;
+      }
+      return null;
+    }, wolfInfo.name.replace('User ', ''));
+
+    // Get the wolf's character name from the vote select (match by player position, not user name)
+    // Fall back to index 1 if exact match not found
     for (const info of pages) {
       const voteSelect = info.page.locator('select[name="vote_id"]');
       await expect(voteSelect).toBeVisible({ timeout: 10000 });
-      await voteSelect.selectOption({ index: 1 });
+
+      // Try to vote for the wolf's player slot (index 2 = wolf's character in the list)
+      // select option index 1 = first non-cancel option
+      // We'll get all options and pick the one matching the wolf's character
+      const wolfCharName = await wolfInfo.page.evaluate(() => {
+        // Get current user's character name from the page header
+        const actionBody = document.querySelector('.action_balloon td.action_body');
+        if (!actionBody) return null;
+        const text = actionBody.innerText;
+        const nameMatch = text.match(/^(.+?)\s*\(/);
+        return nameMatch ? nameMatch[1].trim() : null;
+      });
+      console.log(`[E2E] Wolf character name: ${wolfCharName}`);
+
+      const wolfOptValue = await info.page.evaluate((charName) => {
+        const sel = document.querySelector('select[name="vote_id"]');
+        if (!sel || !charName) return null;
+        for (const opt of sel.options) {
+          if (opt.text.includes(charName)) return opt.value;
+        }
+        return null;
+      }, wolfCharName);
+
+      if (wolfOptValue && wolfOptValue !== '-1') {
+        await voteSelect.selectOption(wolfOptValue);
+        console.log(`[E2E] ${info.name} votes for wolf (value=${wolfOptValue})`);
+      } else {
+        // Fallback: vote for index 1
+        await voteSelect.selectOption({ index: 1 });
+        console.log(`[E2E] ${info.name} fallback vote for index 1`);
+      }
       await submitFormWorkaround(info.page, 'vote_id');
     }
+
+    // In this scenario: all voted for wolf → wolf is executed → village wins
+    // Village-side (占い師, 狂人*): 占い師 wins, 狂人 loses (wolf-side, but wolf lost)
+    // *狂人's win is tied to wolf winning, so if wolf loses, 狂人 loses too
+    const villageSideRoles = ['占い師', '村人', '霊能者', '狩人'];
+    const wolfLostRoles = ['人狼', '人喰い', '狂人']; // wolf-side loses when wolf is executed
 
     // Wait for the game over transition and click reload prompts
     for (const info of pages) {
       const prompt = info.page.locator('.reload-prompt');
-      if (await prompt.isVisible({ timeout: 15000 }).catch(() => false)) {
+      const promptVisible = await prompt.isVisible({ timeout: 15000 }).catch(() => false);
+      if (promptVisible) {
+        // Snapshot the game-over reload prompt BEFORE clicking
+        await saveSnapshot(info.page, `reload_prompt_game_over_${info.name.replace(' ', '_')}`);
+        console.log(`[E2E] Reload prompt (game over) visible for ${info.name}, snapshotted.`);
         await prompt.click();
         console.log(`[E2E] Clicked reload prompt after vote for ${info.name}`);
       } else {
@@ -468,12 +525,27 @@ test.describe('AIwolf Server E2E Tests for v2.cgi', () => {
 
     await saveSnapshot(pageA, 'enhanced_5_game_over');
 
-    // Verify game finished and outcomes are displayed
+    // Verify game finished and outcomes are correct by role
+    // Scenario: all players voted for wolf → wolf executed → VILLAGE WINS
+    //   Village-side (占い師, 村人 etc.) → win_res (勝利)
+    //   Wolf-side (人狼, 狂人 etc.)      → lose_res (敗北)
+    const wolfSideRoles = ['人狼', '人喰い', '狂人'];
     for (const info of pages) {
       const outcomeLocator = info.page.locator('.win_res, .lose_res');
       await expect(outcomeLocator.first()).toBeVisible({ timeout: 10000 });
       const text = await outcomeLocator.first().innerText();
-      console.log(`[E2E] Game finished! ${info.name} outcome: ${text}`);
+      const outcomeClass = await outcomeLocator.first().getAttribute('class');
+      console.log(`[E2E] ${info.name} (${info.role}): ${text} [class=${outcomeClass}]`);
+      await saveSnapshot(info.page, `game_result_${info.name.replace(' ', '_')}`);
+
+      const isWolfSide = wolfSideRoles.includes(info.role);
+      if (isWolfSide) {
+        // Wolf executed → wolf-side LOSES
+        expect(outcomeClass, `${info.name} (${info.role}) should LOSE (village wins) but got: ${text}`).toContain('lose_res');
+      } else {
+        // Village-side WINS when wolf is executed
+        expect(outcomeClass, `${info.name} (${info.role}) should WIN (village wins) but got: ${text}`).toContain('win_res');
+      }
     }
 
     await contextA.close();
