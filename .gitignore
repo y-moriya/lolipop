@@ -20,3 +20,7 @@ log/
 anman-ai/log/
 memory/
 anman-ai/memory/
+
+node_modules
+tmp
+test-results

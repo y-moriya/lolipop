@@ -1,0 +1,24 @@
+{
+  "name": "lolipop",
+  "version": "1.0.0",
+  "description": "ロリポップ！レンタルサーバーのCGI仕様に合わせたローカル開発環境（VSCode DevContainer）および、FTP自動デプロイスクリプトのセットアップです。",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/y-moriya/lolipop.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/y-moriya/lolipop/issues"
+  },
+  "homepage": "https://github.com/y-moriya/lolipop#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
+  }
+}

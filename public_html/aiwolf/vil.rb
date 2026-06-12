@@ -362,7 +362,6 @@ class Vil
 
 	def record_event(msg)
 		@events ||= []
-		next_id = @events.empty? ? 1 : @events.last[:id] + 1
 		now_str = Time.now.strftime("%Y/%m/%d %H:%M:%S")
 
 		strip_html = lambda do |html|
@@ -375,14 +374,13 @@ class Vil
 			text.strip
 		end
 
-		# 1. Normal chat messages, thinks, whispers, groans, etc.
-		if msg =~ /<!--(say|think|whisper|groan|fanatic|spirit|whisperhowl)(\d*)-->\s*<table class="message">.*?target="_blank">(.*?)<\/a>.*?<span class="time">(.*?)<\/span>.*?<div class="mes_(?:say|think|whisper|groan|fanatic|spirit|whisperhowl)_body1">(.*?)<\/div>.*?<\/table>/m
-			type_code = $1
-			speaker_id = $2.empty? ? nil : $2.to_i
-			speaker = $3
-			time_str = $4
-			content_html = $5
+		matched = false
 
+		# 1. Normal chat messages, thinks, whispers, groans, etc.
+		msg.scan(/<!--(say|think|whisper|groan|fanatic|spirit|whisperhowl)(\d*)-->\s*<table class="message">.*?target="_blank">(.*?)<\/a>.*?<span class="time">(.*?)<\/span>.*?<div class="mes_(?:say|think|whisper|groan|fanatic|spirit|whisperhowl)_body1">(.*?)<\/div>.*?<\/table>/m) do |type_code, speaker_id_str, speaker, time_str, content_html|
+			matched = true
+			next_id = @events.empty? ? 1 : @events.last[:id] + 1
+			speaker_id = (speaker_id_str.nil? || speaker_id_str.empty?) ? nil : speaker_id_str.to_i
 			@events << {
 				id: next_id,
 				type: 'message',
@@ -394,10 +392,12 @@ class Vil
 				day: @date
 			}
 			STDERR.puts "[record_event] Recorded message: #{strip_html.call(content_html)}"
+		end
 
 		# 1b. Masked howl
-		elsif msg =~ /<table class="message">.*?<td colspan="2" class="howl">狼の遠吠え<\/td>.*?<div class="mes_whisper_body1">(.*?)<\/div>.*?<\/table>/m
-			content_html = $1
+		msg.scan(/<table class="message">.*?<td colspan="2" class="howl">狼の遠吠え<\/td>.*?<div class="mes_whisper_body1">(.*?)<\/div>.*?<\/table>/m) do |content_html|
+			matched = true
+			next_id = @events.empty? ? 1 : @events.last[:id] + 1
 			@events << {
 				id: next_id,
 				type: 'message',
@@ -409,13 +409,13 @@ class Vil
 				day: @date
 			}
 			STDERR.puts "[record_event] Recorded howl: #{strip_html.call(content_html)}"
+		end
 
 		# 2. System announcements
-		elsif msg =~ /<!--(say|think|whisper|groan|fanatic|spirit|whisperhowl)?(\d*)-->\s*<div class="announce.*?">(.*?)<\/div>/m
-			tag_type = $1
-			target_id = $2.empty? ? nil : $2.to_i
-			content_html = $3
-			
+		msg.scan(/<!--(say|think|whisper|groan|fanatic|spirit|whisperhowl)?(\d*)-->\s*<div class="announce.*?">(.*?)<\/div>/m) do |tag_type, target_id_str, content_html|
+			matched = true
+			next_id = @events.empty? ? 1 : @events.last[:id] + 1
+			target_id = (target_id_str.nil? || target_id_str.empty?) ? nil : target_id_str.to_i
 			event_type_code = if (tag_type.nil? || tag_type == 'say') && target_id.nil?
 				'announce'
 			else
@@ -432,10 +432,12 @@ class Vil
 				day: @date
 			}
 			STDERR.puts "[record_event] Recorded announce: #{strip_html.call(content_html)}"
+		end
 
 		# 3. Time advances or state changes
-		elsif msg =~ /<(?:div|span) class="(?:time_announce|alllog_announce)">(.*?)<\/(?:div|span)>/m
-			content_html = $1
+		msg.scan(/<(?:div|span) class="(?:time_announce|alllog_announce)">(.*?)<\/(?:div|span)>/m) do |content_html|
+			matched = true
+			next_id = @events.empty? ? 1 : @events.last[:id] + 1
 			@events << {
 				id: next_id,
 				type: 'state_change',
@@ -445,7 +447,9 @@ class Vil
 				day: @date
 			}
 			STDERR.puts "[record_event] Recorded time change: #{strip_html.call(content_html)}"
-		else
+		end
+
+		unless matched
 			STDERR.puts "[record_event] Unmatched message pattern: #{msg[0..60]}..."
 		end
 	end

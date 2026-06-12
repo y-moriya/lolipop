@@ -95,6 +95,31 @@ class Api
       end
     end
 
+    # ログインユーザーの参加・状態情報
+    joined = false
+    my_role = nil
+    my_dead = nil
+    my_num_id = nil
+
+    if @login.login && File.exist?(detail_db_path)
+      begin
+        detail_db = PStore.new(detail_db_path)
+        detail_db.transaction(true) do
+          vil_obj = detail_db['root']
+          if vil_obj
+            player = vil_obj.player(@login)
+            if player
+              joined = true
+              my_role = Skill.skills[player.sid].name if vil_obj.state >= 1
+              my_dead = player.dead
+              my_num_id = player.num_id
+            end
+          end
+        end
+      rescue
+      end
+    end
+
     vil_info = {
       'vid' => vild['vid'],
       'name' => vild['name'],
@@ -121,7 +146,13 @@ class Api
       'open_skill' => detail_data['open_skill'] || false,
       'death_defeat' => detail_data['death_defeat'] || false,
       'update_time' => detail_data['update_time'] || 0,
-      'survivors' => detail_data['survivors'] || 0
+      'survivors' => detail_data['survivors'] || 0,
+
+      # ログインユーザーの状態
+      'joined' => joined,
+      'my_role' => my_role,
+      'my_dead' => my_dead,
+      'my_num_id' => my_num_id
     }
 
     print "Content-Type: application/json; charset=UTF-8\n\n"
@@ -168,6 +199,7 @@ class Api
           
           # 各村の進行状況（現在の日付や生存人数など）を詳細DBから取得
           detail_data = {}
+          joined = false
           detail_db_path = "db/vil#{(i - 1) / 100}/#{i}.db"
           if File.exist?(detail_db_path)
             begin
@@ -180,6 +212,9 @@ class Api
                     'night' => vil_obj.night,
                     'survivors' => vil_obj.players.values.count { |p| p.dead == 0 }
                   }
+                  if @login.login && vil_obj.players.key?(@login.userid)
+                    joined = true
+                  end
                 end
               end
             rescue
@@ -197,7 +232,8 @@ class Api
             'dummy' => vild['dummy'],
             'date' => detail_data['date'] || 0,
             'night' => detail_data['night'] || false,
-            'survivors' => detail_data['survivors'] || 0
+            'survivors' => detail_data['survivors'] || 0,
+            'joined' => joined
           }
         end
       end
@@ -243,6 +279,26 @@ class Api
           voted = player.dead == 0 ? (player.vote != -1) : nil
           acted = (player.dead == 0 && current_player && current_player.num_id == player.num_id) ? (player.target != -1) : nil
 
+          # 占い師・霊能者の判定結果
+          result = nil
+          if vil.state >= 1 && current_player
+            if current_player.sid == 2 # 占い師
+              has_fortune = player.fortune_t.keys.any? { |k| k.num_id == current_player.num_id }
+              if has_fortune
+                result = player.sid == 1 ? "人狼" : "人間"
+              end
+            elsif current_player.sid == 11 # 中身占い師
+              has_fortune_id = player.fortune_id_t.keys.any? { |k| k.num_id == current_player.num_id }
+              if has_fortune_id
+                result = player.userid
+              end
+            elsif current_player.sid == 3 # 霊能者
+              if player.dead != 0
+                result = player.sid == 1 ? "人狼" : "人間"
+              end
+            end
+          end
+
           players_list << {
             'userid' => userid,
             'name' => player.name,
@@ -250,7 +306,8 @@ class Api
             'role' => role_name,   # 進行中は null
             'num_id' => player.num_id,
             'voted' => voted,
-            'acted' => acted
+            'acted' => acted,
+            'result' => result
           }
         end
       end

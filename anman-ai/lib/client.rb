@@ -42,6 +42,15 @@ module AnmanAI
       @compact_prompt = @config.dig('llm', 'compact_prompt') != false
       puts "[System] Compact prompt mode: #{@compact_prompt ? 'ON（サマリー+差分ログ）' : 'OFF（全ログ）'}"
 
+      # 発言頻度の制限設定（設定がない場合はデフォルト値を使用）
+      @talk_interval_reactive = @config.dig('llm', 'talk_interval_reactive') || 10
+      @talk_interval_active = @config.dig('llm', 'talk_interval_active') || 60
+      @auto_adjust_talk_interval = @config.dig('llm', 'auto_adjust_talk_interval') != false
+      @budget_mode = @config.dig('llm', 'budget_mode') || 'normal'
+      @current_talk_interval_reactive = @talk_interval_reactive
+      @current_talk_interval_active = @talk_interval_active
+      puts "[System] Talk intervals - Reactive: #{@talk_interval_reactive}s, Active: #{@talk_interval_active}s, AutoAdjust: #{@auto_adjust_talk_interval}, BudgetMode: #{@budget_mode}"
+
       @voted_today = {}       # { day => bool }
       @acted_tonight = {}     # { day => bool }
       @whispered_tonight = {} # { day => bool }
@@ -50,6 +59,10 @@ module AnmanAI
 
       @reflected_and_greeting = false
       @epilogue_start_time = nil
+
+      # アンカー解決機能: true の場合、ログ内の >>N を対応発言内容に展開してLLMに渡す
+      @anchor_resolution = @config.dig('llm', 'anchor_resolution') != false
+      puts "[System] Anchor resolution: #{@anchor_resolution ? 'ON（>>Nを発言内容に展開）' : 'OFF（原文のまま）'}"
     end
     
     # 接続・ログイン (Cookieの取得)
@@ -374,6 +387,7 @@ module AnmanAI
               @game_state.is_night = vil_info['night']
               @game_state.game_started = true if game_state_val >= 1
               check_and_update_role_if_started!(game_state_val)
+              adjust_talk_intervals!(vil_info['period'].to_i)
             end
 
             # サーバーから状態を同期
@@ -401,6 +415,7 @@ module AnmanAI
               end
 
               check_and_update_role_if_started!(game_state_val)
+              adjust_talk_intervals!(vil_info['period'].to_i)
 
               # 進行中の場合は状態同期を実行
               if @game_state.game_started && game_state_val == 1
@@ -487,9 +502,9 @@ module AnmanAI
           last_log = @game_state.chat_logs.last
           others_spoke = (current_chat_size > @last_chat_logs_size) && last_log && !last_log['is_mine']
 
-          # 反応発言は前回の発言から2秒以上空いていれば実行（テスト等での迅速な応答に対応）
-          # 能動的発言は30秒以上空いていれば実行
-          if (others_spoke && time_since_last_say >= 2) || (time_since_last_say >= 30)
+          # 反応発言は前回の発言から指定された秒数以上空いていれば実行（デフォルトは10秒、時間自動伸縮あり）
+          # 能動的発言は指定された秒数以上空いていれば実行（デフォルトは60秒、時間自動伸縮あり）
+          if (others_spoke && time_since_last_say >= @current_talk_interval_reactive) || (time_since_last_say >= @current_talk_interval_active)
             check_and_say
             @last_chat_logs_size = current_chat_size
           end
@@ -565,13 +580,31 @@ module AnmanAI
     # コンパクトモード切り替え: chat_logsに渡す内容を決定するヘルパー
     # compact_prompt=true  → 「ゲームサマリー + 新着差分ログのみ」を返す
     # compact_prompt=false → 「全チャットログ」を返す
+    # anchor_resolution=true の場合、チャットログ内の >>N を対応発言内容に展開する
     def build_log_context
       if @compact_prompt
         summary = @game_state.game_summary
-        incremental = @game_state.incremental_chat_logs
+        incremental = @game_state.incremental_chat_logs(resolve_anchor: @anchor_resolution)
         "#{summary}\n\n【新着チャット（前回送信以降）】\n#{incremental}"
       else
-        @game_state.formatted_chat_logs
+        @game_state.formatted_chat_logs(resolve_anchor: @anchor_resolution)
+      end
+    end
+
+    # LLMが anchor_request: N を返したとき、N番のアンカーを解決して追加コンテキストを返す
+    # 解決できた場合: "【アンカー参照結果】>>N: 発言者「内容」" を返す
+    # 解決できなかった場合: nil を返す
+    def resolve_anchor_request(anchor_num)
+      return nil unless anchor_num.is_a?(Integer) && anchor_num > 0
+      day = @game_state.current_day
+      resolved = @game_state.resolve_anchors(">>#{anchor_num}", day)
+      # 解決できなかった場合は原文のまま返ってくる
+      if resolved == ">>#{anchor_num}"
+        puts "[Anchor] >>#{anchor_num} could not be resolved (not found in say_index)"
+        nil
+      else
+        puts "[Anchor] Resolved >>#{anchor_num}: #{resolved}"
+        "【アンカー参照結果】LLMが >>#{anchor_num} の内容を要求しました。該当発言: #{resolved}"
       end
     end
 
@@ -608,6 +641,10 @@ module AnmanAI
         # thought フィールド抽出（任意）
         if clean =~ /"thought"\s*:\s*"((?:[^"\\]|\\.)*)"/m
           result['thought'] = $1
+        end
+        # anchor_request フィールド抽出（整数または null）
+        if clean =~ /"anchor_request"\s*:\s*(\d+)/
+          result['anchor_request'] = $1.to_i
         end
 
         # 何も抽出できなければ例外を再発生
@@ -722,7 +759,18 @@ module AnmanAI
       begin
         response = @llm.chat(system_prompt, user_prompt)
         parsed = parse_llm_json(response)
-        
+
+        # anchor_request: N が返ってきた場合、アンカーを解決して1度だけ再問い合わせ
+        if parsed['anchor_request'] && !parsed['anchor_request'].to_s.empty? && parsed['anchor_request'].to_i > 0
+          anchor_context = resolve_anchor_request(parsed['anchor_request'].to_i)
+          if anchor_context
+            puts "[Anchor] Re-querying LLM with anchor context for >>#{parsed['anchor_request']}"
+            retry_prompt = user_prompt + "\n\n#{anchor_context}\n\n上記のアンカー参照内容を踏まえて、改めて発言を決定してください。"
+            response = @llm.chat(system_prompt, retry_prompt)
+            parsed = parse_llm_json(response)
+          end
+        end
+
         if parsed['reasoning_update'] && !parsed['reasoning_update'].empty?
           @game_state.my_reasoning_notes = parsed['reasoning_update']
         end
@@ -994,7 +1042,18 @@ module AnmanAI
       begin
         response = @llm.chat(system_prompt, user_prompt)
         parsed = parse_llm_json(response)
-        
+
+        # anchor_request: N が返ってきた場合、アンカーを解決して1度だけ再問い合わせ
+        if parsed['anchor_request'] && !parsed['anchor_request'].to_s.empty? && parsed['anchor_request'].to_i > 0
+          anchor_context = resolve_anchor_request(parsed['anchor_request'].to_i)
+          if anchor_context
+            puts "[Anchor] Re-querying whisper LLM with anchor context for >>#{parsed['anchor_request']}"
+            retry_prompt = user_prompt + "\n\n#{anchor_context}\n\n上記のアンカー参照内容を踏まえて、改めてささやきを決定してください。"
+            response = @llm.chat(system_prompt, retry_prompt)
+            parsed = parse_llm_json(response)
+          end
+        end
+
         if parsed['reasoning_update'] && !parsed['reasoning_update'].empty?
           @game_state.my_reasoning_notes = parsed['reasoning_update']
         end
@@ -1166,6 +1225,47 @@ module AnmanAI
       else
         puts "[System] Reflection failed."
       end
+    end
+
+    # 村の時間の長さの設定や予算モードによって発言頻度を変更する自動調整
+    def adjust_talk_intervals!(period)
+      # 1. まずベース値と時間伸縮比率の適用
+      reactive = @talk_interval_reactive
+      active = @talk_interval_active
+
+      if @auto_adjust_talk_interval && period && period > 0
+        is_test = @url.include?("localhost") || @url.include?("127.0.0.1")
+        unless is_test
+          # 基準を10分（10）とする
+          ratio = period.to_f / 10.0
+          # 1.0 未満にはならないようにする（超短期村でもベースの制限は維持）
+          ratio = 1.0 if ratio < 1.0
+
+          reactive = (reactive * ratio).to_i
+          active = (active * ratio).to_i
+        end
+      end
+
+      # 2. 予算モード（budget_mode）による倍率補正の適用
+      # low_cost: 2.5倍、max: 0.5倍、normal: 1.0倍
+      budget_ratio = case @budget_mode
+                     when "low_cost"
+                       2.5
+                     when "max"
+                       0.5
+                     else
+                       1.0
+                     end
+
+      reactive = (reactive * budget_ratio).to_i
+      active = (active * budget_ratio).to_i
+
+      # 3. 最低下限値の適用（reactiveは最低2秒、activeは最低5秒）
+      reactive = 2 if reactive < 2
+      active = 5 if active < 5
+
+      @current_talk_interval_reactive = reactive
+      @current_talk_interval_active = active
     end
   end
 end

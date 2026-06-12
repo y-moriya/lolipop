@@ -95,7 +95,7 @@ class CWolf
 
 		if (!@vil || !File.exist?("db/log#{(@vid - 1) / 100}"))
 			print "Status: 302 Found\n"
-			print "Location: index.cgi\n\n"
+			print "Location: v2.cgi\n\n"
 			exit(0)
 		end
 
@@ -235,11 +235,37 @@ class CWolf
 	def print_head(title = nil)
 		@headered = true
 		print "Content-Type: text/html; charset=UTF-8\n\n"
-    	print(HEAD1)
+    	print(HEAD1.gsub('plugin/base.css', 'plugin/v2.css').gsub('plugin/jquery.js', 'plugin/jquery-3.7.1.min.js').gsub('plugin/script.js', 'plugin/v2.js'))
 		if (title)
 			print "<title>AI天国 #{title}</title>"
 		else
 			print "<title>AI天国</title>"
+		end
+
+		if (@vid >= 1 && @vil)
+			# アバター画像のマッピング辞書を作成
+			mapping = {}
+			@vil.pids.each do |p|
+				f_name = "#{Charset.charsets[@vil.char].file_name}#{two(p.pid)}"
+				mapping[p.num_id] = f_name
+			end
+			# 観戦者（spectator_filename）
+			mapping[-1] = Charset.charsets[@vil.char].spectator_filename rescue "spectator"
+
+			last_event_id = @vil.events.empty? ? 0 : @vil.events.last[:id]
+			my_num_id = @player ? @player.num_id : -1
+			current_vid = @vid
+
+			# JSONに変換して出力
+			require 'json'
+			print <<~HTML
+				<script type="text/javascript">
+					var lastEventId = #{last_event_id};
+					var myNumId = #{my_num_id};
+					var currentVid = #{current_vid};
+					var avatarMapping = #{mapping.to_json};
+				</script>
+			HTML
 		end
 
 		if (@cgi['date'] == "0" || @cgi['cmd'] == 'mkvil')
@@ -249,6 +275,12 @@ class CWolf
 		else
 			print(HEAD2)
 		end
+	end
+
+	def erbrun(file)
+		html = ERB.new(File.open(file, "r:utf-8"){|f| f.read}).result(binding)
+		html.gsub!("index.cgi", "v2.cgi")
+		print html
 	end
 
 	def handle_index
@@ -1215,7 +1247,7 @@ class CWolf
 			elsif (@cgi['cmd'] == 'delcomp')
 				print "Location: ?cmd=pscomp\n\n"
 			else
-				print "Location: index.cgi\n\n"
+				print "Location: v2.cgi\n\n"
 			 end
         	return
 		end

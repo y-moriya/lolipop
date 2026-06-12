@@ -112,8 +112,18 @@ function init() {
 	syncActAcd();
 	focusMessage();
 	ajaxitems = [];
-	setAjaxEvent($(".vil_main"));
+
+	var isV2 = window.location.pathname.indexOf('v2.cgi') !== -1;
+	if (isV2) {
+		initV2AnchorHover();
+	} else {
+		setAjaxEvent($(".vil_main"));
+	}
+
   	$('#entryname').display = 'none';
+	if (typeof lastEventId !== 'undefined') {
+		pollEvents();
+	}
 }
 
 function hideSelectBoxes(popL, popR, popT, popD){
@@ -193,7 +203,6 @@ function popdown(){
 	}
 }
 
-// Plugin toggle
 function showPlagin(idno){
 pc = ('PlagClose' + (idno));
 pc2 = ('PlagClosex' + (idno));
@@ -225,6 +234,8 @@ function setAjaxEvent(target){
 		var ank  = $(this);
 		var base = ank.parents(".message");
 		var actbase = ank.parents(".announce");
+		//var div = $("#popup");
+		//alert(div.css('left'));
 		var text = ank.text();
 		if( 0 == text.indexOf(">>") ){
 			var href = this.href.replace("all","anc").replace("#","&num=");
@@ -240,7 +251,7 @@ function setAjaxEvent(target){
 				ajaxitems.push(mes);
 				closeWindow();
 				var topm    = mouse.pageY +  16;
-				var leftm   = mouse.pageX - 50;
+				var leftm   = mouse.pageX - 50; // 決めうち、本当はよくない。
 				var leftend = $("body").width() - mes.width() - 8;
 				if( leftend < leftm )
 					leftm   = leftend;
@@ -286,7 +297,11 @@ function closeWindow() {
 
 function setList(vid,date){
   $("#list").show();
-  var href = "./index.cgi?vid="+vid+"&date="+date+"&log=list";
+  var currentScript = window.location.pathname.split('/').pop() || 'index.cgi';
+  if (!currentScript.match(/^(index|v2)\.cgi$/)) {
+    currentScript = 'index.cgi';
+  }
+  var href = "./" + currentScript + "?vid="+vid+"&date="+date+"&log=list";
   $.get(href,{},function(data){
     var list = $(data).find(".list");
     $("#list").html(list)
@@ -295,4 +310,184 @@ function setList(vid,date){
 
 function hideList(){
   $("#list").hide();
+}
+
+function pollEvents() {
+  if (typeof lastEventId === 'undefined' || currentVid <= 0) return;
+
+  var url = "./api.cgi?cmd=events&vid=" + currentVid + "&since=" + lastEventId;
+  $.ajax({
+    url: url,
+    method: "GET",
+    dataType: "json",
+    timeout: 20000,
+    success: function(events) {
+      if (events && events.length > 0) {
+        var added = false;
+        events.forEach(function(e) {
+          if (e.id > lastEventId) {
+            lastEventId = e.id;
+            if (appendEventToUI(e)) {
+              added = true;
+            }
+          }
+        });
+        if (added) {
+          $('html, body').animate({ scrollTop: $(document).height() }, 'slow');
+        }
+      }
+      setTimeout(pollEvents, 100);
+    },
+    error: function(xhr, status, error) {
+      setTimeout(pollEvents, 2000);
+    }
+  });
+}
+
+function appendEventToUI(e) {
+  if (e.type === 'message') {
+    if ($('table[data-event-id="' + e.id + '"]').length > 0) return false;
+    
+    var imgName = (e.speaker_id !== null && typeof avatarMapping[e.speaker_id] !== 'undefined') ? avatarMapping[e.speaker_id] : avatarMapping[-1];
+    var imgSrc = "img/" + imgName + ".png";
+    var mark = "";
+    if (e.type_code === 'whisper') mark = "*";
+    else if (e.type_code === 'think') mark = "-";
+    else if (e.type_code === 'groan') mark = "+";
+    
+    var type = e.type_code;
+    if (type === 'whisperhowl') type = 'whisper';
+    
+    var speakerLink = "";
+    if (e.speaker_id !== null) {
+      speakerLink = '<a href="?vid=' + currentVid + '&id=' + e.speaker_id + '&date=' + e.day + '" target="_blank">' + e.speaker + '</a>';
+    } else {
+      speakerLink = '<a href="?cmd=user&uid=' + encodeURIComponent(e.speaker) + '" target="_blank">' + e.speaker + '</a>';
+    }
+    
+    var safeContent = escapeHtml(e.content).replace(/\\n/g, '<br>');
+    var eventDay = e.day || 1;
+    safeContent = safeContent.replace(/&gt;&gt;(\d+):([*+-]?)(\d+)|&gt;&gt;([*+-]?)(\d+)/g, function(match, d1, mark1, n1, mark2, n2) {
+      var targetDay = d1 ? d1 : eventDay;
+      var mark = d1 ? mark1 : mark2;
+      var num = d1 ? n1 : n2;
+      var t = 'say';
+      if (mark === '*') t = 'whisper';
+      else if (mark === '-') t = 'think';
+      else if (mark === '+') t = 'groan';
+      return '<a class="say" href="?vid=' + currentVid + '&date=' + targetDay + '&log=all#' + t + num + '">' + match + '</a>';
+    });
+    
+    var html = '<table class="message" data-event-id="' + e.id + '">' +
+               '<tr>' +
+               '  <td width="100" rowspan="2"><img src="' + imgSrc + '" style="width:70px; height:70px; object-fit:cover; border-radius:12px; border:1px solid rgba(255,255,255,0.05); box-shadow:0 4px 6px rgba(0,0,0,0.2);"></td>' +
+               '  <td colspan="2">' + speakerLink + ' <span class="time">' + e.time + '</span></td>' +
+               '</tr>' +
+               '<tr>' +
+               '  <td valign="top"><div class="mes_' + type + '"></div></td>' +
+               '  <td width="584" valign="top">' +
+               '    <div class="mes_' + type + '_body0">' +
+               '      <div class="mes_' + type + '_body1">' + safeContent + '</div>' +
+               '    </div>' +
+               '  </td>' +
+               '</tr>' +
+               '</table>';
+               
+    $(".action_box").first().before(html);
+    return true;
+  } else if (e.type === 'system') {
+    if ($('div[data-event-id="' + e.id + '"]').length > 0) return false;
+    
+    var announceClass = "announce";
+    if (e.type_code === 'whisperhowl') announceClass = "announce";
+    
+    var safeContent = escapeHtml(e.content).replace(/\\n/g, '<br>');
+    var html = '<div class="' + announceClass + '" data-event-id="' + e.id + '">' + safeContent + '</div>';
+    
+    $(".action_box").first().before(html);
+    return true;
+  }
+  return false;
+}
+
+function escapeHtml(string) {
+  if (typeof string !== 'string') {
+    return '';
+  }
+  return string.replace(/[&<>"']/g, function(match) {
+    return {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[match];
+  });
+}
+
+var anchorCache = {};
+function initV2AnchorHover() {
+  $(document).on('mouseenter', 'a.say', function(e) {
+    var ank = $(this);
+    ank.data('hovering', true);
+    var text = ank.text();
+    if (text.indexOf('>>') !== 0) return;
+
+    var href = ank.attr('href');
+    if (!href) return;
+
+    var $popup = $('#anchor-popup');
+    if ($popup.length === 0) {
+      $popup = $('<div id="anchor-popup"></div>').appendTo('body');
+    }
+
+    var loadAndShow = function(htmlContent) {
+      $popup.html(htmlContent);
+      $popup.show();
+
+      var ankOffset = ank.offset();
+      var ankHeight = ank.outerHeight();
+      var popupW = $popup.outerWidth();
+      var popupH = $popup.outerHeight();
+
+      var top = ankOffset.top - popupH - 10;
+      var left = ankOffset.left - 20;
+
+      if (top < $(window).scrollTop()) {
+        top = ankOffset.top + ankHeight + 10;
+      }
+      if (left + popupW > $(window).width()) {
+        left = $(window).width() - popupW - 10;
+      }
+      if (left < 0) left = 10;
+
+      $popup.css({
+        top: top + 'px',
+        left: left + 'px'
+      });
+    };
+
+    if (anchorCache[href]) {
+      loadAndShow(anchorCache[href]);
+    } else {
+      var fetchUrl = href.replace("all", "anc").replace("#", "&num=");
+      $.get(fetchUrl, {}, function(data) {
+        var $mes = $(data).find(".message");
+        if ($mes.length > 0) {
+          var html = $mes.prop('outerHTML');
+          anchorCache[href] = html;
+          if (ank.data('hovering')) {
+            loadAndShow(html);
+          }
+        }
+      });
+    }
+  }).on('mouseleave', 'a.say', function() {
+    var ank = $(this);
+    ank.data('hovering', false);
+    var $popup = $('#anchor-popup');
+    if ($popup.length > 0) {
+      $popup.hide();
+    }
+  });
 }

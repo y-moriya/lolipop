@@ -50,8 +50,9 @@ class Login
 			@userid = CGI.escapeHTML(Kconv.toutf8(userid))
 			@pass = Kconv.toutf8(cgi['pass'])
 			if(@userid == '' || @pass == '')
+				script_name = ENV['SCRIPT_NAME'] ? File.basename(ENV['SCRIPT_NAME']) : "index.cgi"
 				print "Status: 302 Found\n"
-	        	print "Location: index.cgi\n\n"
+	        	print "Location: #{script_name}\n\n"
 				exit(0)
 			end
 
@@ -73,9 +74,10 @@ class Login
 		end
 
 		if (cmd == 'login' || cmd == 'logout')
+			script_name = ENV['SCRIPT_NAME'] ? File.basename(ENV['SCRIPT_NAME']) : "index.cgi"
 			print "Status: 302 Found\n"
 			print "Set-Cookie: #{@cookie}\n"
-        	print "Location: index.cgi\n\n"
+        	print "Location: #{script_name}\n\n"
 			exit(0)
 		end
 	end

@@ -71,7 +71,10 @@ puts "=== APIセキュリティ・情報閲覧制限テストを開始します 
 # 1. 村のセットアップ
 num_players = 16
 users = (1..15).map { |i| PlayerSession.new("test_user#{i}", "pass#{i}") }
-users.each(&:login!)
+users.each do |u|
+  u.login!
+  sleep 0.1
+end
 
 creator = users.first
 res = creator.post(
@@ -90,7 +93,10 @@ puts "村を作成しました。ID: #{vid}"
 users.each_with_index do |user, index|
   pid = index + 1
   user.post('cmd' => 'entry', 'vid' => vid.to_s, 'pid' => pid.to_s, 'pass' => 'testpass', 'message' => 'よろしくお願いします', 'j_data' => 'あ')
+  sleep 0.1
 end
+
+sleep 0.5
 
 # ゲーム開始
 creator.post('cmd' => 'upstart', 'vid' => vid.to_s)
@@ -307,10 +313,15 @@ skill_req_players.each do |player|
     end
   else
     # 他の役職（人狼や狩人）は自分以外の生存者をランダムに選択
-    targets = surviving_pids - [player.num_id]
-    target_pid = targets.sample
     current_date = nil
     db.transaction(true) { |d| current_date = d['root'].date }
+    if player.sid == 1 && current_date <= 3
+      # 初日襲撃（ダミー襲撃期間）はダミー(ID: 1)のみ
+      target_pid = 1
+    else
+      targets = surviving_pids - [player.num_id]
+      target_pid = targets.sample
+    end
   end
 
   user_session = users.find { |u| u.userid == player.userid }

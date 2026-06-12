@@ -20,6 +20,12 @@ module AnmanAI
       # ゲームの重要イベントを蓄積して要約文を生成する
       @key_events = []          # 重要イベント of テキストリスト
       @last_sent_event_id = 0   # 最後にLLMへ送ったイベントID（差分ログ用）
+
+      # --- アンカー解決用 ---
+      # { day => { say_num => log_entry } } の形式で各日の say 発言番号を管理
+      @say_index = Hash.new { |h, k| h[k] = {} }
+      # { day => counter } 各日のsay発言連番カウンター
+      @say_counter = Hash.new(0)
     end
 
     # 初期プレイヤー情報を設定 (cmd=players のレスポンスを反映)
@@ -119,6 +125,17 @@ module AnmanAI
       @chat_logs << e
       # メモリ節約・コンテキスト長抑制のため直近30件に制限
       @chat_logs.shift if @chat_logs.size > 30
+
+      # say 発言はアンカー解決インデックスに登録（>>N 参照用）
+      # say_counter はイベントの day ごとに通常発言（say）の連番を管理
+      if e['type'] == 'message' && e['type_code'] == 'say'
+        day = e['day'].to_i
+        @say_counter[day] += 1
+        cnt = @say_counter[day]
+        # イベント本体に say_num を付与して検索できるようにする
+        e['say_num'] = cnt unless e['say_num']
+        @say_index[day][cnt] = e
+      end
     end
 
     # 重要イベントをサマリーに追記（最大30件）
@@ -152,11 +169,11 @@ module AnmanAI
     end
 
     # 最後にLLMへ送ったイベントID以降の差分チャットログのみを返す
-    def incremental_chat_logs
+    def incremental_chat_logs(resolve_anchor: false)
       new_logs = @chat_logs.select { |log| log['id'].to_i > @last_sent_event_id }
       return "（新着チャットなし）" if new_logs.empty?
 
-      new_logs.map { |log| format_log_line(log) }.join("\n")
+      new_logs.map { |log| format_log_line(log, resolve_anchor: resolve_anchor) }.join("\n")
     end
 
     # LLM呼び出し後に実行。「ここまで送信済み」マークを更新する
@@ -180,8 +197,8 @@ module AnmanAI
     end
 
     # 全チャットログをフォーマット（compact_prompt=false 時に使用）
-    def formatted_chat_logs
-      @chat_logs.map { |log| format_log_line(log) }.join("\n")
+    def formatted_chat_logs(resolve_anchor: false)
+      @chat_logs.map { |log| format_log_line(log, resolve_anchor: resolve_anchor) }.join("\n")
     end
 
     # 自分の直近N件の発言テキストを返す（繰り返し防止用）
@@ -199,10 +216,44 @@ module AnmanAI
       @action_results.empty? ? "特になし" : @action_results.join("\n")
     end
 
+    # アンカー（>>N）を対応する発言内容に展開する
+    # anchor_resolution が true の場合のみ呼ばれる
+    # >> N の N は当日の通常発言（say）の連番を指す
+    # 書式: >>N  -> [>>N: 発言者「内容（先頭30文字）」]
+    def resolve_anchors(text, day = nil)
+      day ||= @current_day
+      return text unless text.is_a?(String)
+      text.gsub(/>>(\.?\d+)/) do |match|
+        num = $1.to_i
+        log = @say_index[day][num]
+        if log
+          speaker = log['speaker'] || ''
+          content = log['content'].to_s[0, 40]
+          content += '…' if log['content'].to_s.length > 40
+          "[>>#{num}: #{speaker}「#{content}」]"
+        else
+          # 当日になければ全日付から検索
+          found = nil
+          @say_index.each do |d, idx|
+            found = idx[num]
+            break if found
+          end
+          if found
+            speaker = found['speaker'] || ''
+            content = found['content'].to_s[0, 40]
+            content += '…' if found['content'].to_s.length > 40
+            "[>>#{num}: #{speaker}「#{content}」]"
+          else
+            match  # 解決できなければ原文のまま
+          end
+        end
+      end
+    end
+
     private
 
     # ログ1件をテキスト行にフォーマット（全メソッド共通）
-    def format_log_line(log)
+    def format_log_line(log, resolve_anchor: false)
       time_part = log['time'] ? "[#{log['time']}] " : ""
       case log['type']
       when 'message'
@@ -213,7 +264,9 @@ module AnmanAI
           "#{time_part}[システム] 狼の遠吠え: わおーん"
         else
           label = tc == 'say' ? "" : " (#{tc})"
-          "#{time_part}#{log['speaker']}#{label}: #{log['content']}"
+          content = log['content']
+          content = resolve_anchors(content, log['day'].to_i) if resolve_anchor
+          "#{time_part}#{log['speaker']}#{label}: #{content}"
         end
       when 'system'
         "#{time_part}[システム]: #{log['content']}"

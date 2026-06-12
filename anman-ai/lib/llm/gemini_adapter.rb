@@ -7,7 +7,7 @@ module AnmanAI
   module LLM
     class GeminiAdapter
       def initialize(config)
-        @model = config.dig('llm', 'model') || "gemini-1.5-flash"
+        @model = config.dig('llm', 'model') || "gemini-2.5-flash"
         @api_key = ENV['GEMINI_API_KEY'] || ENV['ANMAN_GEMINI_API_KEY'] || config.dig('llm', 'api_key')
         @base_url = config.dig('llm', 'base_url') || "https://generativelanguage.googleapis.com"
         

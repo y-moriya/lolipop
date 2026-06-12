@@ -1,0 +1,587 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+
+* {
+    line-height: 150%;
+    font-size: 100%;
+    font-family: 'Outfit', 'Noto Sans JP', sans-serif;
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #0b0f19 0%, #111827 100%);
+    color: #e2e8f0;
+    min-height: 100vh;
+}
+
+.credit {
+    font-size: 110%;
+    opacity: 0.8;
+}
+
+.large_doc {
+    font-size: 150%;
+    font-weight: 500;
+}
+
+a:visited, a:link {
+    color: #38bdf8;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: #7dd3fc;
+    text-decoration: underline;
+}
+
+a:visited.vid, a:link.vid {
+    color: #f1f5f9;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+a:hover .vid {
+    text-decoration: underline;
+}
+
+.love {
+    color: #f472b6;
+    text-shadow: 0 0 8px rgba(244, 114, 182, 0.4);
+}
+
+.win_res {
+    color: #f87171;
+    font-weight: bold;
+}
+
+.lose_res {
+    color: #60a5fa;
+    font-weight: bold;
+}
+
+/* Announcements & Notices */
+.announce {
+    width: 100%;
+    max-width: 760px;
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    background: rgba(30, 41, 59, 0.4);
+    margin: 10px 0;
+    padding: 12px 16px;
+    font-size: 95%;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    color: #cbd5e1;
+}
+
+.alllog_announce {
+    width: 100%;
+    max-width: 760px;
+    border: 1px solid rgba(234, 179, 8, 0.2);
+    background: rgba(234, 179, 8, 0.05);
+    margin: 10px 0;
+    padding: 12px 16px;
+    color: #fef08a;
+    font-size: 95%;
+    border-radius: 12px;
+}
+
+.time_announce {
+    width: 100%;
+    max-width: 760px;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    background: rgba(239, 68, 68, 0.08);
+    margin: 10px 0;
+    padding: 12px 16px;
+    color: #fca5a5;
+    font-size: 95%;
+    border-radius: 12px;
+}
+
+.win {
+    padding: 8px 16px;
+    color: #f87171;
+    font-size: 130%;
+    font-weight: bold;
+    border-left: 4px solid #ef4444;
+}
+
+.whisper { color: #f87171; }
+.relive { color: #c084fc; }
+.fortune { color: #c084fc; font-weight: 500; }
+.fortune_id { color: #fda4af; }
+.guard { color: #4ade80; font-weight: 500; }
+.safety { color: #e2e8f0; }
+.spirit { color: #60a5fa; }
+.free { color: #fbbf24; }
+.stigmata { color: #a3e635; }
+.gammer { color: #cbd5e1; }
+.cupid { color: #f472b6; }
+.possessed { color: #2dd4bf; }
+.human { color: #38bdf8; font-weight: 500; }
+.wolf { color: #ef4444; font-weight: bold; }
+.vote, .conf, .flash { color: #eab308; }
+
+.char_name {
+    font-size: 150%;
+    color: #cbd5e1;
+    font-weight: 500;
+}
+
+.comp_vote {
+    color: #fbbf24;
+    font-weight: 700;
+}
+
+/* Form inputs & buttons */
+input.submit {
+    height: 36px;
+    padding: 0 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    background: linear-gradient(to bottom, #3b82f6, #2563eb);
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+    transition: all 0.2s ease;
+}
+
+input.submit:hover {
+    background: linear-gradient(to bottom, #60a5fa, #3b82f6);
+    box-shadow: 0 4px 12px -1px rgba(37, 99, 235, 0.4);
+    transform: translateY(-1px);
+}
+
+input.pass {
+    height: 36px;
+    padding: 0 10px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background-color: rgba(30, 41, 59, 0.7);
+    color: #ffffff;
+    border-radius: 8px;
+    transition: border-color 0.2s ease;
+}
+
+input.pass:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+select {
+    height: 36px;
+    padding: 0 10px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background-color: rgba(30, 41, 59, 0.7);
+    color: #ffffff;
+    border-radius: 8px;
+    width: 180px;
+    transition: border-color 0.2s ease;
+}
+
+select:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+select.edit {
+    width: 160px;
+}
+
+select.postpos {
+    width: auto;
+}
+
+.action_text {
+    width: 95%;
+    height: 36px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background-color: rgba(30, 41, 59, 0.7);
+    color: #fff;
+}
+
+.action_text:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.monospace {
+    font-family: 'Courier New', Courier, monospace;
+}
+
+/* Layout Containers */
+table.main {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    border-collapse: separate;
+    border-spacing: 0 15px;
+}
+
+table.menu td div {
+    font-size: 90%;
+    width: 10em;
+    margin: 0 10px 10px 0;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background-color: rgba(30, 41, 59, 0.8);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+table.menu td div a {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 8px 12px;
+    color: #cbd5e1;
+    text-decoration: none;
+    border-radius: 8px;
+}
+
+table.menu td div a:visited, table.menu td div a:link {
+    color: #cbd5e1;
+}
+
+table.menu td div a:hover {
+    color: #fff;
+    text-decoration: none;
+}
+
+table.menu td div:hover {
+    background-color: rgba(51, 65, 85, 0.8);
+    transform: translateY(-1px);
+}
+
+/* Village List (Index Table) */
+table.vil_index {
+    width: 100%;
+    color: #cbd5e1;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: rgba(17, 24, 39, 0.5);
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+table.vil_index th, table.vil_index td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    text-align: left;
+}
+
+table.vil_index tr:last-child td {
+    border-bottom: none;
+}
+
+table.vil_index td.vil_title {
+    font-size: 110%;
+    font-weight: bold;
+    color: #f8fafc;
+    background: rgba(30, 41, 59, 0.9);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+table.vil_index tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+table.vil_index td.space {
+    border: 0;
+    height: 15px;
+    padding: 0;
+    background: transparent !important;
+}
+
+/* Sidebar List (Players List) */
+table.list {
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(17, 24, 39, 0.6);
+    border-radius: 12px;
+    width: 240px;
+    margin: 20px 0 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+table.list th {
+    padding: 10px 14px;
+    background-color: rgba(30, 41, 59, 0.9);
+    color: #f8fafc;
+    font-weight: 500;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+table.list td {
+    padding: 8px 12px;
+    color: #94a3b8;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+table.list tr:last-child td {
+    border-bottom: none;
+}
+
+table.list tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+    color: #f1f5f9;
+}
+
+p {
+    margin: 12px 0 16px;
+    color: #94a3b8;
+}
+
+h2 {
+    width: 100%;
+    max-width: 760px;
+    font-size: 120%;
+    font-weight: 500;
+    padding: 10px 16px;
+    margin: 0 0 15px 0;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    color: #f8fafc;
+    background-color: rgba(30, 41, 59, 0.7);
+}
+
+.loud {
+    display: inline;
+    color: #ef4444;
+    font-size: 115%;
+    font-weight: bold;
+    text-shadow: 0 0 8px rgba(239, 68, 68, 0.2);
+}
+
+/* Chat Messages & Dialog Balloon */
+table.message {
+    margin: 0 0 12px;
+    width: 100%;
+    max-width: 760px;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+table.message td {
+    padding: 0;
+}
+
+/* User image column */
+table.message td[rowspan="2"] {
+    width: 80px;
+    vertical-align: top;
+    padding-right: 12px;
+}
+
+table.message td[rowspan="2"] img {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+table.message td.howl {
+    font-size: 85%;
+    color: #ef4444;
+    font-weight: bold;
+    padding: 2px 0;
+}
+
+table.message span.time {
+    font-size: 80%;
+    color: #64748b;
+    margin-left: 8px;
+}
+
+/* Chat Bubbles Style */
+.mes_say, .mes_whisper, .mes_groan, .mes_think {
+    display: none;
+}
+
+.mes_say_body1, .mes_whisper_body1, .mes_groan_body1, .mes_think_body1 {
+    padding: 12px 16px;
+    border-radius: 12px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+    font-size: 95%;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Normal chat */
+.mes_say_body1 {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    color: #e2e8f0;
+}
+
+/* Wolf whisper */
+.mes_whisper_body1 {
+    background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%);
+    color: #fecaca;
+    border: 1px solid rgba(239, 68, 68, 0.15);
+}
+
+/* Dead groan */
+.mes_groan_body1 {
+    background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%);
+    color: #dbeafe;
+    border: 1px solid rgba(59, 130, 246, 0.15);
+}
+
+/* Monologue/Think */
+.mes_think_body1 {
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+    color: #cbd5e1;
+    border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+/* Action Area */
+.action_box {
+    margin: 20px 0;
+    width: 100%;
+    max-width: 760px;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.action_balloon {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(30, 41, 59, 0.5);
+    backdrop-filter: blur(8px);
+    overflow: hidden;
+}
+
+.action_body {
+    padding: 16px;
+    color: #f8fafc;
+}
+
+.action_textarea, .whisper_textarea, .groan_textarea {
+    width: 100%;
+    min-height: 80px;
+    font-size: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.action_textarea {
+    background-color: rgba(15, 23, 42, 0.6);
+}
+
+.whisper_textarea {
+    background-color: rgba(69, 10, 10, 0.6);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.whisper_textarea:focus {
+    border-color: #ef4444;
+}
+
+.groan_textarea {
+    background-color: rgba(23, 37, 84, 0.6);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.groan_textarea:focus {
+    border-color: #3b82f6;
+}
+
+.action_textarea:focus {
+    border-color: #3b82f6;
+}
+
+span.today {
+    color: #94a3b8;
+}
+
+.time, .act_time {
+    font-size: 80%;
+    color: #64748b;
+}
+
+.act_toggle {
+    font-size: 85%;
+    margin-left: 20px;
+    padding: 4px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+    background-color: rgba(51, 65, 85, 0.7);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.act_toggle:hover {
+    background-color: rgba(71, 85, 105, 0.9);
+    color: #fff;
+}
+
+.close {
+    float: right;
+    cursor: pointer;
+    font-weight: bold;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.close:hover {
+    opacity: 1;
+}
+
+/* Hide legacy bubble images (corners/tail) in v2 UI */
+.action_box img[src*="say"] {
+    display: none !important;
+}
+
+/* V2 Anchor Popup Style */
+#anchor-popup {
+    display: none;
+    position: absolute;
+    z-index: 10000;
+    width: 100%;
+    max-width: 500px;
+    background: rgba(15, 23, 42, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    pointer-events: none;
+}
+
+#anchor-popup table.message {
+    margin: 0;
+    max-width: 100%;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+#anchor-popup table.message td[rowspan="2"] {
+    width: 60px;
+    padding-right: 8px;
+}
+
+#anchor-popup table.message td[rowspan="2"] img {
+    width: 50px;
+    height: 50px;
+}
+
