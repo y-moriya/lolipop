@@ -376,7 +376,15 @@ function pollEvents() {
 }
 
 function appendEventToUI(e) {
-  if (e.type === 'state_change' || (e.type === 'system' && (e.content.indexOf('の勝利です') !== -1 || e.content.indexOf('ゲームが決着しました') !== -1 || e.content.indexOf('ゲーム終了') !== -1))) {
+  if (e.type === 'state_change' || (e.type === 'system' && (
+    e.content.indexOf('の勝利です') !== -1 ||
+    e.content.indexOf('ゲームが決着しました') !== -1 ||
+    e.content.indexOf('ゲーム終了') !== -1 ||
+    e.content.indexOf('夜になりました') !== -1 ||
+    e.content.indexOf('朝になりました') !== -1 ||
+    e.content.indexOf('犠牲者') !== -1 ||
+    e.content.indexOf('おぞましいダニエル') !== -1
+  ))) {
     showReloadPrompt(e.content);
     return true;
   }
