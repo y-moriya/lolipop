@@ -481,6 +481,69 @@ else
 end
 
 
+# ----------------------------------------------------
+# 検証 8: 投票/取り消しおよび霊能結果の閲覧制限検証
+# ----------------------------------------------------
+puts "\n--- 検証 8: 投票/取り消しおよび霊能結果の閲覧制限検証 ---"
+
+# 8-1. 投票と取り消しメッセージの漏洩チェック
+# 占い師が投票する
+target_pid = nil
+current_date = nil
+db.transaction(true) do |d|
+  vil = d['root']
+  target_pid = vil.players[villager_session.userid].num_id
+  current_date = vil.date
+end
+
+# 投票前の最新イベントIDを取得
+res_init = villager_session.get_api('cmd' => 'events', 'vid' => vid.to_s, 'since' => '0')
+init_events = JSON.parse(res_init.body)
+latest_id = init_events.empty? ? 0 : init_events.last['id']
+
+# 占い師が投票し、すぐ取り消す
+seer_session.post('cmd' => 'vote', 'vote_id' => target_pid.to_s, 'set_date' => current_date.to_s, 'vid' => vid.to_s)
+seer_session.post('cmd' => 'vote', 'vote_id' => '-1', 'set_date' => current_date.to_s, 'vid' => vid.to_s)
+
+# 村人が投票関連のイベントを受信していないことを確認
+res_villager = villager_session.get_api('cmd' => 'events', 'vid' => vid.to_s, 'since' => latest_id.to_s)
+events_villager = JSON.parse(res_villager.body)
+has_vote_leak = events_villager.any? { |e| e['content'].include?("投票しました") || e['content'].include?("投票を取り消しました") }
+
+if has_vote_leak
+  puts "[ERROR] 占い師の投票・取り消しメッセージが村人に漏洩しています！"
+  errors += 1
+else
+  puts "[OK] 占い師の投票・取り消しメッセージは村人には配信されていません。"
+end
+
+# 8-2. 霊能結果の漏洩チェック
+# 現在、霊能者が霊能結果を受信しているか確認 (霊能者はsid=3)
+medium_session = nil
+db.transaction(true) do |d|
+  vil = d['root']
+  vil.players.each do |userid, player|
+    medium_session = users.find { |u| u.userid == userid } if player.sid == 3
+  end
+end
+
+if medium_session
+  # 霊能者以外のプレイヤー（村人）がイベントを取得し、霊能結果が入っていないことを確認
+  res_villager = villager_session.get_api('cmd' => 'events', 'vid' => vid.to_s, 'since' => '0')
+  events_villager = JSON.parse(res_villager.body)
+  has_spirit_leak = events_villager.any? { |e| e['content'].include?("だったようです") }
+
+  if has_spirit_leak
+    puts "[ERROR] 霊能結果メッセージが霊能者以外のプレイヤーに漏洩しています！"
+    errors += 1
+  else
+    puts "[OK] 霊能結果メッセージは霊能者以外のプレイヤーには配信されていません。"
+  end
+else
+  puts "[INFO] 霊能者が生存していないため、霊能結果のチェックをスキップします。"
+end
+
+
 puts "\n=== テスト終了 ==="
 if errors == 0
   puts "【すべての検証項目に合格しました】"

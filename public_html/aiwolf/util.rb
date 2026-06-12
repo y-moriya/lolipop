@@ -172,7 +172,7 @@ def safety_announce(str)
 	%Q(<!--say--><div class="announce safety">#{str}</div>\n)
 end
 def spirit_announce(str)
-	%Q(<!--sprit--><div class="announce spirit">#{str}</div>\n)
+	%Q(<!--spirit--><div class="announce spirit">#{str}</div>\n)
 end
 def free_announce(str, id)
 	%Q(<!--think#{id}--><div class="announce free">#{str}</div>\n)

@@ -474,7 +474,7 @@ class Api
                 next if vil_state == 0
                 next if current_player.nil?
                 next if current_player.dead == 0
-              when 'sprit' # 霊能者の霊界メッセージ
+              when 'sprit', 'spirit' # 霊能者の霊界メッセージ
                 next if vil_state == 0
                 next if current_player.nil?
                 next if current_player.sid != 3

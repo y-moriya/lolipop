@@ -377,10 +377,11 @@ class Vil
 		matched = false
 
 		# 1. Normal chat messages, thinks, whispers, groans, etc.
-		msg.scan(/<!--(say|think|whisper|groan|fanatic|spirit|whisperhowl)(\d*)-->\s*<table class="message">.*?target="_blank">(.*?)<\/a>.*?<span class="time">(.*?)<\/span>.*?<div class="mes_(?:say|think|whisper|groan|fanatic|spirit|whisperhowl)_body1">(.*?)<\/div>.*?<\/table>/m) do |type_code, speaker_id_str, speaker, time_str, content_html|
+		msg.scan(/<!--(say|think|whisper|groan|fanatic|spirit|sprit|whisperhowl)(\d*)-->\s*<table class="message">.*?target="_blank">(.*?)<\/a>.*?<span class="time">(.*?)<\/span>.*?<div class="mes_(?:say|think|whisper|groan|fanatic|spirit|sprit|whisperhowl)_body1">(.*?)<\/div>.*?<\/table>/m) do |type_code, speaker_id_str, speaker, time_str, content_html|
 			matched = true
 			next_id = @events.empty? ? 1 : @events.last[:id] + 1
 			speaker_id = (speaker_id_str.nil? || speaker_id_str.empty?) ? nil : speaker_id_str.to_i
+			type_code = 'spirit' if type_code == 'sprit'
 			@events << {
 				id: next_id,
 				type: 'message',
@@ -412,10 +413,11 @@ class Vil
 		end
 
 		# 2. System announcements
-		msg.scan(/<!--(say|think|whisper|groan|fanatic|spirit|whisperhowl)?(\d*)-->\s*<div class="announce.*?">(.*?)<\/div>/m) do |tag_type, target_id_str, content_html|
+		msg.scan(/<!--(say|think|whisper|groan|fanatic|spirit|sprit|whisperhowl)?(\d*)-->\s*<div class="announce.*?">(.*?)<\/div>/m) do |tag_type, target_id_str, content_html|
 			matched = true
 			next_id = @events.empty? ? 1 : @events.last[:id] + 1
 			target_id = (target_id_str.nil? || target_id_str.empty?) ? nil : target_id_str.to_i
+			tag_type = 'spirit' if tag_type == 'sprit'
 			event_type_code = if (tag_type.nil? || tag_type == 'say') && target_id.nil?
 				'announce'
 			else
