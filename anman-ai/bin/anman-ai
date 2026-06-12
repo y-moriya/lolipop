@@ -33,14 +33,29 @@ end
 
 # ログ設定を反映するため先に config をロード
 require 'yaml'
-config = YAML.load_file(config_path) rescue {}
+begin
+  config = YAML.load_file(config_path)
+  config = {} unless config.is_a?(Hash)
+rescue => e
+  puts "===================================================="
+  puts "[Fatal Error] Failed to parse config file: #{e.message}"
+  puts "Please check your configuration file: #{config_path}"
+  puts "===================================================="
+  exit 1
+end
+
 if config['llm_config']
   config_dir = File.dirname(config_path)
   llm_config_path = File.expand_path(config['llm_config'], config_dir)
   if File.exist?(llm_config_path)
-    llm_config = YAML.load_file(llm_config_path) rescue {}
-    config['llm'] = llm_config['llm'] if llm_config['llm']
-    config['llm_fallback'] = llm_config['llm_fallback'] if llm_config['llm_fallback']
+    begin
+      llm_config = YAML.load_file(llm_config_path)
+      llm_config = {} unless llm_config.is_a?(Hash)
+      config['llm'] = llm_config['llm'] if llm_config['llm']
+      config['llm_fallback'] = llm_config['llm_fallback'] if llm_config['llm_fallback']
+    rescue => e
+      puts "[System WARNING] Failed to parse LLM config at #{llm_config_path}: #{e.message}"
+    end
   else
     puts "[System WARNING] Referenced LLM config file not found: #{llm_config_path}"
   end

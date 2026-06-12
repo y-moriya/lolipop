@@ -24,14 +24,26 @@ module AnmanAI
 
   class Client
     def self.load_config(config_path)
-      config = YAML.load_file(config_path) rescue {}
+      begin
+        config = YAML.load_file(config_path)
+        config = {} unless config.is_a?(Hash)
+      rescue => e
+        puts "[Fatal Error] Failed to parse config file at #{config_path}: #{e.message}"
+        config = {}
+      end
+
       if config['llm_config']
         config_dir = File.dirname(config_path)
         llm_config_path = File.expand_path(config['llm_config'], config_dir)
         if File.exist?(llm_config_path)
-          llm_config = YAML.load_file(llm_config_path) rescue {}
-          config['llm'] = llm_config['llm'] if llm_config['llm']
-          config['llm_fallback'] = llm_config['llm_fallback'] if llm_config['llm_fallback']
+          begin
+            llm_config = YAML.load_file(llm_config_path)
+            llm_config = {} unless llm_config.is_a?(Hash)
+            config['llm'] = llm_config['llm'] if llm_config['llm']
+            config['llm_fallback'] = llm_config['llm_fallback'] if llm_config['llm_fallback']
+          rescue => e
+            puts "[System WARNING] Failed to parse LLM config at #{llm_config_path}: #{e.message}"
+          end
         else
           puts "[System WARNING] Referenced LLM config file not found: #{llm_config_path}"
         end
@@ -43,10 +55,14 @@ module AnmanAI
       @exe_dir = exe_dir
       @internal_root_dir = internal_root_dir || exe_dir
       @config = Client.load_config(config_path)
-      @url = @config['server']['url']
-      @vid = @config['server']['vid']
-      @userid = @config['user']['userid']
-      @password = @config['user']['password']
+      
+      server_config = @config['server'] || {}
+      @url = server_config['url']
+      @vid = server_config['vid']
+      
+      user_config = @config['user'] || {}
+      @userid = user_config['userid']
+      @password = user_config['password']
       
       @cookie = nil
       @game_state = GameState.new(@userid)
