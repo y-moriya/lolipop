@@ -362,20 +362,51 @@ test.describe('AIwolf Server E2E Tests for v2.cgi', () => {
     await submitFormWorkaround(seerPage, 'target_id');
     console.log(`[E2E] Seer (${seerInfo.name}) submitted fortune action.`);
 
-    // Werewolf action: target index 1
+    // Werewolf: send whisper BEFORE committing the attack target
+    // (whisper_textarea is only available during night, before night-commit)
     const wolfPage = wolfInfo.page;
+    await expect(wolfPage.locator('select[name="target_id"]')).toBeVisible({ timeout: 10000 });
+    await wolfPage.selectOption('select[name="target_id"]', { index: 1 });
+
+    const whisperTextarea = wolfPage.locator('textarea.whisper_textarea');
+    if (await whisperTextarea.isVisible()) {
+      // Send whisper before submitting attack (which triggers night-commit)
+      await whisperTextarea.fill('今夜はダニエルを襲うよ');
+      await wolfPage.click('input[value="人狼のささやき"]');
+      console.log(`[E2E] Werewolf whisper sent.`);
+
+      // Wolf's own view: whisper should be visible immediately
+      await expect(wolfPage.locator('.mes_whisper_body1').last())
+        .toContainText('今夜はダニエルを襲うよ', { timeout: 10000 });
+      await saveSnapshot(wolfPage, 'whisper_wolf_view');
+      console.log(`[E2E] Snapshot saved: whisper_wolf_view`);
+
+      // Non-wolf pages: "わおーん" howl should arrive dynamically via long-polling
+      const nonWolfPages = pages.filter(p => !isWolf(p.role));
+      for (const info of nonWolfPages) {
+        await expect(info.page.locator('.mes_whisper_body1').last())
+          .toContainText('わおーん', { timeout: 15000 });
+        await saveSnapshot(info.page, `whisper_howl_${info.name.replace(' ', '_')}_view`);
+
+        // Verify icon is howl.png, NOT a character avatar
+        const howlTable = info.page.locator('table.message').filter({ hasText: 'わおーん' }).last();
+        await expect(howlTable).toBeVisible();
+        const howlImg = howlTable.locator('td:first-child img').first();
+        const imgSrc = await howlImg.getAttribute('src');
+        console.log(`[E2E] Howl icon for ${info.name}: ${imgSrc}`);
+        expect(imgSrc).toContain('howl');
+      }
+    }
+
+    // Werewolf submits attack target (this triggers night-commit)
+    // Re-select index 1 because the whisper form submit caused a page reload,
+    // resetting the select back to -1.
     await expect(wolfPage.locator('select[name="target_id"]')).toBeVisible({ timeout: 10000 });
     await wolfPage.selectOption('select[name="target_id"]', { index: 1 });
     await saveSnapshot(wolfPage, 'wolf_before_submit');
     await submitFormWorkaround(wolfPage, 'target_id');
     console.log(`[E2E] Werewolf (${wolfInfo.name}) submitted attack action.`);
 
-    // Werewolf whisper (optional)
-    const whisperTextarea = wolfPage.locator('textarea.whisper_textarea');
-    if (await whisperTextarea.isVisible()) {
-      await whisperTextarea.fill('今夜はダニエルを襲うよ');
-      await wolfPage.click('input[value="人狼のささやき"]');
-    }
 
     // Wait for Day 2 Daytime transitions
     // Since both Seer and Werewolf committed, the game state should transition to Day 2

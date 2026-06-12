@@ -392,11 +392,17 @@ function appendEventToUI(e) {
   if (e.type === 'message') {
     if ($('table[data-event-id="' + e.id + '"]').length > 0) return false;
     
-    var imgName = e.avatar;
-    if (!imgName) {
-      imgName = (e.speaker_id !== null && typeof avatarMapping[e.speaker_id] !== 'undefined') ? avatarMapping[e.speaker_id] : avatarMapping[-1];
-    } else if (e.speaker_id !== null) {
-      avatarMapping[e.speaker_id] = imgName;
+    var imgName;
+    if (e.type_code === 'whisperhowl') {
+      // 狼の遠吠えは常に howl アイコンを使用（キャラアイコンを使わない）
+      imgName = 'howl';
+    } else {
+      imgName = e.avatar;
+      if (!imgName) {
+        imgName = (e.speaker_id !== null && typeof avatarMapping[e.speaker_id] !== 'undefined') ? avatarMapping[e.speaker_id] : avatarMapping[-1];
+      } else if (e.speaker_id !== null) {
+        avatarMapping[e.speaker_id] = imgName;
+      }
     }
     var imgSrc = "img/" + imgName + ".png";
     var mark = "";
