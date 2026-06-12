@@ -10,7 +10,9 @@ def print_usage
 end
 
 # OCRANの実行パス解決
-exe_dir = if defined?(OCRAN_EXECUTABLE)
+exe_dir = if ENV['OCRAN_EXECUTABLE']
+  File.dirname(ENV['OCRAN_EXECUTABLE'])
+elsif defined?(OCRAN_EXECUTABLE)
   File.dirname(OCRAN_EXECUTABLE)
 else
   File.expand_path('..', __dir__)
