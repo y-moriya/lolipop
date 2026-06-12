@@ -58,6 +58,9 @@ module AnmanAI
       
       server_config = @config['server'] || {}
       @url = server_config['url']
+      if @url
+        @url = @url.sub(/\/aiwolf\/?\z/, '').chomp('/')
+      end
       @vid = server_config['vid']
       
       user_config = @config['user'] || {}
