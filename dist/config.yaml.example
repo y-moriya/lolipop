@@ -6,11 +6,16 @@ user:
   userid: "your_username"      # ← ウルフテンのユーザーID
   password: "your_password"    # ← パスワード
 
+# --- LLM 設定の切り替え用外部ファイル指定 (推奨) ---
+# config.gemini.yml などを読み込んで llm セクションを上書きします。
+llm_config: "config.gemini.yml"  # 外部ファイルを使わない場合はコメントアウトしてください。
+
 llm:
   # 使用するプロバイダを選択:
-  #   ollama        : ローカル Ollama（デフォルト・APIキー不要）
-  #   openai_compat : OpenAI互換API（OpenAI公式/LM Studio/Groq等、APIキー必要）
-  provider: "ollama"
+  #   gemini        : Google AI Studio
+  #   ollama        : ローカル Ollama
+  #   openai_compat : OpenAI互換API
+  provider: "gemini"
 
   # --- Ollama 設定 ---
   base_url: "http://localhost:11434"

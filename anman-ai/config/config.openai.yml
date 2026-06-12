@@ -1,0 +1,13 @@
+# OpenAI configuration for anman-ai
+llm:
+  provider: "openai_compat"
+  # あなたのOpenAI APIキー (※環境変数 ANMAN_LLM_API_KEY でも指定可能)
+  api_key: "sk-proj-YourOpenAIApiKey"
+  base_url: "https://api.openai.com/v1"
+  model: "gpt-4o-mini"
+  compact_prompt: true                   # true: サマリー+差分ログのみ送信（コンテキスト節約）/ false: 全チャットログ送信
+  talk_interval_reactive: 10             # 反応発言の最小間隔（秒）。他人の発言にすぐ喋りすぎるのを防ぐ
+  talk_interval_active: 60               # 能動発言の最小間隔（秒）。誰も喋っていないときに喋り出す間隔
+  auto_adjust_talk_interval: true        # true: 昼の長さに比例して発言間隔を自動調整
+  budget_mode: "normal"                  # 発言頻度の予算モード ("low_cost" / "normal" / "max")
+  anchor_resolution: true                # true: チャットログ内の >>N アンカーを展開して渡す

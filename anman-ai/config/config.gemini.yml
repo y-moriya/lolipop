@@ -1,0 +1,12 @@
+# Gemini configuration for anman-ai
+llm:
+  provider: "gemini"
+  # あなたのGemini APIキー (※環境変数 GEMINI_API_KEY または ANMAN_GEMINI_API_KEY でも指定可能)
+  api_key: "AIzaSyYourGeminiApiKeyHere"
+  model: "gemini-2.5-flash"              # 選択可能なモデル: gemini-2.5-flash, gemini-2.5-pro, gemini-3.5-flash など
+  compact_prompt: true                   # true: サマリー+差分ログのみ送信（コンテキスト節約）/ false: 全チャットログ送信
+  talk_interval_reactive: 10             # 反応発言の最小間隔（秒）。他人の発言にすぐ喋りすぎるのを防ぐ
+  talk_interval_active: 60               # 能動発言の最小間隔（秒）。誰も喋っていないときに喋り出す間隔
+  auto_adjust_talk_interval: true        # true: 村の昼の長さ(period)に比例して発言間隔を自動調整し、長期村での連投を防ぐ
+  budget_mode: "normal"                  # 発言頻度の予算モード ("low_cost": 発言間隔を2.5倍に延ばしトークン節約 / "normal": 等倍 / "max": 0.5倍に短縮し積極的に喋る)
+  anchor_resolution: true                # true: チャットログ内の >>N アンカーを参照先の発言内容に展開してLLMに渡す

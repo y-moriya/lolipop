@@ -33,9 +33,12 @@ user:
 # ---------------------------------------------------------------------
 # 3. メインLLM設定
 # ---------------------------------------------------------------------
-llm:
-  # --- 各LLM別の設定記載例 ---
+# LLM設定を外部ファイルに切り分けることで、簡単に切り替えが可能です。
+# （外部ファイルを使用する場合は、以下の llm_config にファイル名を指定します）
+llm_config: "config.gemini.yml"  # 例: config.gemini.yml, config.ollama.yml, config.openai.yml
 
+# 直接このファイルに設定を書くことも可能です（llm_config を省略した場合）
+llm:
   # 例 A: Google AI Studio (Gemini) [推奨]
   provider: "gemini"
   api_key: "AIzaSyYourGeminiApiKeyHere"  # あなたのGemini APIキー (※環境変数 GEMINI_API_KEY または ANMAN_GEMINI_API_KEY でも指定可能)
