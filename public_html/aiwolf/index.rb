@@ -224,11 +224,10 @@ class CWolf
 			vil.add_player(player)
 
 			type = 'say'
-			s = announce("#{player.name} が集会所を訪れました。")
+			vil.addlog(announce("#{player.name} が集会所を訪れました。"))
 			vil.say_cnt[type] = vil.say_cnt[type] + 1
 			cnt = vil.say_cnt[type]
-			s += vil.say(type, cnt, player, msg, player.userid)
-			vil.addlog(s)
+			vil.addlog(vil.say(type, cnt, player, msg, player.userid))
 		end
 	end
 
@@ -505,9 +504,8 @@ class CWolf
 			vil.say_cnt[type] = vil.say_cnt[type] + 1
 			cnt = vil.say_cnt[type]
 			player = vil.player_p(1)
-			s = announce("#{player.name} が集会所を訪れました。")
-			s += vil.say(type, cnt, player, Charset.charsets[vil.char].dummy_message['middle'], player.userid)
-			vil.addlog(s)
+			vil.addlog(announce("#{player.name} が集会所を訪れました。"))
+			vil.addlog(vil.say(type, cnt, player, Charset.charsets[vil.char].dummy_message['middle'], player.userid))
 			vldb = PStore.new('db/vil.db')
 			vldb.transaction do
 				vild = vldb["root#{@vid}"]
@@ -1042,9 +1040,8 @@ class CWolf
 				vil.say_cnt[type] = vil.say_cnt[type] + 1
 				cnt = vil.say_cnt[type]
 				player = vil.player_p(1)
-				s = announce("#{player.name} が集会所を訪れました。")
-				s += vil.say(type, cnt, player, Charset.charsets[vil.char].dummy_message['entry'], player.userid)
-				vil.addlog(s)
+				vil.addlog(announce("#{player.name} が集会所を訪れました。"))
+				vil.addlog(vil.say(type, cnt, player, Charset.charsets[vil.char].dummy_message['entry'], player.userid))
 			end
 
 			if (DEBUG)
@@ -1052,10 +1049,8 @@ class CWolf
 					vil.say_cnt[type] = vil.say_cnt[type] + 1
 					cnt = vil.say_cnt[type]
 					player = vil.player_p(i)
-					s = announce("#{player.name} が集会所を訪れました。")
-					s += vil.say(type, cnt, player, 'ふぁーあ、眠いよ…パトラッシュ…。', player.userid)
-
-					vil.addlog(s)
+					vil.addlog(announce("#{player.name} が集会所を訪れました。"))
+					vil.addlog(vil.say(type, cnt, player, 'ふぁーあ、眠いよ…パトラッシュ…。', player.userid))
 				end
 			end
 		end
