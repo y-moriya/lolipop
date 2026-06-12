@@ -312,7 +312,33 @@ function hideList(){
   $("#list").hide();
 }
 
+var pollStopped = false;
+
+function showReloadPrompt(content) {
+  pollStopped = true;
+  if ($('.reload-prompt').length > 0) return;
+  
+  var html = '<div class="announce reload-prompt" style="border: 2px solid #ef4444; background: rgba(239, 68, 68, 0.15); color: #fca5a5; text-align: center; padding: 16px; margin: 20px 0; border-radius: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);" onclick="window.location.reload()">' +
+             '  <div style="font-size: 110%; margin-bottom: 8px;">🔄 【進行状況更新】' + escapeHtml(content) + '</div>' +
+             '  <div>ゲームの状態が変化しました。ここをクリックしてページをリロードしてください。</div>' +
+             '</div>';
+             
+  var $container = $(".chat-container");
+  if ($container.length > 0) {
+    if ($container.attr("data-up2down") === "1") {
+      $container.prepend(html);
+    } else {
+      $container.append(html);
+    }
+  } else {
+    $(".action_box").first().before(html);
+  }
+  
+  $('html, body').animate({ scrollTop: $(document).height() }, 'slow');
+}
+
 function pollEvents() {
+  if (pollStopped) return;
   if (typeof lastEventId === 'undefined' || currentVid <= 0) return;
 
   var url = "./api.cgi?cmd=events&vid=" + currentVid + "&since=" + lastEventId;
@@ -322,6 +348,7 @@ function pollEvents() {
     dataType: "json",
     timeout: 20000,
     success: function(events) {
+      if (pollStopped) return;
       if (events && events.length > 0) {
         var added = false;
         events.forEach(function(e) {
@@ -336,19 +363,33 @@ function pollEvents() {
           $('html, body').animate({ scrollTop: $(document).height() }, 'slow');
         }
       }
-      setTimeout(pollEvents, 100);
+      if (!pollStopped) {
+        setTimeout(pollEvents, 100);
+      }
     },
     error: function(xhr, status, error) {
-      setTimeout(pollEvents, 2000);
+      if (!pollStopped) {
+        setTimeout(pollEvents, 2000);
+      }
     }
   });
 }
 
 function appendEventToUI(e) {
+  if (e.type === 'state_change' || (e.type === 'system' && (e.content.indexOf('の勝利です') !== -1 || e.content.indexOf('ゲームが決着しました') !== -1 || e.content.indexOf('ゲーム終了') !== -1))) {
+    showReloadPrompt(e.content);
+    return true;
+  }
+
   if (e.type === 'message') {
     if ($('table[data-event-id="' + e.id + '"]').length > 0) return false;
     
-    var imgName = (e.speaker_id !== null && typeof avatarMapping[e.speaker_id] !== 'undefined') ? avatarMapping[e.speaker_id] : avatarMapping[-1];
+    var imgName = e.avatar;
+    if (!imgName) {
+      imgName = (e.speaker_id !== null && typeof avatarMapping[e.speaker_id] !== 'undefined') ? avatarMapping[e.speaker_id] : avatarMapping[-1];
+    } else if (e.speaker_id !== null) {
+      avatarMapping[e.speaker_id] = imgName;
+    }
     var imgSrc = "img/" + imgName + ".png";
     var mark = "";
     if (e.type_code === 'whisper') mark = "*";
@@ -393,7 +434,16 @@ function appendEventToUI(e) {
                '</tr>' +
                '</table>';
                
-    $(".action_box").first().before(html);
+    var $container = $(".chat-container");
+    if ($container.length > 0) {
+      if ($container.attr("data-up2down") === "1") {
+        $container.prepend(html);
+      } else {
+        $container.append(html);
+      }
+    } else {
+      $(".action_box").first().before(html);
+    }
     return true;
   } else if (e.type === 'system') {
     if ($('div[data-event-id="' + e.id + '"]').length > 0) return false;
@@ -404,7 +454,16 @@ function appendEventToUI(e) {
     var safeContent = escapeHtml(e.content).replace(/\\n/g, '<br>');
     var html = '<div class="' + announceClass + '" data-event-id="' + e.id + '">' + safeContent + '</div>';
     
-    $(".action_box").first().before(html);
+    var $container = $(".chat-container");
+    if ($container.length > 0) {
+      if ($container.attr("data-up2down") === "1") {
+        $container.prepend(html);
+      } else {
+        $container.append(html);
+      }
+    } else {
+      $(".action_box").first().before(html);
+    }
     return true;
   }
   return false;

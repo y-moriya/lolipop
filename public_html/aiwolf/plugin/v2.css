@@ -547,6 +547,10 @@ span.today {
 }
 
 /* Hide legacy bubble images (corners/tail) in v2 UI */
+table.message td img[src*="say"],
+table.message td img[src*="whisper"],
+table.message td img[src*="groan"],
+table.message td img[src*="think"],
 .action_box img[src*="say"] {
     display: none !important;
 }

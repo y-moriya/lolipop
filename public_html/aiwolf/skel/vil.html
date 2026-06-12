@@ -375,7 +375,9 @@ elsif (@vil.date == date && @vil.update_time && @vil.state == 2)
 end
 %>
 <% if (@conf.up2down == 0) %>
+<div class="chat-container" data-up2down="0">
 <%= s_log.join %>
+</div>
 <%= s_time %>
 					</td>
 				</tr>
@@ -458,7 +460,9 @@ end
 
 <% if (@conf.up2down == 1) %>
 <%= s_time %>
+<div class="chat-container" data-up2down="1">
 <%= s_log.join %>
+</div>
 <% end %>
 					</td>
 				</tr>

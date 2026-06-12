@@ -382,12 +382,17 @@ class Vil
 			next_id = @events.empty? ? 1 : @events.last[:id] + 1
 			speaker_id = (speaker_id_str.nil? || speaker_id_str.empty?) ? nil : speaker_id_str.to_i
 			type_code = 'spirit' if type_code == 'sprit'
+			avatar = nil
+			if $& =~ /img src=["']img\/([a-zA-Z0-9_-]+)\.png["']/
+				avatar = $1
+			end
 			@events << {
 				id: next_id,
 				type: 'message',
 				type_code: type_code,
 				speaker_id: speaker_id,
 				speaker: speaker,
+				avatar: avatar,
 				time: time_str,
 				content: strip_html.call(content_html),
 				day: @date
@@ -399,12 +404,17 @@ class Vil
 		msg.scan(/<table class="message">.*?<td colspan="2" class="howl">狼の遠吠え<\/td>.*?<div class="mes_whisper_body1">(.*?)<\/div>.*?<\/table>/m) do |content_html|
 			matched = true
 			next_id = @events.empty? ? 1 : @events.last[:id] + 1
+			avatar = nil
+			if $& =~ /img src=["']img\/([a-zA-Z0-9_-]+)\.png["']/
+				avatar = $1
+			end
 			@events << {
 				id: next_id,
 				type: 'message',
 				type_code: 'whisperhowl',
 				speaker_id: nil,
 				speaker: 'システム',
+				avatar: avatar,
 				time: now_str,
 				content: "狼の遠吠え: " + strip_html.call(content_html),
 				day: @date
