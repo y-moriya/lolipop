@@ -74,6 +74,33 @@ module AnmanAI
             else
               raise "LLM API Error: #{res.code} - #{res.body[0..200]}"
             end
+          rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Net::OpenTimeout => e
+            if uri.host == 'localhost' || uri.host == '127.0.0.1'
+              wsl_ips = detect_wsl_host_ips
+              successful_host = nil
+              wsl_ips.each do |ip|
+                begin
+                  Net::HTTP.start(ip, uri.port, use_ssl: use_ssl, open_timeout: 2) do |http|
+                    check_res = http.get('/api/tags')
+                    if check_res.code == '200'
+                      successful_host = ip
+                      break
+                    end
+                  end
+                rescue
+                  # Ignore failure on candidate host
+                end
+              end
+
+              if successful_host
+                STDERR.puts "[LLM Warning] Connection to #{uri.host} failed. Automatically redirected to detected WSL host: #{successful_host}"
+                uri.host = successful_host
+                retry
+              end
+            end
+
+            last_error = e.message
+            raise "LLM Client Connection Error: #{e.message}"
           rescue => e
             last_error = e.message
             raise "LLM Client Connection Error: #{e.message}" unless e.message.include?("empty response") || e.message.include?("429")
@@ -83,6 +110,32 @@ module AnmanAI
 
         raise "LLM Client Error: #{last_error}"
       end
+
+      private
+
+      def detect_wsl_host_ips
+        ips = []
+        begin
+          `ip route`.split("\n").each do |line|
+            if line =~ /default via (\S+)/
+              ips << $1
+            end
+          end
+        rescue
+        end
+        begin
+          if File.exist?('/etc/resolv.conf')
+            File.readlines('/etc/resolv.conf').each do |line|
+              if line =~ /^\s*nameserver\s+(\S+)/
+                ips << $1
+              end
+            end
+          end
+        rescue
+        end
+        ips.uniq
+      end
     end
   end
 end
+

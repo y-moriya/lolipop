@@ -449,15 +449,19 @@ module AnmanAI
             
             # 感想戦中は、他の参加者からの新着メッセージがあった場合のみ反応して発言する（一人の連投を防ぐ）
             time_since_last_say = Time.now - @last_say_time
-            if time_since_last_say >= 10
-              current_chat_size = @game_state.chat_logs.size
-              if (current_chat_size > @last_chat_logs_size)
-                # is_mine フラグ（サーバー付与）を優先し、なければ speaker 名で判定
-                last_log = @game_state.chat_logs.last
-                is_others_msg = last_log && (last_log['is_mine'] == false || last_log['speaker'] != @game_state.my_name)
-                if is_others_msg
+            current_chat_size = @game_state.chat_logs.size
+            if current_chat_size > @last_chat_logs_size
+              new_logs = @game_state.chat_logs[@last_chat_logs_size..-1] || []
+              is_others_msg = new_logs.any? do |log|
+                !log['is_mine'] && log['speaker'] != @game_state.my_name && log['type_code'] == 'say'
+              end
+              
+              if is_others_msg
+                if time_since_last_say >= 10
                   check_and_say_epilogue
+                  @last_chat_logs_size = current_chat_size
                 end
+              else
                 @last_chat_logs_size = current_chat_size
               end
             end
@@ -466,18 +470,22 @@ module AnmanAI
             next
           end
           
-          # ゲーム開始前（募集中・点呼中）の雑談
+          # ゲーム開始前（募集中・点挙中）の雑談
           if game_state_val == 0 && @game_state.my_name
             time_since_last_say = Time.now - @last_say_time
-            if time_since_last_say >= 10
-              current_chat_size = @game_state.chat_logs.size
-              if current_chat_size > @last_chat_logs_size
-                last_log = @game_state.chat_logs.last
-                is_others_msg = last_log && (last_log['is_mine'] == false || last_log['speaker'] != @game_state.my_name)
-                is_player_say = last_log && last_log['type_code'] == 'say'
-                if is_others_msg && is_player_say
+            current_chat_size = @game_state.chat_logs.size
+            if current_chat_size > @last_chat_logs_size
+              new_logs = @game_state.chat_logs[@last_chat_logs_size..-1] || []
+              is_others_msg = new_logs.any? do |log|
+                !log['is_mine'] && log['speaker'] != @game_state.my_name && log['type_code'] == 'say'
+              end
+              
+              if is_others_msg
+                if time_since_last_say >= 10
                   check_and_say_recruiting
+                  @last_chat_logs_size = current_chat_size
                 end
+              else
                 @last_chat_logs_size = current_chat_size
               end
             end
@@ -499,8 +507,22 @@ module AnmanAI
           # 1. 自律的・反応的な発言・思考発信の判定 (昼夜、生存死亡を問わず実行)
           time_since_last_say = Time.now - @last_say_time
           current_chat_size = @game_state.chat_logs.size
-          last_log = @game_state.chat_logs.last
-          others_spoke = (current_chat_size > @last_chat_logs_size) && last_log && !last_log['is_mine']
+          
+          if current_chat_size > @last_chat_logs_size
+            new_logs = @game_state.chat_logs[@last_chat_logs_size..-1] || []
+            others_spoke = new_logs.any? do |log|
+              !log['is_mine'] && 
+                log['speaker'] != @game_state.my_name && 
+                ['say', 'think', 'whisper', 'groan', 'whisperhowl'].include?(log['type_code'])
+            end
+            
+            # 発言がなかった（システムログや自分の発言のみ）の場合はここで index を進める
+            unless others_spoke
+              @last_chat_logs_size = current_chat_size
+            end
+          else
+            others_spoke = false
+          end
 
           # 反応発言は前回の発言から指定された秒数以上空いていれば実行（デフォルトは10秒、時間自動伸縮あり）
           # 能動的発言は指定された秒数以上空いていれば実行（デフォルトは60秒、時間自動伸縮あり）
@@ -730,7 +752,9 @@ module AnmanAI
       
       # 前回の発言から28秒以上経過している場合は、能動的発信（沈黙タイムアウト）とみなす
       time_since_last_say = Time.now - @last_say_time
-      is_active_trigger = (time_since_last_say >= 28)
+      is_test = @url.include?("localhost") || @url.include?("127.0.0.1")
+      active_threshold = is_test ? 3 : 28
+      is_active_trigger = (time_since_last_say >= active_threshold)
       
       system_prompt = "あなたは人狼ゲームのプレイヤー「#{@game_state.my_name}」です。必ず指定されたJSONフォーマットで回答してください。JSON以外の文章は一切含めてはいけません。\n" \
                       "【超重要・発言文字数の制限】会話に馴染むため、message に入れる発言は「30〜80文字以内（最大でも2文）」にしてください。絶対に長文を書いてはいけません。\n" \
@@ -758,6 +782,7 @@ module AnmanAI
       
       begin
         response = @llm.chat(system_prompt, user_prompt)
+        puts "[System DEBUG] LLM raw response: #{response.inspect}"
         parsed = parse_llm_json(response)
 
         # anchor_request: N が返ってきた場合、アンカーを解決して1度だけ再問い合わせ

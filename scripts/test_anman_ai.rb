@@ -81,7 +81,8 @@ end
 
 # 2. テスト用ユーザー作成
 puts "\n--- ユーザー作成 & ログイン ---"
-config = YAML.load_file('anman-ai/config/config.yaml')
+config_path = ENV['ANMAN_CONFIG'] || 'anman-ai/config/config.yaml'
+config = YAML.load_file(config_path)
 ai_userid = config['user']['userid']
 ai_password = config['user']['password']
 
@@ -190,21 +191,76 @@ end
 
 # 4. LLM接続確認 & モック差し替え (Ollamaが起動していない場合用)
 puts "\n--- LLM API 接続検証 ---"
-llm_config = YAML.load_file('anman-ai/config/config.yaml')
-begin
-  uri = URI.parse("#{llm_config['llm']['base_url']}/chat/completions")
-  path = uri.path.empty? ? "/v1/chat/completions" : uri.path
-  req = Net::HTTP::Post.new(path, { 'Content-Type' => 'application/json' })
-  req.body = { model: llm_config['llm']['model'], messages: [{ role: 'user', content: 'hello' }] }.to_json
-  
-  res = Net::HTTP.start(uri.host, uri.port, read_timeout: 2, open_timeout: 2) { |http| http.request(req) }
-  if res.code == '200'
-    puts "[System] Ollama API is active. Test will run against the real LLM."
-  else
-    raise "Ollama responded with status: #{res.code}"
+llm_config = YAML.load_file(config_path)
+
+def detect_wsl_host_ips
+  ips = []
+  begin
+    `ip route`.split("\n").each do |line|
+      if line =~ /default via (\S+)/
+        ips << $1
+      end
+    end
+  rescue
   end
+  begin
+    if File.exist?('/etc/resolv.conf')
+      File.readlines('/etc/resolv.conf').each do |line|
+        if line =~ /^\s*nameserver\s+(\S+)/
+          ips << $1
+        end
+      end
+    end
+  rescue
+  end
+  ips.uniq
+end
+
+begin
+  base_url = llm_config.dig('llm', 'base_url')
+  if base_url.nil? || base_url.strip.empty?
+    if llm_config.dig('llm', 'provider') == 'ollama'
+      base_url = "http://localhost:11434"
+    else
+      raise "No base_url for LLM config, skipping connectivity check"
+    end
+  end
+
+  uri = URI.parse(base_url)
+  host = uri.host
+  port = uri.port
+  
+  res = nil
+  begin
+    Net::HTTP.start(host, port, read_timeout: 3, open_timeout: 3) do |http|
+      res = http.get('/')
+    end
+  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Net::OpenTimeout => e
+    if host == 'localhost' || host == '127.0.0.1'
+      wsl_ips = detect_wsl_host_ips
+      successful_host = nil
+      wsl_ips.each do |ip|
+        begin
+          Net::HTTP.start(ip, port, open_timeout: 2) do |http|
+            check_res = http.get('/')
+            successful_host = ip
+            break
+          end
+        rescue
+        end
+      end
+      if successful_host
+        puts "[System] Redirecting LLM connection check from #{host} to WSL host: #{successful_host}"
+        host = successful_host
+        retry
+      end
+    end
+    raise e
+  end
+
+  puts "[System] LLM API is active at #{host}:#{port}. Test will run against the real LLM."
 rescue => e
-  puts "[System] Ollama is inactive or unreachable: #{e.message}"
+  puts "[System] LLM is inactive or unreachable: #{e.message}"
   puts "[System] Mocking LLMClient for local integration test stability."
   
   # 動的に LLMClient のメソッドをオーバーライド
@@ -266,7 +322,7 @@ end
 puts "\n--- AIクライアント起動 ---"
 ai_thread = Thread.new do
   begin
-    ai_client = AnmanAI::Client.new('anman-ai/config/config.yaml', 'anman-ai')
+    ai_client = AnmanAI::Client.new(config_path, 'anman-ai')
     ai_client.instance_variable_set(:@vid, vid)
     ai_client.login!
     ai_client.init_game_state!
