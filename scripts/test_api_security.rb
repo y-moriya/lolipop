@@ -76,6 +76,11 @@ users.each do |u|
   sleep 0.1
 end
 
+# ログイン済みだがこの村にエントリーしていない外部閲覧者
+observer = PlayerSession.new("test_user_obs", "passobs")
+observer.login!
+puts "外部閲覧者（非エントリー）セッション: #{observer.userid}"
+
 creator = users.first
 res = creator.post(
   'cmd' => 'mkvil', 'name' => 'test_api_sec_vil', 'sname' => 'apisec',
@@ -165,6 +170,15 @@ if res.body.include?("私は本物の占い師です")
   errors += 1
 else
   puts "[OK] 未ログインユーザーからは独り言は非表示になっています。"
+end
+
+# 4. ログイン済みだが非エントリーの外部閲覧者でログAPIを叩く -> 独り言が見えないはず
+res = observer.get_api('cmd' => 'log', 'vid' => vid.to_s, 'date' => '2')
+if res.body.include?("私は本物の占い師です")
+  puts "[ERROR] ログイン済み非エントリーユーザーに独り言が漏洩しています！"
+  errors += 1
+else
+  puts "[OK] ログイン済み非エントリーユーザーからは独り言は非表示になっています。"
 end
 
 
@@ -273,12 +287,36 @@ end
 # 2. 村人がログを叩く -> ささやき本文は見えず、「わおーん」にマスクされているはず
 res = villager_session.get_api('cmd' => 'log', 'vid' => vid.to_s, 'date' => '2')
 if res.body.include?("今夜は占い師を噛みましょう")
-  puts "[ERROR] 人狼のささやき本文が村人に漏洩しています。"
+  puts "[ERROR] 人狼 of ささやき本文が村人に漏洩しています。"
   errors += 1
 elsif res.body.include?("狼の遠吠え: わおーん")
   puts "[OK] 村人には「狼の遠吠え: わおーん」とマスクされて見えています。"
 else
   puts "[ERROR] 村人にささやきも遠吠えも表示されていません。"
+  errors += 1
+end
+
+# 3. ログイン済み非エントリーの外部閲覧者 -> ささやき本文は漏れず、遠吠えのみ（マスク）で見えるはず
+res = observer.get_api('cmd' => 'log', 'vid' => vid.to_s, 'date' => '2')
+if res.body.include?("今夜は占い師を噛みましょう")
+  puts "[ERROR] 人狼のささやき本文がログイン済み非エントリーユーザーに漏洩しています！"
+  errors += 1
+elsif res.body.include?("狼の遠吠え: わおーん")
+  puts "[OK] ログイン済み非エントリーユーザーにはマスクされた「わおーん」のみ見えています。"
+else
+  puts "[ERROR] ログイン済み非エントリーユーザーにささやきも遠吠えも表示されていません。"
+  errors += 1
+end
+
+# 4. 未ログインユーザー -> ささやき本文は見えず、「わおーん」にマスクされているはず
+res = guest.get_api('cmd' => 'log', 'vid' => vid.to_s, 'date' => '2')
+if res.body.include?("今夜は占い師を噛みましょう")
+  puts "[ERROR] 人狼のささやき本文が未ログインユーザーに漏洩しています！"
+  errors += 1
+elsif res.body.include?("狼の遠吠え: わおーん")
+  puts "[OK] 未ログインユーザーにはマスクされた「わおーん」のみ見えています。"
+else
+  puts "[ERROR] 未ログインユーザーにささやきも遠吠えも表示されていません。"
   errors += 1
 end
 
@@ -360,6 +398,24 @@ if res.body.include?("人間のようです") || res.body.include?("人狼のよ
   errors += 1
 else
   puts "[OK] 他人の占い結果は村人には表示されていません。"
+end
+
+# 3. ログイン済み非エントリーの外部閲覧者 -> 占い結果が見えないはず
+res = observer.get_api('cmd' => 'log', 'vid' => vid.to_s, 'date' => '3')
+if res.body.include?("人間のようです") || res.body.include?("人狼のようです")
+  puts "[ERROR] 占い結果がログイン済み非エントリーユーザーに漏洩しています！"
+  errors += 1
+else
+  puts "[OK] 占い結果はログイン済み非エントリーユーザーには表示されていません。"
+end
+
+# 4. 未ログインユーザー -> 占い結果が見えないはず
+res = guest.get_api('cmd' => 'log', 'vid' => vid.to_s, 'date' => '3')
+if res.body.include?("人間のようです") || res.body.include?("人狼のようです")
+  puts "[ERROR] 占い結果が未ログインユーザーに漏洩しています！"
+  errors += 1
+else
+  puts "[OK] 占い結果は未ログインユーザーには表示されていません。"
 end
 
 
@@ -480,6 +536,31 @@ else
   errors += 1
 end
 
+# 7-3. ログイン済み非エントリーの外部閲覧者でのevents APIフィルタリング
+res_observer = observer.get_api('cmd' => 'events', 'vid' => vid.to_s, 'since' => latest_id.to_s)
+events_observer = JSON.parse(res_observer.body)
+has_whisper_observer = events_observer.any? { |e| e['type_code'] == 'whisper' }
+has_whisper_content_observer = events_observer.any? { |e| e['content'] == "人狼用のささやきイベント" }
+
+if has_whisper_observer || has_whisper_content_observer
+  puts "[ERROR] 人狼のささやきがログイン済み非エントリーユーザーに漏洩しています！"
+  errors += 1
+else
+  puts "[OK] ログイン済み非エントリーユーザーには人狼のささやきは配信されていません。"
+end
+
+# 7-4. 未ログインユーザーでのevents APIフィルタリング
+res_guest = guest.get_api('cmd' => 'events', 'vid' => vid.to_s, 'since' => latest_id.to_s)
+events_guest = JSON.parse(res_guest.body)
+has_whisper_guest = events_guest.any? { |e| e['type_code'] == 'whisper' }
+
+if has_whisper_guest
+  puts "[ERROR] 人狼のささやきが未ログインユーザーに漏洩しています！"
+  errors += 1
+else
+  puts "[OK] 未ログインユーザーには人狼のささやきは配信されていません。"
+end
+
 
 # ----------------------------------------------------
 # 検証 8: 投票/取り消しおよび霊能結果の閲覧制限検証
@@ -517,6 +598,22 @@ else
   puts "[OK] 占い師の投票・取り消しメッセージは村人には配信されていません。"
 end
 
+# 外部閲覧者、未ログインユーザーが投票関連のイベントを受信していないことを確認
+res_observer = observer.get_api('cmd' => 'events', 'vid' => vid.to_s, 'since' => latest_id.to_s)
+events_observer = JSON.parse(res_observer.body)
+has_vote_leak_observer = events_observer.any? { |e| e['content'].include?("投票しました") || e['content'].include?("投票を取り消しました") }
+
+res_guest = guest.get_api('cmd' => 'events', 'vid' => vid.to_s, 'since' => latest_id.to_s)
+events_guest = JSON.parse(res_guest.body)
+has_vote_leak_guest = events_guest.any? { |e| e['content'].include?("投票しました") || e['content'].include?("投票を取り消しました") }
+
+if has_vote_leak_observer || has_vote_leak_guest
+  puts "[ERROR] 占い師の投票・取り消しメッセージが外部閲覧者または未ログインユーザーに漏洩しています！"
+  errors += 1
+else
+  puts "[OK] 占い師の投票・取り消しメッセージは外部閲覧者および未ログインユーザーには配信されていません。"
+end
+
 # 8-2. 霊能結果の漏洩チェック
 # 現在、霊能者が霊能結果を受信しているか確認 (霊能者はsid=3)
 medium_session = nil
@@ -538,6 +635,22 @@ if medium_session
     errors += 1
   else
     puts "[OK] 霊能結果メッセージは霊能者以外のプレイヤーには配信されていません。"
+  end
+
+  # 外部閲覧者、未ログインユーザーがイベントを取得し、霊能結果が入っていないことを確認
+  res_observer = observer.get_api('cmd' => 'events', 'vid' => vid.to_s, 'since' => '0')
+  events_observer = JSON.parse(res_observer.body)
+  has_spirit_leak_observer = events_observer.any? { |e| e['content'].include?("だったようです") }
+
+  res_guest = guest.get_api('cmd' => 'events', 'vid' => vid.to_s, 'since' => '0')
+  events_guest = JSON.parse(res_guest.body)
+  has_spirit_leak_guest = events_guest.any? { |e| e['content'].include?("だったようです") }
+
+  if has_spirit_leak_observer || has_spirit_leak_guest
+    puts "[ERROR] 霊能結果メッセージが外部閲覧者または未ログインユーザーに漏洩しています！"
+    errors += 1
+  else
+    puts "[OK] 霊能結果メッセージは外部閲覧者および未ログインユーザーには配信されていません。"
   end
 else
   puts "[INFO] 霊能者が生存していないため、霊能結果のチェックをスキップします。"
