@@ -5,8 +5,9 @@
 $LOAD_PATH.unshift(File.expand_path('../lib', __dir__))
 
 def print_usage
-  puts "Usage: #{$0} [config_path]"
+  puts "Usage: #{$0} [config_path] [--update]"
   puts "Default config_path is config/config.yaml"
+  puts "Use --update to perform self-update to the latest version."
 end
 
 # OCRANの実行パス解決
@@ -16,6 +17,12 @@ elsif defined?(OCRAN_EXECUTABLE)
   File.dirname(OCRAN_EXECUTABLE)
 else
   File.expand_path('..', __dir__)
+end
+
+if ARGV.include?('--update')
+  require 'updater'
+  AnmanAI::Updater.run(exe_dir)
+  exit 0
 end
 
 internal_root_dir = File.expand_path('..', __dir__)

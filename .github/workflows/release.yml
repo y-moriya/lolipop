@@ -64,6 +64,7 @@ jobs:
           cp dist/anman-ai.exe   "${PKG}/"
           cp dist/start.bat      "${PKG}/"
           cp dist/start_wt.bat   "${PKG}/"
+          cp dist/update.bat     "${PKG}/"
           cp dist/README_JA.txt  "${PKG}/"
           cp dist/config.yaml.example "${PKG}/config/config.yaml"
           cp anman-ai/config/config.gemini.yml "${PKG}/config/"
