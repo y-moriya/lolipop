@@ -676,6 +676,7 @@ table.message td img[src*="think"],
     table.vil_main > tbody > tr > td {
         display: block;
         width: 100% !important;
+        box-sizing: border-box !important;
         text-align: left;
     }
 
@@ -683,25 +684,103 @@ table.message td img[src*="think"],
         margin: 0;
     }
 
+    /* Ensure all images inside main containers are responsive */
+    table.main img {
+        max-width: 100% !important;
+        height: auto !important;
+        border-radius: 8px !important;
+    }
+
+    /* Make nested tables inside table.main stack vertically on mobile (forms, setup) */
+    table.main table:not(.vil_index):not(.menu),
+    table.main table:not(.vil_index):not(.menu) > tbody,
+    table.main table:not(.vil_index):not(.menu) > tbody > tr,
+    table.main table:not(.vil_index):not(.menu) > tr,
+    table.main table:not(.vil_index):not(.menu) td {
+        display: block !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        text-align: left !important;
+    }
+
+    /* Form inputs and select boxes full width on mobile */
+    table.main input[type="text"],
+    table.main input[type="password"],
+    table.main input[type="number"],
+    table.main select {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        padding: 8px 12px !important;
+        border-radius: 6px !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        background: rgba(30, 41, 59, 0.5) !important;
+        color: #fff !important;
+        margin-top: 4px !important;
+        margin-bottom: 12px !important;
+    }
+
+    /* Login card responsive styling on mobile */
+    table.main td.right {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+        padding: 12px !important;
+        background: rgba(30, 41, 59, 0.35) !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        border-radius: 12px !important;
+        margin-bottom: 15px !important;
+    }
+
     /* Adjust main layout td spacing */
     table.vil_main > tbody > tr > td {
         padding: 0 0 16px 0 !important;
     }
 
-    /* Top menu responsive styling */
+    /* Top menu 2-column grid styling on mobile */
     table.menu {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
         width: 100% !important;
+        padding: 0 !important;
+    }
+    table.menu tr {
+        display: contents !important;
     }
     table.menu td {
-        display: block;
-        width: 100% !important;
+        display: block !important;
+        flex: 1 1 calc(50% - 4px) !important;
+        max-width: calc(50% - 4px) !important;
+        box-sizing: border-box !important;
     }
     table.menu td div {
         width: 100% !important;
         margin: 0 !important;
+    }
+
+    /* Style vil_index for mobile */
+    table.vil_index {
+        width: 100% !important;
+        margin: 10px 0 !important;
+        font-size: 82% !important;
+    }
+    table.vil_index td {
+        padding: 8px 6px !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
+    }
+    table.vil_index td.vil_title {
+        padding: 10px 12px !important;
+    }
+    /* Hide columns on mobile */
+    table.vil_index td:nth-child(4),
+    table.vil_index td:nth-child(5),
+    table.vil_index td:nth-child(6),
+    table.vil_index td:nth-child(7),
+    table.vil_index td:nth-child(9),
+    table.vil_index td:nth-child(10) {
+        display: none !important;
     }
 
     /* List width to full on mobile */
