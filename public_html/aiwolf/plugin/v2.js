@@ -81,11 +81,13 @@ function actToggle(obj_id, obj_t_id) {
 	if(elm_t){
 		if(elm.style.display == 'none'){
 			elm.style.display = "block";
+			$(elm).addClass('v2-action-box-visible');
 			elm_t.innerHTML = '▲';
 			actAcd = '0';
 		}
 		else{
 			elm.style.display = "none";
+			$(elm).removeClass('v2-action-box-visible');
 			elm_t.innerHTML = '▼';
 			actAcd = '1';
 		}
@@ -116,6 +118,8 @@ function init() {
 	var isV2 = window.location.pathname.indexOf('v2.cgi') !== -1;
 	if (isV2) {
 		initV2AnchorHover();
+		initResponsivePlayers();
+		initModernChat();
 	} else {
 		setAjaxEvent($(".vil_main"));
 	}
@@ -561,6 +565,129 @@ function initV2AnchorHover() {
     var $popup = $('#anchor-popup');
     if ($popup.length > 0) {
       $popup.hide();
+    }
+  });
+}
+
+function initResponsivePlayers() {
+  var $originalList = $('table.list');
+  if ($originalList.length === 0) return;
+
+  var $btn = $('<button id="show-players-btn" type="button">👤 参加者一覧</button>');
+  $('body').append($btn);
+
+  var $modal = $(
+    '<div id="players-modal">' +
+    '  <div class="modal-overlay"></div>' +
+    '  <div class="modal-content">' +
+    '    <button type="button" class="modal-close-btn">&times;</button>' +
+    '    <div class="modal-body"></div>' +
+    '  </div>' +
+    '</div>'
+  );
+  $('body').append($modal);
+
+  if (typeof IntersectionObserver !== 'undefined') {
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        var listTop = $originalList.offset().top;
+        var scrollTop = $(window).scrollTop();
+        if (!entry.isIntersecting && scrollTop > listTop) {
+          $btn.addClass('visible');
+        } else {
+          $btn.removeClass('visible');
+        }
+      });
+    }, { threshold: 0 });
+    observer.observe($originalList[0]);
+  } else {
+    $(window).on('scroll', function() {
+      var listTop = $originalList.offset().top;
+      var listHeight = $originalList.outerHeight();
+      var scrollTop = $(window).scrollTop();
+      if (scrollTop > listTop + listHeight) {
+        $btn.addClass('visible');
+      } else {
+        $btn.removeClass('visible');
+      }
+    });
+  }
+
+  $btn.on('click', function() {
+    var $modalBody = $modal.find('.modal-body');
+    $modalBody.empty();
+    var $clonedList = $originalList.clone();
+    $modalBody.append($clonedList);
+    $modal.addClass('active');
+    $('body').css('overflow', 'hidden');
+  });
+
+  var closeModal = function() {
+    $modal.removeClass('active');
+    $('body').css('overflow', '');
+  };
+
+  $modal.find('.modal-close-btn').on('click', closeModal);
+  $modal.find('.modal-overlay').on('click', closeModal);
+}
+
+function initModernChat() {
+  $(document).on('click', '.modern-chat-box .chat-tab', function() {
+    var $tab = $(this);
+    var mode = $tab.data('mode');
+    var $box = $tab.closest('.modern-chat-box');
+    
+    // Set active tab styling
+    $box.find('.chat-tab').removeClass('active');
+    $tab.addClass('active');
+    
+    // Set data-mode attribute on form for CSS styling
+    $box.attr('data-mode', mode);
+    
+    // Update hidden parameters
+    var $thinkInput = $box.find('#chat-think-input');
+    var $whisperInput = $box.find('#chat-whisper-input');
+    var $groanInput = $box.find('#chat-groan-input');
+    
+    // Reset all mode values
+    $thinkInput.val('');
+    $whisperInput.val('');
+    $groanInput.val('');
+    
+    // Set active mode parameter
+    if (mode === 'think') {
+      $thinkInput.val('on');
+    } else if (mode === 'whisper') {
+      $whisperInput.val('on');
+    } else if (mode === 'groan') {
+      $groanInput.val('on');
+    }
+  });
+
+  // Remove background/border from parent td when it contains #box_act
+  $('.action_balloon td.action_body:has(#box_act)').css({
+    'background': 'transparent',
+    'border': 'none',
+    'padding': '0',
+    'box-shadow': 'none'
+  });
+
+  // If syncActAcd initialized it as visible, make sure the class is added
+  var $boxAct = $('#box_act');
+  if ($boxAct.length && $boxAct.css('display') !== 'none') {
+    $boxAct.addClass('v2-action-box-visible');
+  }
+
+  // Hide empty rows inside action balloon
+  $('.action_balloon td.action_body').each(function() {
+    var $this = $(this);
+    if ($this.find('.modern-chat-box').length > 0) {
+      $this.css('padding', '0');
+    } else if ($this.find('#box_act').length === 0) {
+      var text = $this.text().replace(/\s+/g, '').trim();
+      if (text === '' && $this.children().length === 0) {
+        $this.closest('tr').hide();
+      }
     }
   });
 }
