@@ -2,6 +2,8 @@
 require 'webrick'
 require 'json'
 require 'yaml'
+require 'net/http'
+require 'uri'
 
 module AnmanAI
   class WebServer
@@ -57,6 +59,10 @@ module AnmanAI
         case req.path
         when '/api/status'
           handle_status(req, res)
+        when '/api/test_llm'
+          if req.request_method == 'POST'
+            handle_test_llm(req, res)
+          end
         when '/api/config'
           if req.request_method == 'GET'
             handle_get_config(req, res)
@@ -234,6 +240,146 @@ module AnmanAI
         res.body = state_data.to_json
       else
         res.body = { success: false, error: "Game state not initialized" }.to_json
+      end
+    end
+
+    def handle_test_llm(req, res)
+      begin
+        data = JSON.parse(req.body)
+        provider = data['provider']
+        api_key = data['api_key']
+        model = data['model']
+        base_url = data['base_url']
+
+        resolved_api_key = api_key
+        if resolved_api_key.nil? || resolved_api_key.to_s.strip.empty?
+          resolved_api_key = ENV['GEMINI_API_KEY'] || ENV['ANMAN_GEMINI_API_KEY'] if provider == 'gemini'
+          resolved_api_key = ENV['ANMAN_LLM_API_KEY'] if provider == 'openai_compat' || provider == 'ollama'
+        end
+
+        success = false
+        message = ""
+
+        case provider
+        when 'gemini'
+          if resolved_api_key.nil? || resolved_api_key.to_s.strip.empty?
+            raise "Gemini API Key is missing. Please set it in settings or environment."
+          end
+          url = base_url.to_s.strip.empty? ? "https://generativelanguage.googleapis.com" : base_url
+          uri = URI.parse("#{url.sub(/\/+$/, '')}/v1beta/models?key=#{resolved_api_key}")
+          
+          http_res = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http|
+            http.read_timeout = 15
+            http.open_timeout = 10
+            http.get(uri.request_uri)
+          end
+
+          if http_res.code == '200'
+            success = true
+            message = "接続成功: モデルリストが正常に取得できました。"
+          else
+            raise "HTTP #{http_res.code}: #{http_res.body[0..300]}"
+          end
+
+        when 'openai_compat'
+          url = base_url.to_s.strip.empty? ? "https://api.openai.com/v1" : base_url
+          base_uri = URI.parse(url)
+          path = base_uri.path.to_s.sub(/\/+$/, '')
+          unless path.end_with?('/v1') || path.end_with?('/v1/')
+            path = path.sub(/\/chat\/completions\z/, '')
+            path += '/v1' unless path.end_with?('/v1')
+          end
+          port_part = base_uri.port && base_uri.port != 80 && base_uri.port != 443 ? ":#{base_uri.port}" : ""
+          target_url = "#{base_uri.scheme}://#{base_uri.host}#{port_part}#{path}/models"
+          uri = URI.parse(target_url)
+
+          req_obj = Net::HTTP::Get.new(uri.request_uri)
+          req_obj['Authorization'] = "Bearer #{resolved_api_key}" if resolved_api_key && !resolved_api_key.to_s.strip.empty?
+
+          http_res = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http|
+            http.read_timeout = 15
+            http.open_timeout = 10
+            http.request(req_obj)
+          end
+
+          if http_res.code == '200'
+            success = true
+            message = "接続成功: モデルリストが正常に取得できました。"
+          else
+            raise "HTTP #{http_res.code}: #{http_res.body[0..300]}"
+          end
+
+        when 'ollama'
+          url = base_url.to_s.strip.empty? ? "http://localhost:11434" : base_url
+          base_uri = URI.parse(url)
+          # handle potential path on Ollama
+          port_part = base_uri.port ? ":#{base_uri.port}" : ""
+          target_url = "#{base_uri.scheme}://#{base_uri.host}#{port_part}/api/tags"
+          uri = URI.parse(target_url)
+
+          req_obj = Net::HTTP::Get.new(uri.path)
+          req_obj['Authorization'] = "Bearer #{resolved_api_key}" if resolved_api_key && !resolved_api_key.to_s.strip.empty?
+
+          begin
+            http_res = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http|
+              http.read_timeout = 15
+              http.open_timeout = 5
+              http.request(req_obj)
+            end
+          rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Net::OpenTimeout => e
+            if uri.host == 'localhost' || uri.host == '127.0.0.1'
+              ips = []
+              begin
+                `ip route`.split("\n").each do |line|
+                  ips << $1 if line =~ /default via (\S+)/
+                end
+              rescue
+              end
+              begin
+                if File.exist?('/etc/resolv.conf')
+                  File.readlines('/etc/resolv.conf').each do |line|
+                    ips << $1 if line =~ /^\s*nameserver\s+(\S+)/
+                  end
+                end
+              rescue
+              end
+              ips = ips.uniq
+
+              successful_host = nil
+              ips.each do |ip|
+                begin
+                  Net::HTTP.start(ip, uri.port, use_ssl: uri.scheme == 'https', open_timeout: 2) do |http|
+                    check_res = http.get('/api/tags')
+                    if check_res.code == '200'
+                      successful_host = ip
+                      break
+                    end
+                  end
+                rescue
+                end
+              end
+
+              if successful_host
+                uri.host = successful_host
+                retry
+              end
+            end
+            raise e
+          end
+
+          if http_res.code == '200'
+            success = true
+            message = "接続成功: Ollamaが起動しており、モデルリストを取得できました。"
+          else
+            raise "HTTP #{http_res.code}: #{http_res.body[0..300]}"
+          end
+        else
+          raise "Unknown provider: #{provider}"
+        end
+
+        res.body = { success: success, message: message }.to_json
+      rescue => e
+        res.body = { success: false, error: e.message }.to_json
       end
     end
   end

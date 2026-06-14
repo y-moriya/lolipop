@@ -170,6 +170,12 @@ test.describe('AIwolf Server E2E Tests for v2.cgi', () => {
 
     // 4. Confirm User B receives the message in real-time (without manual reload!)
     await expect(pageB.locator('.mes_say_body1').last()).toContainText('user_aからのテストメッセージです。', { timeout: 20000 });
+    
+    // Verify that the message number (anchor) is displayed for the dynamically added message
+    const messageTableB = pageB.locator('table.message').last();
+    await expect(messageTableB.locator('a[href="#say4"]')).toBeVisible();
+    await expect(messageTableB.locator('a[href="#say4"]')).toContainText('4');
+    
     await saveSnapshot(pageB, '6_pageB_received_say');
 
     // 5. User B sends a reply with an anchor link (>>4 targets User A's test message)
@@ -179,6 +185,12 @@ test.describe('AIwolf Server E2E Tests for v2.cgi', () => {
     // Confirm User A receives the reply in real-time
     const replyLocator = pageA.locator('.mes_say_body1').last();
     await expect(replyLocator).toContainText('user_bがリアルタイムで返信します。', { timeout: 20000 });
+    
+    // Verify that the message number (anchor) is displayed for the dynamically added reply
+    const replyTableA = pageA.locator('table.message').last();
+    await expect(replyTableA.locator('a[href="#say5"]')).toBeVisible();
+    await expect(replyTableA.locator('a[href="#say5"]')).toContainText('5');
+    
     await saveSnapshot(pageA, '7_pageA_received_reply');
 
     // Hover over the anchor link '>>4' on pageA

@@ -424,6 +424,11 @@ function appendEventToUI(e) {
       speakerLink = '<a href="?cmd=user&uid=' + encodeURIComponent(e.speaker) + '" target="_blank">' + e.speaker + '</a>';
     }
     
+    var countLink = "";
+    if (e.count) {
+      countLink = '<a name="' + type + e.count + '"></a><a href="#' + type + e.count + '">' + mark + e.count + '</a> ';
+    }
+    
     var safeContent = escapeHtml(e.content).replace(/\\n/g, '<br>');
     var eventDay = e.day || 1;
     safeContent = safeContent.replace(/&gt;&gt;(\d+):([*+-]?)(\d+)|&gt;&gt;([*+-]?)(\d+)/g, function(match, d1, mark1, n1, mark2, n2) {
@@ -440,7 +445,7 @@ function appendEventToUI(e) {
     var html = '<table class="message" data-event-id="' + e.id + '">' +
                '<tr>' +
                '  <td width="100" rowspan="2"><img src="' + imgSrc + '" style="width:70px; height:70px; object-fit:cover; border-radius:12px; border:1px solid rgba(255,255,255,0.05); box-shadow:0 4px 6px rgba(0,0,0,0.2);"></td>' +
-               '  <td colspan="2">' + speakerLink + ' <span class="time">' + e.time + '</span></td>' +
+               '  <td colspan="2">' + countLink + speakerLink + ' <span class="time">' + e.time + '</span></td>' +
                '</tr>' +
                '<tr>' +
                '  <td valign="top"><div class="mes_' + type + '"></div></td>' +

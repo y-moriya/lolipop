@@ -87,6 +87,8 @@ const elements = {
   logOutput: document.getElementById('log-output') as HTMLElement,
   logLinesCount: document.getElementById('log-lines-count') as HTMLSelectElement,
   btnClearLogView: document.getElementById('btn-clear-log-view') as HTMLButtonElement,
+  btnTestLlm: document.getElementById('btn-test-llm') as HTMLButtonElement,
+  llmTestStatus: document.getElementById('llm-test-status') as HTMLElement,
 };
 
 // Initialize Tab Switching
@@ -510,6 +512,47 @@ function setupListeners() {
   // Clear log screen
   elements.btnClearLogView.addEventListener('click', () => {
     elements.logOutput.innerHTML = '<div class="log-line system">ログ画面がクリアされました。待機中...</div>';
+  });
+
+  // LLM Test Connection
+  elements.btnTestLlm.addEventListener('click', async () => {
+    elements.btnTestLlm.disabled = true;
+    elements.llmTestStatus.textContent = '接続テスト中...';
+    elements.llmTestStatus.style.color = '#3b82f6';
+
+    try {
+      const provider = (document.getElementById('llm-provider') as HTMLSelectElement).value;
+      const apiKey = (document.getElementById('llm-apikey') as HTMLInputElement).value;
+      const model = (document.getElementById('llm-model') as HTMLInputElement).value;
+      const baseUrl = (document.getElementById('llm-baseurl') as HTMLInputElement).value;
+
+      const res = await fetch('/api/test_llm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider,
+          api_key: apiKey,
+          model,
+          base_url: baseUrl
+        })
+      });
+
+      if (!res.ok) throw new Error('API リクエストに失敗しました');
+      const data = await res.json();
+
+      if (data.success) {
+        elements.llmTestStatus.textContent = '✅ 接続成功！';
+        elements.llmTestStatus.style.color = '#10b981';
+      } else {
+        elements.llmTestStatus.textContent = `❌ 接続失敗: ${data.error || data.message}`;
+        elements.llmTestStatus.style.color = '#ef4444';
+      }
+    } catch (error: any) {
+      elements.llmTestStatus.textContent = `❌ エラー: ${error.message}`;
+      elements.llmTestStatus.style.color = '#ef4444';
+    } finally {
+      elements.btnTestLlm.disabled = false;
+    }
   });
 }
 

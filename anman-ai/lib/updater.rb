@@ -178,8 +178,9 @@ module AnmanAI
         del "%~f0"
       BATCH
 
+      bat_path_win = bat_path.gsub('/', '\\')
       File.write(bat_path, bat_content)
-      spawn("cmd.exe", "/c", "start \"anman-ai Updater\" \"#{bat_path}\"")
+      spawn("cmd.exe", "/c", "start \"\" \"#{bat_path_win}\"")
     end
 
     def self.apply_update_unix(extracted_root, exe_dir)

@@ -377,7 +377,7 @@ class Vil
 		matched = false
 
 		# 1. Normal chat messages, thinks, whispers, groans, etc.
-		msg.scan(/<!--(say|think|whisper|groan|fanatic|spirit|sprit|whisperhowl)(\d*)-->\s*<table class="message">.*?target="_blank">(.*?)<\/a>.*?<span class="time">(.*?)<\/span>.*?<div class="mes_(?:say|think|whisper|groan|fanatic|spirit|sprit|whisperhowl)_body1">(.*?)<\/div>.*?<\/table>/m) do |type_code, speaker_id_str, speaker, time_str, content_html|
+		msg.scan(/<!--(say|think|whisper|groan|fanatic|spirit|sprit|whisperhowl)(\d*)-->\s*<table class="message">.*?(?:<a name="[^"]+"><\/a><a href="[^"]+">[*+-]?(\d+)<\/a>\s*)?<a href="[^"]+" target="_blank">(.*?)<\/a>.*?<span class="time">(.*?)<\/span>.*?<div class="mes_(?:say|think|whisper|groan|fanatic|spirit|sprit|whisperhowl)_body1">(.*?)<\/div>.*?<\/table>/m) do |type_code, speaker_id_str, count_str, speaker, time_str, content_html|
 			matched = true
 			next_id = @events.empty? ? 1 : @events.last[:id] + 1
 			speaker_id = (speaker_id_str.nil? || speaker_id_str.empty?) ? nil : speaker_id_str.to_i
@@ -386,6 +386,7 @@ class Vil
 			if $& =~ /img src=["']img\/([a-zA-Z0-9_-]+)\.png["']/
 				avatar = $1
 			end
+			count = (count_str.nil? || count_str.empty?) ? nil : count_str.to_i
 			@events << {
 				id: next_id,
 				type: 'message',
@@ -395,9 +396,10 @@ class Vil
 				avatar: avatar,
 				time: time_str,
 				content: strip_html.call(content_html),
-				day: @date
+				day: @date,
+				count: count
 			}
-			STDERR.puts "[record_event] Recorded message: #{strip_html.call(content_html)}"
+			STDERR.puts "[record_event] Recorded message: #{strip_html.call(content_html)} (count: #{count})"
 		end
 
 		# 1b. Masked howl
