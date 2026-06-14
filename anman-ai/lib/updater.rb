@@ -144,10 +144,28 @@ module AnmanAI
       bat_path = File.join(exe_dir, 'apply_update.bat')
       bat_content = <<~BATCH
         @echo off
-        echo Waiting for anman-ai process to exit...
-        timeout /t 2 /nobreak > nul
-        echo Copying update files...
-        xcopy /y /e /s /i "#{extracted_root.gsub('/', '\\')}\*" "#{exe_dir.gsub('/', '\\')}\"
+        echo ============================================
+        echo  anman-ai Updater
+        echo ============================================
+        echo Waiting for old processes to release files...
+
+        set retry_count=0
+        :copy_loop
+        xcopy /y /e /s /i "#{extracted_root.gsub('/', '\\')}\*" "#{exe_dir.gsub('/', '\\')}\" > nul 2>&1
+        if errorlevel 1 (
+          set /a retry_count+=1
+          if %retry_count% gtr 30 (
+            echo.
+            echo [Error] Update failed: Files are locked by another process.
+            echo Please close any running anman-ai instances and try again.
+            pause
+            exit /b 1
+          )
+          echo   Files are locked. Retrying... (%retry_count%/30)
+          timeout /t 1 /nobreak > nul
+          goto copy_loop
+        )
+
         echo Cleaning up...
         rmdir /s /q "#{File.join(exe_dir, 'update_tmp').gsub('/', '\\')}"
         del "#{File.join(exe_dir, 'anman-ai-snapshot-windows.zip').gsub('/', '\\')}"
@@ -161,7 +179,7 @@ module AnmanAI
       BATCH
 
       File.write(bat_path, bat_content)
-      spawn("cmd.exe", "/c", bat_path, out: File::NULL, err: File::NULL)
+      spawn("cmd.exe", "/c", "start \"anman-ai Updater\" \"#{bat_path}\"")
     end
 
     def self.apply_update_unix(extracted_root, exe_dir)
