@@ -137,4 +137,4 @@ fi
 
 echo "=== デプロイ完了 ==="
 echo "Windows 側のデプロイ先: $WINDOWS_WORKSPACE"
-echo "start.bat を起動してテストしてください。"
+echo "anman-ai.exe を起動してテストしてください。"

@@ -65,7 +65,6 @@ jobs:
           mkdir -p "${PKG}/config" "${PKG}/log"
 
           cp dist/anman-ai.exe   "${PKG}/"
-          cp dist/start.bat      "${PKG}/"
           cp dist/README_JA.txt  "${PKG}/"
           cp dist/config.yaml.example "${PKG}/config/config.yaml"
           cp anman-ai/config/config.gemini.yml "${PKG}/config/"

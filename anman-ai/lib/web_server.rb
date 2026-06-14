@@ -63,6 +63,10 @@ module AnmanAI
           if req.request_method == 'POST'
             handle_test_llm(req, res)
           end
+        when '/api/update'
+          if req.request_method == 'POST'
+            handle_update(req, res)
+          end
         when '/api/config'
           if req.request_method == 'GET'
             handle_get_config(req, res)
@@ -379,6 +383,22 @@ module AnmanAI
 
         res.body = { success: success, message: message }.to_json
       rescue => e
+        res.body = { success: false, error: e.message }.to_json
+      end
+    end
+
+    def handle_update(req, res)
+      begin
+        require 'updater'
+        # Run update asynchronously to allow HTTP response to complete first
+        Thread.new do
+          sleep 1.0
+          AnmanAI::Updater.run(@exe_dir)
+          exit 0
+        end
+        res.body = { success: true, message: "アップデートを開始しました。数秒後に自動で再起動されます。" }.to_json
+      rescue => e
+        res.status = 500
         res.body = { success: false, error: e.message }.to_json
       end
     end

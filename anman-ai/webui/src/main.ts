@@ -89,6 +89,8 @@ const elements = {
   btnClearLogView: document.getElementById('btn-clear-log-view') as HTMLButtonElement,
   btnTestLlm: document.getElementById('btn-test-llm') as HTMLButtonElement,
   llmTestStatus: document.getElementById('llm-test-status') as HTMLElement,
+  btnRunUpdate: document.getElementById('btn-run-update') as HTMLButtonElement,
+  updateStatusMsg: document.getElementById('update-status-msg') as HTMLElement,
 };
 
 // Initialize Tab Switching
@@ -552,6 +554,41 @@ function setupListeners() {
       elements.llmTestStatus.style.color = '#ef4444';
     } finally {
       elements.btnTestLlm.disabled = false;
+    }
+  });
+
+  // Run self-update
+  elements.btnRunUpdate.addEventListener('click', async () => {
+    if (!confirm('自己アップデートを実行しますか？実行すると最新版がダウンロードされ、本アプリケーションは自動的に再起動します。')) {
+      return;
+    }
+    
+    elements.btnRunUpdate.disabled = true;
+    elements.updateStatusMsg.textContent = 'アップデート処理を開始しています...';
+    elements.updateStatusMsg.style.color = '#3b82f6';
+    
+    try {
+      const res = await fetch('/api/update', { method: 'POST' });
+      if (!res.ok) throw new Error('API リクエストに失敗しました');
+      const data = await res.json();
+      
+      if (data.success) {
+        elements.updateStatusMsg.textContent = '📥 アップデート実行中... 数秒後に自動再起動します。この画面はそのままお待ちください。';
+        elements.updateStatusMsg.style.color = '#10b981';
+        
+        // Reload after 6 seconds to reconnect
+        setTimeout(() => {
+          window.location.reload();
+        }, 6000);
+      } else {
+        elements.updateStatusMsg.textContent = `❌ アップデート失敗: ${data.error}`;
+        elements.updateStatusMsg.style.color = '#ef4444';
+        elements.btnRunUpdate.disabled = false;
+      }
+    } catch (error: any) {
+      elements.updateStatusMsg.textContent = `❌ エラー: ${error.message}`;
+      elements.updateStatusMsg.style.color = '#ef4444';
+      elements.btnRunUpdate.disabled = false;
     }
   });
 }

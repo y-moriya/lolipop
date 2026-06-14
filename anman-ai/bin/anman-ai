@@ -5,8 +5,9 @@
 $LOAD_PATH.unshift(File.expand_path('../lib', __dir__))
 
 def print_usage
-  puts "Usage: #{$0} [config_path] [--update]"
+  puts "Usage: #{$0} [config_path] [--update] [--cli]"
   puts "Default config_path is config/config.yaml"
+  puts "Use --cli to launch in console mode (default is WebUI mode)."
   puts "Use --update to perform self-update to the latest version."
 end
 
@@ -19,8 +20,8 @@ else
   File.expand_path('..', __dir__)
 end
 
-no_web = ARGV.include?('--no-web')
-clean_argv = ARGV.reject { |arg| arg == '--no-web' }
+no_web = ARGV.include?('--no-web') || ARGV.include?('--cli')
+clean_argv = ARGV.reject { |arg| arg == '--no-web' || arg == '--cli' }
 
 if ARGV.include?('--update')
   require 'updater'
