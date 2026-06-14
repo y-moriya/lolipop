@@ -151,7 +151,7 @@ module AnmanAI
 
         set retry_count=0
         :copy_loop
-        xcopy /y /e /s /i "#{extracted_root.gsub('/', '\\')}\*" "#{exe_dir.gsub('/', '\\')}\" > nul 2>&1
+        xcopy /y /e /s /i "#{extracted_root.gsub('/', '\\')}" "#{exe_dir.gsub('/', '\\')}" > nul 2>&1
         if errorlevel 1 (
           set /a retry_count+=1
           if %retry_count% gtr 30 (
