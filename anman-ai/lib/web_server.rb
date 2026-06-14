@@ -116,6 +116,17 @@ module AnmanAI
         end
       end
       
+      if config['user']
+        uid = config['user']['userid'].to_s
+        pwd = config['user']['password'].to_s
+        if uid == 'your_username' || uid == 'YOUR_USER_ID' || uid == 'anman_bot'
+          config['user']['userid'] = ''
+        end
+        if pwd == 'your_password' || pwd == 'YOUR_PASSWORD' || pwd == 'password123'
+          config['user']['password'] = ''
+        end
+      end
+      
       res.body = config.to_json
     end
 
