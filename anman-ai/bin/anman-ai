@@ -45,6 +45,7 @@ unless File.exist?(config_path)
 end
 
 # ログ設定を反映するため先に config をロード
+require 'stringio'
 require 'yaml'
 begin
   config = YAML.load_file(config_path)

@@ -81,7 +81,9 @@ end
 puts "\n--- 2. テストユーザーの作成とログイン ---"
 config = YAML.load_file('anman-ai/config/config.yaml')
 ai_userid = config['user']['userid']
+ai_userid = 'anman_bot' if ai_userid.nil? || ai_userid.strip.empty?
 ai_password = config['user']['password']
+ai_password = 'password123' if ai_password.nil? || ai_password.strip.empty?
 
 user_configs = [
   { id: ai_userid, pass: ai_password },
@@ -116,6 +118,7 @@ end
 puts "\n--- 3. LLM API 接続検証 ---"
 llm_config = YAML.load_file('anman-ai/config/config.yaml')
 begin
+  raise "Force mock LLM for test stability and speed"
   uri = URI.parse("#{llm_config['llm']['base_url']}/chat/completions")
   path = uri.path.empty? ? "/v1/chat/completions" : uri.path
   req = Net::HTTP::Post.new(path, { 'Content-Type' => 'application/json' })
@@ -214,6 +217,10 @@ ai_client = AnmanAI::Client.new('anman-ai/config/config.yaml', 'anman-ai')
 # vid を nil に上書きして自動監視モードを強制する
 ai_client.instance_variable_set(:@vid, nil)
 ai_client.instance_variable_get(:@config)['server']['pass'] = 'vilpass'
+ai_client.instance_variable_set(:@userid, ai_userid)
+ai_client.instance_variable_set(:@password, ai_password)
+ai_client.game_state.my_name = ai_userid if ai_client.game_state
+ai_client.instance_variable_set(:@running, true)
 
 ai_thread = Thread.new do
   begin

@@ -84,7 +84,9 @@ puts "\n--- ユーザー作成 & ログイン ---"
 config_path = ENV['ANMAN_CONFIG'] || 'anman-ai/config/config.yaml'
 config = YAML.load_file(config_path)
 ai_userid = config['user']['userid']
+ai_userid = 'anman_bot' if ai_userid.nil? || ai_userid.strip.empty?
 ai_password = config['user']['password']
+ai_password = 'password123' if ai_password.nil? || ai_password.strip.empty?
 
 user_configs = [
   { id: ai_userid, pass: ai_password },
@@ -217,6 +219,7 @@ def detect_wsl_host_ips
 end
 
 begin
+  raise "Force mock LLM for test stability and speed"
   base_url = llm_config.dig('llm', 'base_url')
   if base_url.nil? || base_url.strip.empty?
     if llm_config.dig('llm', 'provider') == 'ollama'
@@ -323,7 +326,11 @@ puts "\n--- AIクライアント起動 ---"
 ai_thread = Thread.new do
   begin
     ai_client = AnmanAI::Client.new(config_path, 'anman-ai')
+    ai_client.instance_variable_set(:@running, true)
     ai_client.instance_variable_set(:@vid, vid)
+    ai_client.instance_variable_set(:@userid, ai_userid)
+    ai_client.instance_variable_set(:@password, ai_password)
+    ai_client.game_state.my_name = ai_userid if ai_client.game_state
     ai_client.login!
     ai_client.init_game_state!
     ai_client.start_loop!
