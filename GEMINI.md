@@ -145,3 +145,15 @@ LLM呼び出し時に `compact_prompt: true` が有効な場合、チャット�
   Node.js や npm などのランタイム・パッケージ管理ツールは、**必ず [mise](https://mise.jdx.dev/) を使用してインストールおよび管理**してください。
   直接システムに node をインストールするのではなく、プロジェクトルートの `mise.toml` を通じてバージョン（例: `node@24`）を制御してください。
 
+---
+
+## 5. 設計規約・互換性維持ルール
+
+### チャットログ保存用HTMLの互換性維持（後方互換性の厳守）
+- 投稿メッセージ等のHTML構築ロジックである [vil.rb](file:///home/wellk/project/lolipop/public_html/aiwolf/vil.rb) の `say` メソッド等が生成・データベース（PStore）に保存する HTML 文字列フォーマット（`<!--typehead id--><table class="message">...`）は**絶対に書き換えないでください**。
+- メッセージ形式を直接変更すると、永続化された過去の村ログの読み込み時や、[api.rb](file:///home/wellk/project/lolipop/public_html/aiwolf/api.rb) 等にあるログ解析用の正規表現、およびボットクライアントとの連携がすべて破損します。
+- デザインやレイアウトの調整（レスポンシブ化など）が必要な場合は、保存データ構造を書き換えるのではなく、スタイルシート（`v2.css`）側で `table.message` に対するスタイルを記述して対応してください。
+
+### CGIテンプレート（クラシック/V2）の分離
+- `skel/` 配下のテンプレートファイル（`msg.html`、`skill*.html` など）を変更する場合は、クラシック版 `index.cgi` の動作を壊さないために元のファイルを直接変更せず、プレフィックスとして `v2_` を付加したファイル（例: `v2_msg.html`）を新しく追加してください。
+- [v2.rb](file:///home/wellk/project/lolipop/public_html/aiwolf/v2.rb) の `erbrun` / `erbres` メソッドが自動的に `v2_` プレフィックスのファイルを優先してロードするよう設計されています。これにより、クラシック版 `index.cgi` の表示を完全に保護できます。

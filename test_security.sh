@@ -1,2 +1,2 @@
 #!/bin/bash
-ruby scripts/clean_db.rb && ruby scripts/test_api_security.rb
+ANMAN_TEST_MODE=true ruby scripts/clean_db.rb && ANMAN_TEST_MODE=true ruby scripts/test_api_security.rb

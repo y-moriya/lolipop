@@ -21,6 +21,11 @@ module AnmanAI
       end
     end
 
+    def <<(string)
+      write(string)
+      self
+    end
+
     def flush
       @original.flush
     end

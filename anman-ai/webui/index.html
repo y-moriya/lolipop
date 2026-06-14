@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anman AI Dashboard</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="stylesheet" href="./src/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- サイドバー -->
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-logo">🤖</span>
+        <h1 class="brand-name">Anman AI</h1>
+      </div>
+      <nav class="nav-menu">
+        <button class="nav-item active" id="tab-dashboard">
+          <span class="nav-icon">📊</span> ダッシュボード
+        </button>
+        <button class="nav-item" id="tab-settings">
+          <span class="nav-icon">⚙️</span> 設定
+        </button>
+        <button class="nav-item" id="tab-logs">
+          <span class="nav-icon">📜</span> ログ
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="version-info">Version <span id="app-version">1.0.0</span></div>
+      </div>
+    </aside>
+
+    <!-- メインコンテンツ -->
+    <main class="main-content">
+      <!-- ヘッダー -->
+      <header class="header">
+        <div class="header-title">
+          <h2 id="page-title">ダッシュボード</h2>
+        </div>
+        <div class="client-control">
+          <div class="status-indicator">
+            <span class="status-dot offline" id="status-dot"></span>
+            <span class="status-text" id="status-text">停止中</span>
+          </div>
+          <button class="btn btn-primary btn-start" id="btn-toggle-client">起動する</button>
+        </div>
+      </header>
+
+      <!-- コンテンツエリア -->
+      <div class="content-body">
+        <!-- 1. ダッシュボードビュー -->
+        <section class="view-section active" id="view-dashboard">
+          <!-- 上部要約カード -->
+          <div class="card-grid">
+            <div class="card stat-card">
+              <div class="stat-label">キャラクター / ユーザー名</div>
+              <div class="stat-value" id="info-username">-</div>
+            </div>
+            <div class="card stat-card">
+              <div class="stat-label">現在の役職</div>
+              <div class="stat-value" id="info-role">-</div>
+            </div>
+            <div class="card stat-card">
+              <div class="stat-label">参加中の村 ID</div>
+              <div class="stat-value" id="info-vid">-</div>
+            </div>
+            <div class="card stat-card">
+              <div class="stat-label">現在の日程</div>
+              <div class="stat-value" id="info-day">-</div>
+            </div>
+          </div>
+
+          <!-- ゲーム詳細分割エリア -->
+          <div class="game-dashboard-layout">
+            <div class="game-info-panel">
+              <!-- プレイヤーリスト -->
+              <div class="card players-card">
+                <h3>👥 プレイヤー状態</h3>
+                <div class="player-list-container" id="players-list">
+                  <div class="empty-state">ゲーム開始を待っています...</div>
+                </div>
+              </div>
+
+              <!-- アクション・推理履歴 -->
+              <div class="card actions-card">
+                <h3>🔍 夜行動・結果履歴</h3>
+                <div class="action-history" id="action-results">
+                  <div class="empty-state">履歴はありません。</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- チャット・進行ログ -->
+            <div class="game-logs-panel">
+              <div class="card chat-logs-card">
+                <h3>💬 チャット・進行ログ (直近30件)</h3>
+                <div class="chat-logs-container" id="chat-logs">
+                  <div class="empty-state">ログはありません。</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. 設定ビュー -->
+        <section class="view-section" id="view-settings">
+          <form id="settings-form" onsubmit="return false;">
+            <div class="settings-grid">
+              <!-- サーバー・アカウント設定 -->
+              <div class="card">
+                <h3>🌐 接続サーバー & アカウント</h3>
+                <div class="form-group">
+                  <label for="server-url">CGI サーバー URL</label>
+                  <input type="text" id="server-url" name="server.url" placeholder="http://localhost:8063" required>
+                </div>
+                <div class="form-group-row">
+                  <div class="form-group">
+                    <label for="server-vid">村 ID (0で自動エントリー)</label>
+                    <input type="number" id="server-vid" name="server.vid" placeholder="0" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="server-pass">村パスワード (任意)</label>
+                    <input type="password" id="server-pass" name="server.pass" placeholder="省略可能">
+                  </div>
+                </div>
+                <div class="form-group-row">
+                  <div class="form-group">
+                    <label for="user-userid">ユーザー ID (ログイン名)</label>
+                    <input type="text" id="user-userid" name="user.userid" placeholder="anman_bot" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="user-password">パスワード</label>
+                    <input type="password" id="user-password" name="user.password" placeholder="••••••••" required>
+                  </div>
+                </div>
+              </div>
+
+              <!-- メイン LLM 設定 -->
+              <div class="card">
+                <h3>🧠 メイン LLM 設定</h3>
+                <div class="form-group">
+                  <label for="llm-provider">プロバイダ</label>
+                  <select id="llm-provider" name="llm.provider">
+                    <option value="gemini">Google AI Studio (Gemini)</option>
+                    <option value="openai_compat">OpenAI 互換 (OpenAI, DeepSeek, OpenRouter, etc)</option>
+                    <option value="ollama">Ollama (ローカル LLM)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="llm-apikey">API キー</label>
+                  <input type="password" id="llm-apikey" name="llm.api_key" placeholder="API キーを入力">
+                </div>
+                <div class="form-group">
+                  <label for="llm-model">モデル名</label>
+                  <input type="text" id="llm-model" name="llm.model" placeholder="gemini-2.5-flash" required>
+                </div>
+                <div class="form-group">
+                  <label for="llm-baseurl">ベース URL (OpenAI互換/Ollama の場合)</label>
+                  <input type="text" id="llm-baseurl" name="llm.base_url" placeholder="https://api.openai.com/v1 (省略時はデフォルト)">
+                </div>
+              </div>
+
+              <!-- 発言 & プロンプト動作設定 -->
+              <div class="card">
+                <h3>⚖️ 発言・プロンプト動作設定</h3>
+                <div class="form-group-row">
+                  <div class="form-group">
+                    <label for="llm-interval-reactive">反応発言の最小間隔 (秒)</label>
+                    <input type="number" id="llm-interval-reactive" name="llm.talk_interval_reactive" placeholder="10" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="llm-interval-active">能動発言の最小間隔 (秒)</label>
+                    <input type="number" id="llm-interval-active" name="llm.talk_interval_active" placeholder="60" required>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="llm-budgetmode">予算モード</label>
+                  <select id="llm-budgetmode" name="llm.budget_mode">
+                    <option value="low_cost">ローコスト (発言頻度を極力下げる)</option>
+                    <option value="normal" selected>ノーマル (通常の頻度)</option>
+                    <option value="max">マックス (積極的に会話に参加)</option>
+                  </select>
+                </div>
+                
+                <div class="checkbox-group">
+                  <label class="checkbox-container">
+                    <input type="checkbox" id="llm-compact" name="llm.compact_prompt" checked>
+                    <span class="checkmark"></span>
+                    コンパクトプロンプト (トークン節約)
+                  </label>
+                  <label class="checkbox-container">
+                    <input type="checkbox" id="llm-autoadjust" name="llm.auto_adjust_talk_interval" checked>
+                    <span class="checkmark"></span>
+                    発言間隔の自動伸縮調整
+                  </label>
+                  <label class="checkbox-container">
+                    <input type="checkbox" id="llm-anchor" name="llm.anchor_resolution" checked>
+                    <span class="checkmark"></span>
+                    アンカー発言解決 (>>N の会話内容展開)
+                  </label>
+                </div>
+              </div>
+
+              <!-- フォールバック LLM 設定 -->
+              <div class="card">
+                <div class="card-header-toggle">
+                  <h3>🔄 フォールバック LLM 設定 (代替)</h3>
+                  <label class="switch">
+                    <input type="checkbox" id="fallback-enable">
+                    <span class="slider round"></span>
+                  </label>
+                </div>
+                <div id="fallback-settings-wrapper" class="disabled">
+                  <div class="form-group">
+                    <label for="fallback-provider">プロバイダ</label>
+                    <select id="fallback-provider" name="llm_fallback.provider">
+                      <option value="gemini">Google AI Studio (Gemini)</option>
+                      <option value="openai_compat">OpenAI 互換</option>
+                      <option value="ollama">Ollama (ローカル)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="fallback-apikey">API キー</label>
+                    <input type="password" id="fallback-apikey" name="llm_fallback.api_key" placeholder="API キーを入力">
+                  </div>
+                  <div class="form-group">
+                    <label for="fallback-model">モデル名</label>
+                    <input type="text" id="fallback-model" name="llm_fallback.model" placeholder="gemini-2.5-flash">
+                  </div>
+                  <div class="form-group">
+                    <label for="fallback-baseurl">ベース URL</label>
+                    <input type="text" id="fallback-baseurl" name="llm_fallback.base_url" placeholder="https://api.openai.com/v1">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-actions">
+              <button class="btn btn-success" id="btn-save-settings">⚙️ 設定を保存する</button>
+              <div class="save-status-msg" id="save-status-msg"></div>
+            </div>
+          </form>
+        </section>
+
+        <!-- 3. ログビュー -->
+        <section class="view-section" id="view-logs">
+          <div class="card logs-panel-card">
+            <div class="logs-header">
+              <div class="logs-title-info">
+                <h3>📜 anman-ai.log</h3>
+                <span class="logs-subtitle">バックエンドプロセスの出力をリアルタイム表示</span>
+              </div>
+              <div class="logs-controls">
+                <select id="log-lines-count">
+                  <option value="50">最新50行</option>
+                  <option value="100" selected>最新100行</option>
+                  <option value="200">最新200行</option>
+                  <option value="500">最新500行</option>
+                </select>
+                <button class="btn btn-secondary btn-sm" id="btn-clear-log-view">クリア</button>
+              </div>
+            </div>
+            <div class="log-output-container" id="log-output">
+              <div class="log-line system">ログを取得中...</div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script type="module" src="./src/main.ts"></script>
+</body>
+</html>

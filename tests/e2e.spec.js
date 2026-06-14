@@ -163,7 +163,7 @@ test.describe('AIwolf Server E2E Tests for v2.cgi', () => {
 
     // 3. User A sends a message
     await pageA.fill('textarea[name="message"]', 'user_aからのテストメッセージです。');
-    await pageA.click('input[type="submit"][value="発言"]');
+    await pageA.click('.chat-send-btn');
 
     // Confirm User A sees their own message
     await expect(pageA.locator('.mes_say_body1').last()).toContainText('user_aからのテストメッセージです。');
@@ -174,7 +174,7 @@ test.describe('AIwolf Server E2E Tests for v2.cgi', () => {
 
     // 5. User B sends a reply with an anchor link (>>4 targets User A's test message)
     await pageB.fill('textarea[name="message"]', '>>4 user_bがリアルタイムで返信します。');
-    await pageB.click('input[type="submit"][value="発言"]');
+    await pageB.click('.chat-send-btn');
 
     // Confirm User A receives the reply in real-time
     const replyLocator = pageA.locator('.mes_say_body1').last();
@@ -221,7 +221,7 @@ test.describe('AIwolf Server E2E Tests for v2.cgi', () => {
       });
     };
 
-    // Create contexts for User A, User B, and User C
+    // Create contexts for User A, User B, User C, and User D
     const contextA = await browser.newContext();
     const pageA = await contextA.newPage();
     setupErrorTracking(pageA, 'Page A');
@@ -233,6 +233,10 @@ test.describe('AIwolf Server E2E Tests for v2.cgi', () => {
     const contextC = await browser.newContext();
     const pageC = await contextC.newPage();
     setupErrorTracking(pageC, 'Page C');
+
+    const contextD = await browser.newContext();
+    const pageD = await contextD.newPage();
+    setupErrorTracking(pageD, 'Page D');
 
     // 1. User A logins and creates a village
     await pageA.goto('/aiwolf/v2.cgi');
@@ -301,6 +305,15 @@ test.describe('AIwolf Server E2E Tests for v2.cgi', () => {
     await pageC.click('input[value="エントリー"]');
     await expect(pageC.locator('text=user_c').first()).toBeVisible();
 
+    // 3.5. User D logins and opens the village page without entering (Spectator)
+    await pageD.goto('/aiwolf/v2.cgi');
+    await pageD.fill('input[name="userid"]', 'user_d');
+    await pageD.fill('input[name="pass"]', 'password999');
+    await pageD.click('input[value="ログイン"]');
+    await expect(pageD.locator('input[value="ログアウト"]')).toBeVisible();
+    await pageD.goto(`/aiwolf/v2.cgi?vid=${vid}`);
+    await saveSnapshot(pageD, 'enhanced_1_userD_spectating');
+
     await saveSnapshot(pageA, 'enhanced_1_users_entered');
 
     // 4. User A (owner) starts the village
@@ -314,9 +327,16 @@ test.describe('AIwolf Server E2E Tests for v2.cgi', () => {
     });
     await pageA.click('input[value="村開始"]');
 
-    // Wait for the game start reload prompt on pageB and pageC and click them
+    // Wait for the game start reload prompt on pageB, pageC and pageD and click/reload them
     await pageB.locator('.reload-prompt').click({ timeout: 15000 });
     await pageC.locator('.reload-prompt').click({ timeout: 15000 });
+
+    const promptDStartVisible = await pageD.locator('.reload-prompt').isVisible({ timeout: 15000 }).catch(() => false);
+    if (promptDStartVisible) {
+      await pageD.locator('.reload-prompt').click();
+    } else {
+      await pageD.reload();
+    }
 
     await saveSnapshot(pageA, 'enhanced_2_game_started');
 
@@ -338,6 +358,11 @@ test.describe('AIwolf Server E2E Tests for v2.cgi', () => {
     const roleC = await getPlayerRole(pageC);
 
     console.log(`[E2E] Assigned Roles: User A = ${roleA}, User B = ${roleB}, User C = ${roleC}`);
+
+    // Verify that User D does not see any assigned roles or action forms
+    await expect(pageD.locator('select[name="target_id"]')).not.toBeVisible();
+    await expect(pageD.locator('select[name="vote_id"]')).not.toBeVisible();
+    await expect(pageD.locator('body')).not.toContainText(/\((占い師|人狼|狂人|村人)\)/);
 
     const pages = [
       { page: pageA, role: roleA, name: 'User A' },
@@ -368,11 +393,11 @@ test.describe('AIwolf Server E2E Tests for v2.cgi', () => {
     await expect(wolfPage.locator('select[name="target_id"]')).toBeVisible({ timeout: 10000 });
     await wolfPage.selectOption('select[name="target_id"]', { index: 1 });
 
-    const whisperTextarea = wolfPage.locator('textarea.whisper_textarea');
+    const whisperTextarea = wolfPage.locator('textarea.chat-textarea');
     if (await whisperTextarea.isVisible()) {
       // Send whisper before submitting attack (which triggers night-commit)
       await whisperTextarea.fill('今夜はダニエルを襲うよ');
-      await wolfPage.click('input[value="人狼のささやき"]');
+      await wolfPage.click('.chat-send-btn');
       console.log(`[E2E] Werewolf whisper sent.`);
 
       // Wolf's own view: whisper should be visible immediately
@@ -396,6 +421,11 @@ test.describe('AIwolf Server E2E Tests for v2.cgi', () => {
         console.log(`[E2E] Howl icon for ${info.name}: ${imgSrc}`);
         expect(imgSrc).toContain('howl');
       }
+
+      // Verify werewolf howl for User D (spectator) - should be masked as "わおーん" and not contain actual text
+      await expect(pageD.locator('.mes_whisper_body1').last()).toContainText('わおーん', { timeout: 15000 });
+      await expect(pageD.locator('body')).not.toContainText('今夜はダニエルを襲うよ');
+      await saveSnapshot(pageD, 'whisper_howl_User_D_view');
     }
 
     // Werewolf submits attack target (this triggers night-commit)
@@ -425,6 +455,14 @@ test.describe('AIwolf Server E2E Tests for v2.cgi', () => {
       }
     }
 
+    // Day 2 transition for User D
+    const promptDDay2Visible = await pageD.locator('.reload-prompt').isVisible({ timeout: 10000 }).catch(() => false);
+    if (promptDDay2Visible) {
+      await pageD.locator('.reload-prompt').click();
+    } else {
+      await pageD.reload();
+    }
+
     await saveSnapshot(pageA, 'enhanced_3_night_actions_done');
 
     // 6. Day 2 Daytime Talk
@@ -438,13 +476,14 @@ test.describe('AIwolf Server E2E Tests for v2.cgi', () => {
       const textarea = info.page.locator('textarea[name="message"]');
       await expect(textarea).toBeVisible({ timeout: 10000 });
       await textarea.fill(`こんにちは、私は ${info.name} (${info.role}) です。`);
-      await info.page.click('input[type="submit"][value="発言"]');
+      await info.page.click('.chat-send-btn');
     }
 
-    // Verify all players received User C's chat message in real-time
+    // Verify all players and User D received User C's chat message in real-time
     for (const info of pages) {
       await expect(info.page.locator('.mes_say_body1').last()).toContainText('こんにちは、私は User C', { timeout: 15000 });
     }
+    await expect(pageD.locator('.mes_say_body1').last()).toContainText('こんにちは、私は User C', { timeout: 15000 });
 
     await saveSnapshot(pageA, 'enhanced_4_day_talk_sent');
 
@@ -468,9 +507,6 @@ test.describe('AIwolf Server E2E Tests for v2.cgi', () => {
       const voteSelect = info.page.locator('select[name="vote_id"]');
       await expect(voteSelect).toBeVisible({ timeout: 10000 });
 
-      // Try to vote for the wolf's player slot (index 2 = wolf's character in the list)
-      // select option index 1 = first non-cancel option
-      // We'll get all options and pick the one matching the wolf's character
       const wolfCharName = await wolfInfo.page.evaluate(() => {
         // Get current user's character name from the page header
         const actionBody = document.querySelector('.action_balloon td.action_body');
@@ -501,12 +537,6 @@ test.describe('AIwolf Server E2E Tests for v2.cgi', () => {
       await submitFormWorkaround(info.page, 'vote_id');
     }
 
-    // In this scenario: all voted for wolf → wolf is executed → village wins
-    // Village-side (占い師, 狂人*): 占い師 wins, 狂人 loses (wolf-side, but wolf lost)
-    // *狂人's win is tied to wolf winning, so if wolf loses, 狂人 loses too
-    const villageSideRoles = ['占い師', '村人', '霊能者', '狩人'];
-    const wolfLostRoles = ['人狼', '人喰い', '狂人']; // wolf-side loses when wolf is executed
-
     // Wait for the game over transition and click reload prompts
     for (const info of pages) {
       const prompt = info.page.locator('.reload-prompt');
@@ -521,6 +551,14 @@ test.describe('AIwolf Server E2E Tests for v2.cgi', () => {
         await info.page.reload();
         console.log(`[E2E] Manually reloaded after vote for ${info.name}`);
       }
+    }
+
+    // Game over reload for User D
+    const promptDGameOverVisible = await pageD.locator('.reload-prompt').isVisible({ timeout: 15000 }).catch(() => false);
+    if (promptDGameOverVisible) {
+      await pageD.locator('.reload-prompt').click();
+    } else {
+      await pageD.reload();
     }
 
     await saveSnapshot(pageA, 'enhanced_5_game_over');
@@ -548,10 +586,57 @@ test.describe('AIwolf Server E2E Tests for v2.cgi', () => {
       }
     }
 
+    // Verify victory announcement for User D (spectator)
+    const winAnnounce = pageD.locator('.announce.win');
+    await expect(winAnnounce.first()).toBeVisible({ timeout: 10000 });
+    const winText = await winAnnounce.first().innerText();
+    console.log(`[E2E] User D (spectator) sees win announcement: ${winText}`);
+    expect(winText).toContain('村人の勝利です！');
+    await saveSnapshot(pageD, 'game_result_User_D');
+
+    // Verify that User D does NOT see personal win/loss elements (win_res / lose_res)
+    await expect(pageD.locator('.win_res, .lose_res')).not.toBeVisible();
+
+    // Verify chat log layout at different viewports (Desktop, Tablet, Mobile)
+    const logPages = [
+      { page: pageA, name: 'UserA' },
+      { page: pageD, name: 'UserD' }
+    ];
+    for (const item of logPages) {
+      // 1. Desktop view (1280x800)
+      await item.page.setViewportSize({ width: 1280, height: 800 });
+      await saveSnapshot(item.page, `enhanced_final_log_desktop_${item.name}`);
+
+      // 2. Tablet view (768x1024)
+      await item.page.setViewportSize({ width: 768, height: 1024 });
+      await saveSnapshot(item.page, `enhanced_final_log_tablet_${item.name}`);
+
+      // 3. Mobile view (375x812 - iPhone 12 Pro)
+      await item.page.setViewportSize({ width: 375, height: 812 });
+      await saveSnapshot(item.page, `enhanced_final_log_mobile_${item.name}`);
+    }
+
     await contextA.close();
     await contextB.close();
     await contextC.close();
+    await contextD.close();
 
     expect(browserErrors).toEqual([]);
+  });
+
+  test('should display top page correctly at different viewports and save snapshots', async ({ page }) => {
+    // 1. Desktop view (1280x800)
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/aiwolf/v2.cgi');
+    await expect(page.locator('input[value="ログイン"]')).toBeVisible();
+    await saveSnapshot(page, 'top_page_desktop');
+
+    // 2. Tablet view (768x1024)
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await saveSnapshot(page, 'top_page_tablet');
+
+    // 3. Mobile view (375x812 - iPhone 12 Pro)
+    await page.setViewportSize({ width: 375, height: 812 });
+    await saveSnapshot(page, 'top_page_mobile');
   });
 });

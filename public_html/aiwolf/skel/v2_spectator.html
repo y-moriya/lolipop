@@ -1,0 +1,73 @@
+<table border=0 cellpadding=0 cellspacing=0 class="action_box">
+	<tr>
+<%=
+	pid = Charset.charsets[@vil.char].spectator_filename
+	%Q(<td width="100"><img src="img/#{pid}.png"></td>)
+%>
+		<td width="16" valign="top"><img src="img/say00b.jpg"></td>
+		<td valign="top">
+			<table border=0 cellpadding=0 cellspacing=0 class="action_balloon">
+			<tr>
+				<td width="8"><img src="img/say01.jpg"></td>
+				<td></td>
+				<td width="8"><img src="img/say02.jpg"></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td class="action_body"><%= @login.userid %></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td class="action_body">
+<% if (@conf.focus == 1 && !@player) %>
+<form name="focus_form" action="index.cgi" method="post" class="modern-chat-box" data-mode="say">
+<% else %>
+<form action="index.cgi" method="post" class="modern-chat-box" data-mode="say">
+<% end %>
+  <input type="hidden" name="cmd" value="msg">
+  <input type="hidden" name="guest" value="on">
+  <input type="hidden" name="vid" value="<%= @vid %>">
+  <input type="hidden" name="j_data" value="日本語のデータ">
+  <input type="hidden" id="chat-think-input" name="think" value="">
+
+  <div class="chat-tabs">
+    <div class="chat-tab active" data-mode="say">観戦者の発言</div>
+    <div class="chat-tab" data-mode="think">独り言</div>
+  </div>
+
+  <div class="chat-input-wrapper">
+    <textarea name="message" class="chat-textarea" placeholder="観戦者の発言を入力..."></textarea>
+    
+    <div class="chat-controls-bar">
+      <div class="chat-options">
+        <label class="chat-option-label">
+          <input type="checkbox" name="loud" value="on"> <span>大声</span>
+        </label>
+        <% if (SMALL_VOICE) %>
+          <label class="chat-option-label">
+            <input type="checkbox" name="small_voice" value="on"> <span><%= SMALL_VOICE %></span>
+          </label>
+        <% end %>
+      </div>
+
+      <button type="submit" class="chat-send-btn" title="送信">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</form>
+				</td>
+				<td></td>
+			</tr>
+			<tr>
+				<td><img src="img/say03.jpg"></td>
+				<td></td>
+				<td><img src="img/say04.jpg"></td>
+			</tr>
+			</table>
+		</td>
+	</tr>
+</table>

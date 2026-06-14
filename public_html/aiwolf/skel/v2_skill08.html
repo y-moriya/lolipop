@@ -1,0 +1,48 @@
+<% if(@vil.night || !@vil.card) %>
+<% if(!@vil.card && !@vil.night) %>
+	<tr><td></td><td><br></td><td></td></tr>
+<% end %>
+<tr>
+	<td></td>
+	<td class="action_body">
+<% if (@conf.focus == 1 && @vil.night) %>
+<form name="focus_form" action="index.cgi" method="post" class="modern-chat-box" data-mode="whisper">
+<% else %>
+<form action="index.cgi" method="post" class="modern-chat-box" data-mode="whisper">
+<% end %>
+  <input type="hidden" name="cmd" value="msg">
+  <input type="hidden" name="whisper" value="on">
+  <input type="hidden" name="vid" value="<%= @vid %>">
+  <input type="hidden" name="pid" value="<%= @player.pid %>">
+  <input type="hidden" name="j_data" value="日本語のデータ">
+  <input type="hidden" id="chat-think-input" name="think" value="">
+  <input type="hidden" id="chat-whisper-input" name="whisper" value="on">
+  <input type="hidden" id="chat-groan-input" name="groan" value="">
+
+  <div class="chat-tabs">
+    <div class="chat-tab active" data-mode="whisper">共有者のささやき</div>
+    <div class="chat-tab" data-mode="think">独り言</div>
+  </div>
+
+  <div class="chat-input-wrapper">
+    <textarea name="message" class="chat-textarea" placeholder="共有者へのささやきを入力..."></textarea>
+    
+    <div class="chat-controls-bar">
+      <div class="chat-options">
+        <label class="chat-option-label">
+          <input type="checkbox" name="loud" value="on"> <span>大声</span>
+        </label>
+      </div>
+
+      <button type="submit" class="chat-send-btn" title="ささやき送信">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</form>
+	</td>
+	<td></td>
+</tr>
+<% end %>

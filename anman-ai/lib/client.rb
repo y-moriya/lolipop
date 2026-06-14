@@ -23,6 +23,8 @@ module AnmanAI
   STDERR.sync = true
 
   class Client
+    attr_reader :config_path, :exe_dir, :internal_root_dir, :game_state, :my_name, :my_role, :vid, :userid, :url, :running
+
     def self.load_config(config_path)
       begin
         config = YAML.load_file(config_path)
@@ -52,9 +54,11 @@ module AnmanAI
     end
 
     def initialize(config_path, exe_dir, internal_root_dir = nil)
+      @config_path = config_path
       @exe_dir = exe_dir
       @internal_root_dir = internal_root_dir || exe_dir
       @config = Client.load_config(config_path)
+      @running = false
       
       server_config = @config['server'] || {}
       @url = server_config['url']
@@ -188,7 +192,7 @@ module AnmanAI
     # 募集中の村を監視し、自動でエントリーする
     def auto_entry_loop!
       puts "[System] Scoping recruiting villages..."
-      loop do
+      while @running
         begin
           res = get_api('cmd' => 'vils', 'state' => 'recruiting')
           if res && res.code == '200'
@@ -334,6 +338,7 @@ module AnmanAI
       if res_players && res_players.code == '200'
         players_json = JSON.parse(res_players.body)
         me = players_json.find { |p| p['userid'] == @userid }
+        @game_state.init_players(players_json, me)
         if me
           if me['voted'] == true
             unless @voted_today[day]
@@ -372,7 +377,7 @@ module AnmanAI
       
       # 1. バックグラウンドでイベントをロングポーリング受信するスレッド
       event_thread = Thread.new do
-        loop do
+        while @running
           begin
             res = get_api('cmd' => 'events', 'since' => since_id.to_s)
             if res && res.code == '200'
@@ -396,7 +401,7 @@ module AnmanAI
       
       is_catching_up = true
       
-      loop do
+      while @running
         begin
           # キューから溜まっているイベントをすべて処理して GameState を更新
           has_new_events = false
@@ -452,8 +457,8 @@ module AnmanAI
               check_and_update_role_if_started!(game_state_val)
               adjust_talk_intervals!(vil_info['period'].to_i)
 
-              # 進行中の場合は状態同期を実行
-              if @game_state.game_started && game_state_val == 1
+              # 進行中または募集中の場合は状態同期を実行
+              if game_state_val <= 1
                 sync_game_status_from_server!
               end
             end
@@ -585,10 +590,10 @@ module AnmanAI
             end
           else
             # 昼フェーズ
-            # 更新時間が近づいたら投票を行う (ローカルテスト環境、または残り時間45秒以下、かつ未投票、生存時のみ)
+            # 更新時間が近づいたら投票を行う (テストモード、または残り時間45秒以下、かつ未投票、生存時のみ)
             unless is_dead
-              is_test = @url.include?("localhost") || @url.include?("127.0.0.1")
-              if !@voted_today[day] && remain_sec > 0 && (remain_sec <= 45 || is_test)
+              is_test_mode = ENV['ANMAN_TEST_MODE'] == 'true' || ENV['ANMAN_QUICK_VOTE'] == 'true'
+              if !@voted_today[day] && remain_sec > 0 && (remain_sec <= 45 || is_test_mode)
                 # Sync vote status from server first
                 res_players = get_api('cmd' => 'players')
                 if res_players && res_players.code == '200'
@@ -1326,6 +1331,104 @@ module AnmanAI
 
       @current_talk_interval_reactive = reactive
       @current_talk_interval_active = active
+    end
+
+    def start_async!
+      return if @running
+      @running = true
+      @reflected_and_greeting = false
+      @epilogue_start_time = nil
+      @voted_today = {}
+      @acted_tonight = {}
+      @whispered_tonight = {}
+      
+      @client_thread = Thread.new do
+        begin
+          login!
+          vid = @vid
+          already_joined = find_active_joined_village
+          
+          if @running && !already_joined
+            if vid.nil? || vid == 0
+              auto_entry_loop!
+            else
+              @vid = vid
+              puts "[System] Target village ID: #{@vid}. Checking entry status..."
+              entry_ok = false
+              30.times do |i|
+                break unless @running
+                if entry_to_village!
+                  entry_ok = true
+                  break
+                end
+                puts "  Waiting for village ID #{@vid} to be created or available... (#{i+1}/30)"
+                sleep 5
+              end
+              if @running && !entry_ok
+                puts "[System] Active entry failed. Falling back to auto-entry monitoring..."
+                @vid = nil
+                auto_entry_loop!
+              end
+            end
+          end
+          
+          if @running
+            init_game_state!
+            start_loop!
+          end
+        rescue => e
+          puts "[System Error] Error in client async thread: #{e.class} - #{e.message}"
+          puts e.backtrace.join("\n")
+        ensure
+          @running = false
+        end
+      end
+    end
+
+    def stop!
+      return unless @running
+      puts "[System] Stopping client..."
+      @running = false
+      
+      if @client_thread
+        @client_thread.join(2)
+        if @client_thread.alive?
+          @client_thread.kill
+        end
+        @client_thread = nil
+      end
+      puts "[System] Client stopped."
+    end
+
+    def reload_config!
+      puts "[System] Reloading configuration from #{@config_path}..."
+      @config = Client.load_config(@config_path)
+      
+      server_config = @config['server'] || {}
+      @url = server_config['url']
+      if @url
+        @url = @url.sub(/\/aiwolf\/?\z/, '').chomp('/')
+      end
+      @vid = server_config['vid']
+      
+      user_config = @config['user'] || {}
+      @userid = user_config['userid']
+      @password = user_config['password']
+      
+      @llm = LLMClient.new(@config)
+      
+      @compact_prompt = @config.dig('llm', 'compact_prompt') != false
+      @talk_interval_reactive = @config.dig('llm', 'talk_interval_reactive') || 10
+      @talk_interval_active = @config.dig('llm', 'talk_interval_active') || 60
+      @auto_adjust_talk_interval = @config.dig('llm', 'auto_adjust_talk_interval') != false
+      @budget_mode = @config.dig('llm', 'budget_mode') || 'normal'
+      @anchor_resolution = @config.dig('llm', 'anchor_resolution') != false
+      
+      @game_state.my_name = @userid if @game_state
+      
+      puts "[System] Configuration reloaded successfully."
+    rescue => e
+      puts "[System Error] Failed to reload configuration: #{e.message}"
     end
   end
 end

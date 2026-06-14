@@ -234,7 +234,13 @@ class CWolf
 	def print_head(title = nil)
 		@headered = true
 		print "Content-Type: text/html; charset=UTF-8\n\n"
-    	print(HEAD1.gsub('plugin/base.css', 'plugin/v2.css').gsub('plugin/jquery.js', 'plugin/jquery-3.7.1.min.js').gsub('plugin/script.js', 'plugin/v2.js'))
+		css_path = File.expand_path('plugin/v2.css', __dir__)
+		js_path = File.expand_path('plugin/v2.js', __dir__)
+		css_mtime = File.exist?(css_path) ? File.mtime(css_path).to_i : Time.now.to_i
+		js_mtime = File.exist?(js_path) ? File.mtime(js_path).to_i : Time.now.to_i
+		head_html = HEAD1.gsub('plugin/base.css', "plugin/v2.css?v=#{css_mtime}").gsub('plugin/jquery.js', 'plugin/jquery-3.7.1.min.js').gsub('plugin/script.js', "plugin/v2.js?v=#{js_mtime}")
+		head_html.gsub!('<head>', "<head>\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">")
+		print(head_html)
 		if (title)
 			print "<title>AI天国 #{title}</title>"
 		else
@@ -277,9 +283,19 @@ class CWolf
 	end
 
 	def erbrun(file)
-		html = ERB.new(File.open(file, "r:utf-8"){|f| f.read}).result(binding)
+		v2_file = file.sub('skel/', 'skel/v2_')
+		target_file = File.exist?(v2_file) ? v2_file : file
+		html = ERB.new(File.open(target_file, "r:utf-8"){|f| f.read}).result(binding)
 		html.gsub!("index.cgi", "v2.cgi")
 		print html
+	end
+
+	def erbres(file)
+		v2_file = file.sub('skel/', 'skel/v2_')
+		target_file = File.exist?(v2_file) ? v2_file : file
+		html = ERB.new(File.open(target_file, "r:utf-8"){|f| f.read}).result(binding)
+		html.gsub!("index.cgi", "v2.cgi")
+		html
 	end
 
 	def handle_index

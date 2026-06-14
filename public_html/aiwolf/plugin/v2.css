@@ -668,13 +668,18 @@ table.message td img[src*="think"],
         padding: 12px;
     }
 
-    /* Force tables to stack vertically */
+    /* Force layout tables to stack vertically as blocks */
     table.main,
+    table.main > tbody,
+    table.main > tbody > tr,
+    table.main > tr,
+    table.main > tbody > tr > td,
+    table.main > tr > td,
     table.vil_main,
     table.vil_main > tbody,
     table.vil_main > tbody > tr,
     table.vil_main > tbody > tr > td {
-        display: block;
+        display: block !important;
         width: 100% !important;
         box-sizing: border-box !important;
         text-align: left;
@@ -692,11 +697,12 @@ table.message td img[src*="think"],
     }
 
     /* Make nested tables inside table.main stack vertically on mobile (forms, setup) */
-    table.main table:not(.vil_index):not(.menu),
-    table.main table:not(.vil_index):not(.menu) > tbody,
-    table.main table:not(.vil_index):not(.menu) > tbody > tr,
-    table.main table:not(.vil_index):not(.menu) > tr,
-    table.main table:not(.vil_index):not(.menu) td {
+    table.main table:not(.vil_index):not(.menu):not(.message),
+    table.main table:not(.vil_index):not(.menu):not(.message) > tbody,
+    table.main table:not(.vil_index):not(.menu):not(.message) > tbody > tr,
+    table.main table:not(.vil_index):not(.menu):not(.message) > tr,
+    table.main table:not(.vil_index):not(.menu):not(.message) > tbody > tr > td,
+    table.main table:not(.vil_index):not(.menu):not(.message) > tr > td {
         display: block !important;
         width: 100% !important;
         box-sizing: border-box !important;
@@ -739,15 +745,19 @@ table.message td img[src*="think"],
     }
 
     /* Top menu 2-column grid styling on mobile */
-    table.menu {
+    table.menu,
+    table.menu > tbody {
+        display: block !important;
+        width: 100% !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+    }
+    table.menu tr {
         display: flex !important;
         flex-wrap: wrap !important;
         gap: 8px !important;
+        margin-bottom: 8px !important;
         width: 100% !important;
-        padding: 0 !important;
-    }
-    table.menu tr {
-        display: contents !important;
     }
     table.menu td {
         display: block !important;
@@ -852,19 +862,30 @@ table.message td img[src*="think"],
     }
 
     /* Message formatting on small screens */
+    table.message {
+        display: table !important;
+        width: 100% !important;
+        border-collapse: separate !important;
+    }
+    table.message tr {
+        display: table-row !important;
+    }
+    table.message td {
+        display: table-cell !important;
+    }
     table.message td[rowspan="2"] {
-        width: 60px;
-        padding-right: 8px;
+        width: 60px !important;
+        padding-right: 8px !important;
     }
 
     table.message td[rowspan="2"] img {
-        width: 50px;
-        height: 50px;
+        width: 50px !important;
+        height: 50px !important;
     }
 
     .mes_say_body1, .mes_whisper_body1, .mes_groan_body1, .mes_think_body1 {
-        padding: 8px 12px;
-        font-size: 90%;
+        padding: 8px 12px !important;
+        font-size: 90% !important;
     }
 
     /* Inputs full width */

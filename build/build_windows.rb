@@ -38,6 +38,7 @@ cmd = [
   entry_point,
   'anman-ai/lib/**/*.rb',             # Include all Ruby libraries
   'anman-ai/prompts/**/*',            # Include werewolf prompts templates
+  'anman-ai/public/**/*',             # Include compiled WebUI static assets
   'anman-ai/config/personality.yaml', # Include default personality template
   '--output', output_exe,
   '--no-autoload',

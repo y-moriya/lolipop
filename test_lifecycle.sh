@@ -1,2 +1,2 @@
 #!/bin/bash
-ruby scripts/test_autonomous_lifecycle.rb
+ANMAN_TEST_MODE=true ruby scripts/test_autonomous_lifecycle.rb

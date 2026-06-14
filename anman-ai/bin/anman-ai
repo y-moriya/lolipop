@@ -19,6 +19,9 @@ else
   File.expand_path('..', __dir__)
 end
 
+no_web = ARGV.include?('--no-web')
+clean_argv = ARGV.reject { |arg| arg == '--no-web' }
+
 if ARGV.include?('--update')
   require 'updater'
   AnmanAI::Updater.run(exe_dir)
@@ -26,7 +29,7 @@ if ARGV.include?('--update')
 end
 
 internal_root_dir = File.expand_path('..', __dir__)
-config_path = ARGV[0] || File.join(exe_dir, 'config', 'config.yaml')
+config_path = clean_argv[0] || File.join(exe_dir, 'config', 'config.yaml')
 
 # OCRANビルド用: もし config.yaml が存在しない場合は config.yaml.example を代用して依存パッケージのロードを通す
 if defined?(Ocran) && !File.exist?(config_path)
@@ -76,6 +79,7 @@ AnmanAI.setup_logger(exe_dir, config)
 
 require 'client'
 require 'version'
+require 'web_server'
 
 # OCRANビルドの依存関係ロード用：ビルド中であれば即終了
 if defined?(Ocran)
@@ -88,47 +92,87 @@ puts "Version:        #{AnmanAI::VERSION}"
 puts "Build Time:     #{AnmanAI::BUILD_TIME}"
 puts "Root Directory: #{exe_dir}"
 puts "Config File:    #{config_path}"
+puts "Mode:           #{no_web ? 'Legacy CUI' : 'WebUI (Default)'}"
 puts "===================================================="
 
 begin
   client = AnmanAI::Client.new(config_path, exe_dir, internal_root_dir)
-  client.login!
   
-  vid = client.instance_variable_get(:@vid)
-  
-  # Check if we are already in an active/in-progress village
-  already_joined = client.find_active_joined_village
-  
-  if already_joined
-    puts "[System] Already joined active village ID: #{client.instance_variable_get(:@vid)}. Resuming gameplay..."
-  else
-    if vid.nil? || vid == 0
-      client.auto_entry_loop!
+  if no_web
+    client.login!
+    
+    vid = client.instance_variable_get(:@vid)
+    already_joined = client.find_active_joined_village
+    
+    if already_joined
+      puts "[System] Already joined active village ID: #{client.instance_variable_get(:@vid)}. Resuming gameplay..."
     else
-      client.instance_variable_set(:@vid, vid)
-      puts "[System] Target village ID: #{vid}. Checking entry status..."
-      # If not yet entered, try entering and wait if the village does not exist yet
-      entry_ok = false
-      30.times do |i|
-        if client.entry_to_village!
-          entry_ok = true
-          break
-        end
-        puts "  Waiting for village ID #{vid} to be created or available... (#{i+1}/30)"
-        sleep 5
-      end
-      unless entry_ok
-        puts "[System] Active entry failed. Falling back to auto-entry monitoring..."
-        client.instance_variable_set(:@vid, nil)
+      if vid.nil? || vid == 0
         client.auto_entry_loop!
+      else
+        client.instance_variable_set(:@vid, vid)
+        puts "[System] Target village ID: #{vid}. Checking entry status..."
+        entry_ok = false
+        30.times do |i|
+          if client.entry_to_village!
+            entry_ok = true
+            break
+          end
+          puts "  Waiting for village ID #{vid} to be created or available... (#{i+1}/30)"
+          sleep 5
+        end
+        unless entry_ok
+          puts "[System] Active entry failed. Falling back to auto-entry monitoring..."
+          client.instance_variable_set(:@vid, nil)
+          client.auto_entry_loop!
+        end
       end
     end
+    
+    # 実行中のフラグを立ててメインループを走らせる
+    client.instance_variable_set(:@running, true)
+    client.init_game_state!
+    client.start_loop!
+  else
+    # WebUI モード
+    web_server = AnmanAI::WebServer.new(client, exe_dir, internal_root_dir)
+    web_server.start
+    
+    url = "http://127.0.0.1:8064"
+    puts "\nWebUI Server started at: #{url}"
+    puts "Press Ctrl+C to stop the server."
+    
+    # 自動で規定のブラウザを開く
+    Thread.new do
+      sleep 1.0 # サーバーの起動待ち
+      begin
+        if RUBY_PLATFORM =~ /mswin|mingw|cygwin/
+          system("start #{url}")
+        elsif RUBY_PLATFORM =~ /darwin/
+          system("open #{url}")
+        else
+          system("xdg-open #{url} > /dev/null 2>&1 &")
+        end
+      rescue => e
+        puts "[System WARNING] Failed to auto-open browser: #{e.message}"
+      end
+    end
+    
+    # メインスレッドは WEBrick を監視しながら待機
+    begin
+      loop do
+        sleep 2
+      end
+    rescue Interrupt
+      puts "\n[System] Shutting down WebUI server..."
+      client.stop! if client.running
+      web_server.stop
+      puts "[System] WebUI server stopped. Goodbye!"
+      exit 0
+    end
   end
-  
-  client.init_game_state!
-  client.start_loop!
 rescue Interrupt
-  puts "\n[System] Exiting anman-ai player loop. Goodbye!"
+  puts "\n[System] Exiting anman-ai. Goodbye!"
   exit 0
 rescue => e
   STDERR.puts "\n[Fatal Error] Runtime exception occurred:"
