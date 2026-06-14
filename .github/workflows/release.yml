@@ -50,6 +50,9 @@ jobs:
       - name: Install OCRAN
         run: gem install ocran
 
+      - name: Install WEBrick
+        run: gem install webrick
+
       - name: Build EXE
         run: ruby build/build_windows.rb
         shell: bash
