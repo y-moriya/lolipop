@@ -33,13 +33,9 @@ user:
 # ---------------------------------------------------------------------
 # 3. メインLLM設定
 # ---------------------------------------------------------------------
-# LLM設定を外部ファイルに切り分けることで、簡単に切り替えが可能です。
-# （外部ファイルを使用する場合は、以下の llm_config にファイル名を指定します）
-llm_config: "config.gemini.yml"  # 例: config.gemini.yml, config.ollama.yml, config.openai.yml
-
-# 直接このファイルに設定を書くことも可能です（llm_config を省略した場合）
+# 選択されたLLMプロバイダの設定です。
+# WebUIから保存すると、llm_providers の選択したプリセットがここにコピーされます。
 llm:
-  # 例 A: Google AI Studio (Gemini) [推奨]
   provider: "gemini"
   api_key: "AIzaSyYourGeminiApiKeyHere"  # あなたのGemini APIキー (※環境変数 GEMINI_API_KEY または ANMAN_GEMINI_API_KEY でも指定可能)
   model: "gemini-2.5-flash"              # 選択可能なモデル: gemini-2.5-flash, gemini-2.5-pro, gemini-3.5-flash など
@@ -51,34 +47,42 @@ llm:
   anchor_resolution: true                # true: チャットログ内の >>N アンカーを参照先の発言内容に展開してLLMに渡す（文脈理解向上、トークン増大）
                                          # false: >>N を原文のまま渡す（トークン節約、LLMはアンカー先を参照不可）
 
-  # 例 B: Ollama (ローカルLLM)
-  # provider: "ollama"
-  # api_key: "ollama"
-  # base_url: "http://localhost:11434"
-  # model: "gemma4"                      # ローカルで展開しているモデル名
-  # compact_prompt: true
-
-  # 例 C: OpenAI (ChatGPT)
-  # provider: "openai_compat"
-  # api_key: "sk-proj-YourOpenAIApiKey"  # あなたのOpenAI APIキー (※環境変数 ANMAN_LLM_API_KEY でも指定可能)
-  # base_url: "https://api.openai.com/v1"
-  # model: "gpt-4o-mini"
-  # compact_prompt: true
-  # max_tokens: 500                      # 出力トークン数の上限を指定する場合
-
-  # 例 D: DeepSeek
-  # provider: "openai_compat"
-  # api_key: "sk-YourDeepSeekApiKey"
-  # base_url: "https://api.deepseek.com/v1"
-  # model: "deepseek-chat"
-  # compact_prompt: true
-
-  # 例 E: OpenRouter (ClaudeやLlama等へのプロキシ)
-  # provider: "openai_compat"
-  # api_key: "sk-or-v1-YourOpenRouterKey"
-  # base_url: "https://openrouter.ai/api/v1"
-  # model: "anthropic/claude-3.5-sonnet"
-  # compact_prompt: true
+# ---------------------------------------------------------------------
+# 各プロバイダのプリセット設定 (WebUI切り替え用)
+# ---------------------------------------------------------------------
+llm_providers:
+  gemini:
+    provider: "gemini"
+    api_key: "AIzaSyYourGeminiApiKeyHere"
+    model: "gemini-2.5-flash"
+    compact_prompt: true
+    talk_interval_reactive: 10
+    talk_interval_active: 60
+    auto_adjust_talk_interval: true
+    budget_mode: "normal"
+    anchor_resolution: true
+  ollama:
+    provider: "ollama"
+    api_key: "ollama"
+    base_url: "http://localhost:11434"
+    model: "gemma4"
+    compact_prompt: true
+    talk_interval_reactive: 10
+    talk_interval_active: 60
+    auto_adjust_talk_interval: true
+    budget_mode: "normal"
+    anchor_resolution: true
+  openai_compat:
+    provider: "openai_compat"
+    api_key: "sk-proj-YourOpenAIApiKey"
+    base_url: "https://api.openai.com/v1"
+    model: "gpt-4o-mini"
+    compact_prompt: true
+    talk_interval_reactive: 10
+    talk_interval_active: 60
+    auto_adjust_talk_interval: true
+    budget_mode: "normal"
+    anchor_resolution: true
 
 # ---------------------------------------------------------------------
 # 4. フォールバックLLM設定 (オプション)

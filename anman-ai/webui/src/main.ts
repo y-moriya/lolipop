@@ -48,6 +48,8 @@ let statusIntervalId: number | null = null;
 let gameIntervalId: number | null = null;
 let logsIntervalId: number | null = null;
 let lastChatLogsCount = 0;
+let llmPresets: Record<string, any> = {};
+let previousProvider = 'gemini';
 
 // DOM Elements
 const elements = {
@@ -315,6 +317,10 @@ async function loadConfig() {
 
     setFormData(elements.settingsForm, config);
     
+    // Presets configuration cache
+    llmPresets = config.llm_presets || {};
+    previousProvider = config.llm?.provider || 'gemini';
+
     // Update fallback toggle and field states
     const hasFallback = !!config.llm_fallback;
     elements.fallbackEnable.checked = hasFallback;
@@ -332,6 +338,18 @@ async function saveConfig() {
   try {
     const data = getFormData(elements.settingsForm);
     
+    // Update active provider's preset in llmPresets before saving
+    const currentProvider = data.llm?.provider || 'gemini';
+    const currentLlmData = getLlmFormData();
+    llmPresets[currentProvider] = {
+      ...llmPresets[currentProvider],
+      ...currentLlmData,
+      provider: currentProvider
+    };
+    
+    // Attach presets to payload
+    data.llm_presets = llmPresets;
+
     // If fallback is not enabled, strip it from POST
     if (!elements.fallbackEnable.checked) {
       delete data.llm_fallback;
@@ -468,6 +486,47 @@ async function pollLogs() {
   }
 }
 
+// Helpers for LLM specific fields to cache/restore them on provider change
+function getLlmFormData(): any {
+  const data: any = {};
+  elements.settingsForm.querySelectorAll('input, select').forEach((el: any) => {
+    const name = el.name;
+    if (name && name.startsWith('llm.')) {
+      const key = name.replace('llm.', '');
+      let value: any;
+      if (el.type === 'checkbox') {
+        value = el.checked;
+      } else {
+        const val = el.value;
+        if (val === 'true') value = true;
+        else if (val === 'false') value = false;
+        else if (el.type === 'number') value = Number(val);
+        else if (!isNaN(Number(val)) && val.toString().trim() !== '') value = Number(val);
+        else value = val;
+      }
+      data[key] = value;
+    }
+  });
+  return data;
+}
+
+function setLlmFormData(data: any) {
+  elements.settingsForm.querySelectorAll('input, select').forEach((el: any) => {
+    const name = el.name;
+    if (name && name.startsWith('llm.')) {
+      const key = name.replace('llm.', '');
+      const value = data[key];
+      if (value !== undefined) {
+        if (el.type === 'checkbox') {
+          el.checked = !!value;
+        } else {
+          el.value = value;
+        }
+      }
+    }
+  });
+}
+
 // Helper: escape HTML tags
 function escapeHTML(str: string): string {
   if (!str) return '';
@@ -492,6 +551,45 @@ function setupListeners() {
       elements.settingsForm.reportValidity();
     }
   });
+
+  // Provider Switch Presets Handler
+  const providerSelect = document.getElementById('llm-provider') as HTMLSelectElement;
+  if (providerSelect) {
+    providerSelect.addEventListener('change', () => {
+      const nextProvider = providerSelect.value;
+      
+      // 1. Save current form values to previous provider's preset
+      const currentLlmData = getLlmFormData();
+      llmPresets[previousProvider] = {
+        ...llmPresets[previousProvider],
+        ...currentLlmData,
+        provider: previousProvider
+      };
+      
+      // 2. Load next provider's preset values
+      const nextPreset = llmPresets[nextProvider] || {};
+      
+      // Enforce default model if empty (so user has a working default)
+      if (!nextPreset.model) {
+        if (nextProvider === 'gemini') nextPreset.model = 'gemini-2.5-flash';
+        else if (nextProvider === 'ollama') nextPreset.model = 'gemma4';
+        else if (nextProvider === 'openai_compat') nextPreset.model = 'gpt-4o-mini';
+      }
+      if (nextProvider === 'ollama' && !nextPreset.base_url) {
+        nextPreset.base_url = 'http://localhost:11434';
+      }
+      if (nextProvider === 'openai_compat' && !nextPreset.base_url) {
+        nextPreset.base_url = 'https://api.openai.com/v1';
+      }
+
+      setLlmFormData({
+        ...nextPreset,
+        provider: nextProvider // must keep provider dropdown value
+      });
+      
+      previousProvider = nextProvider;
+    });
+  }
 
   // Fallback Enable Toggle
   elements.fallbackEnable.addEventListener('change', () => {

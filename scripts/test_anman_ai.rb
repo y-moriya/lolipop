@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 # -*- coding: utf-8 -*-
 
+ENV['ANMAN_TEST_MODE'] ||= 'true'
+
 require 'net/http'
 require 'uri'
 require 'pstore'
@@ -174,10 +176,22 @@ puts "村を開始しました。ID: #{vid}"
 
 # 役職情報を確認
 db_path = "public_html/aiwolf/db/vil0/#{vid}.db"
+db = PStore.new(db_path)
+db.transaction do
+  vil = db['root']
+  seer_player_name = vil.players.find { |name, p| p.sid == 2 }&.first
+  if seer_player_name && seer_player_name != ai_userid
+    ai_p = vil.players[ai_userid]
+    seer_p = vil.players[seer_player_name]
+    tmp_sid = ai_p.sid
+    ai_p.sid = 2
+    seer_p.sid = tmp_sid
+  end
+end
+
 ai_role = nil
 ai_num_id = nil
 ai_char_name = nil
-db = PStore.new(db_path)
 db.transaction(true) do
   vil = db['root']
   vil.players.each do |name, p|

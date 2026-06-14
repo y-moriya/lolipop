@@ -7,7 +7,8 @@ module AnmanAI
   module LLM
     class OpenAICompatAdapter
       def initialize(config)
-        @base_url = config.dig('llm', 'base_url') || "https://api.openai.com"
+        url = config.dig('llm', 'base_url')
+        @base_url = (url.nil? || url.to_s.strip.empty?) ? "https://api.openai.com" : url
         @model = config.dig('llm', 'model') || "gpt-4o-mini"
         @api_key = ENV['ANMAN_LLM_API_KEY'] || config.dig('llm', 'api_key')
         @max_tokens = config.dig('llm', 'max_tokens')

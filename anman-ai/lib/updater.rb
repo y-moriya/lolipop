@@ -149,21 +149,17 @@ module AnmanAI
         echo ============================================
         echo Waiting for old processes to release files...
 
-        set retry_count=0
-        :copy_loop
-        xcopy /y /e /s /i "#{extracted_root.gsub('/', '\\')}" "#{exe_dir.gsub('/', '\\')}" > nul 2>&1
-        if errorlevel 1 (
-          set /a retry_count+=1
-          if %retry_count% gtr 30 (
-            echo.
-            echo [Error] Update failed: Files are locked by another process.
-            echo Please close any running anman-ai instances and try again.
-            pause
-            exit /b 1
-          )
-          echo   Files are locked. Retrying... (%retry_count%/30)
-          timeout /t 1 /nobreak > nul
-          goto copy_loop
+        :: Wait 2 seconds for parent process to release file handles
+        timeout /t 2 /nobreak > nul
+
+        echo Copying update files...
+        robocopy "#{extracted_root.gsub('/', '\\')}" "#{exe_dir.gsub('/', '\\')}" /E /XD "#{File.join(exe_dir, 'update_tmp').gsub('/', '\\')}" /R:30 /W:1 /NFL /NDL /NP /NJH /NJS
+        if errorlevel 8 (
+          echo.
+          echo [Error] Update failed: Files could not be copied.
+          echo Please close any running anman-ai instances and try again.
+          pause
+          exit /b 1
         )
 
         echo Cleaning up...

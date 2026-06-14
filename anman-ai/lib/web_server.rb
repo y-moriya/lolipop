@@ -105,7 +105,7 @@ module AnmanAI
       config_path = @client.config_path
       config = YAML.load_file(config_path) rescue {}
       
-      # llm_configがあれば外部ファイルからもLLM設定を読み込んでマージ
+      # llm_configがあれば外部ファイルからもLLM設定を読み込んでマージ (後方互換性)
       if config['llm_config']
         config_dir = File.dirname(config_path)
         llm_config_path = File.expand_path(config['llm_config'], config_dir)
@@ -126,6 +126,66 @@ module AnmanAI
           config['user']['password'] = ''
         end
       end
+
+      # 各プロバイダのプリセットを読み込んで返却
+      presets = {}
+      if config['llm_providers'].is_a?(Hash)
+        presets = config['llm_providers']
+      end
+
+      # もし一部のプリセットがllm_providersに無ければ、後方互換性のために個別ファイルから読み込む
+      config_dir = File.dirname(config_path)
+      {
+        'gemini' => 'config.gemini.yml',
+        'ollama' => 'config.ollama.yml',
+        'openai_compat' => 'config.openai.yml'
+      }.each do |provider, filename|
+        next if presets[provider] # 既に llm_providers にあればスキップ
+        path = File.join(config_dir, filename)
+        if File.exist?(path)
+          yml = YAML.load_file(path) rescue {}
+          presets[provider] = yml['llm'] if yml['llm']
+        end
+      end
+
+      # デフォルト設定値のフォールバック (新規/クリア時のため)
+      presets['gemini'] ||= {
+        'provider' => 'gemini',
+        'api_key' => '',
+        'model' => 'gemini-2.5-flash',
+        'compact_prompt' => true,
+        'talk_interval_reactive' => 10,
+        'talk_interval_active' => 60,
+        'auto_adjust_talk_interval' => true,
+        'budget_mode' => 'normal',
+        'anchor_resolution' => true
+      }
+      presets['ollama'] ||= {
+        'provider' => 'ollama',
+        'api_key' => 'ollama',
+        'base_url' => 'http://localhost:11434',
+        'model' => 'gemma4',
+        'compact_prompt' => true,
+        'talk_interval_reactive' => 10,
+        'talk_interval_active' => 60,
+        'auto_adjust_talk_interval' => true,
+        'budget_mode' => 'normal',
+        'anchor_resolution' => true
+      }
+      presets['openai_compat'] ||= {
+        'provider' => 'openai_compat',
+        'api_key' => '',
+        'base_url' => 'https://api.openai.com/v1',
+        'model' => 'gpt-4o-mini',
+        'compact_prompt' => true,
+        'talk_interval_reactive' => 10,
+        'talk_interval_active' => 60,
+        'auto_adjust_talk_interval' => true,
+        'budget_mode' => 'normal',
+        'anchor_resolution' => true
+      }
+
+      config['llm_presets'] = presets
       
       res.body = config.to_json
     end
@@ -134,7 +194,6 @@ module AnmanAI
       begin
         data = JSON.parse(req.body)
         config_path = @client.config_path
-        config_dir = File.dirname(config_path)
         
         # 既存のconfig.yamlをロードして構造を維持
         current_config = YAML.load_file(config_path) rescue {}
@@ -158,23 +217,22 @@ module AnmanAI
         llm_data = data['llm'] || {}
         llm_fallback_data = data['llm_fallback']
         
-        if current_config['llm_config']
-          # 外部ファイル構成の場合
-          llm_config_path = File.expand_path(current_config['llm_config'], config_dir)
-          external_llm_config = {
-            'llm' => llm_data
-          }
-          external_llm_config['llm_fallback'] = llm_fallback_data if llm_fallback_data
-          
-          File.write(llm_config_path, YAML.dump(external_llm_config))
+        # 単一config.yamlへの移行のため、外部ファイル設定キー(llm_config)は削除する
+        current_config.delete('llm_config')
+        
+        # メインのllm設定を更新
+        current_config['llm'] = llm_data
+        
+        # 各プロバイダのプリセット(llm_providers)を保存
+        if data['llm_presets'].is_a?(Hash)
+          current_config['llm_providers'] = data['llm_presets']
+        end
+        
+        # フォールバック設定の更新
+        if llm_fallback_data
+          current_config['llm_fallback'] = llm_fallback_data
         else
-          # 直接 config.yaml に書く場合
-          current_config['llm'] = llm_data
-          if llm_fallback_data
-            current_config['llm_fallback'] = llm_fallback_data
-          else
-            current_config.delete('llm_fallback')
-          end
+          current_config.delete('llm_fallback')
         end
         
         # config.yamlの保存

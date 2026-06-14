@@ -572,6 +572,7 @@ module AnmanAI
           end
           
           if @game_state.is_night
+            puts "[DEBUG client.rb] is_night=true, role=#{@game_state.my_role}, acted=#{@acted_tonight[day]}, dead=#{is_dead}"
             # 夜フェーズ (生存時のみアクション可能)
             unless is_dead
               # 1. 人狼のささやき（夜の初めに1回）

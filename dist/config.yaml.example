@@ -6,42 +6,59 @@ user:
   userid: "your_username"      # ← ウルフテンのユーザーID
   password: "your_password"    # ← パスワード
 
-# --- LLM 設定の切り替え用外部ファイル指定 (推奨) ---
-# config.gemini.yml などを読み込んで llm セクションを上書きします。
-llm_config: "config.gemini.yml"  # 外部ファイルを使わない場合はコメントアウトしてください。
-
 llm:
-  # 使用するプロバイダを選択:
-  #   gemini        : Google AI Studio
-  #   ollama        : ローカル Ollama
-  #   openai_compat : OpenAI互換API
   provider: "gemini"
+  api_key: ""
+  model: "gemini-2.5-flash"
+  compact_prompt: true
+  talk_interval_reactive: 10
+  talk_interval_active: 60
+  auto_adjust_talk_interval: true
+  budget_mode: "normal"
+  anchor_resolution: true
 
-  # --- Ollama 設定 ---
-  base_url: "http://localhost:11434"
-  model: "gemma3"
-
-  # --- OpenAI互換 設定（OpenAI公式もこちらを使用）---
-  # provider: "openai_compat"
-  # base_url: "https://api.openai.com"    # OpenAI公式
-  # base_url: "http://localhost:1234"     # LM Studio
-  # base_url: "https://api.groq.com/openai" # Groq
-  # api_key: "sk-..."                    # OpenAI/Groqのキー、LM Studioは任意文字列
-  # model: "gpt-4o-mini"
-
-  compact_prompt: true   # true: 短縮モード / false: 全ログ
-  temperature: 0.7
-  max_tokens: 2048
+# --- 各プロバイダのプリセット設定 (WebUI切り替え用) ---
+llm_providers:
+  gemini:
+    provider: "gemini"
+    api_key: ""
+    model: "gemini-2.5-flash"
+    compact_prompt: true
+    talk_interval_reactive: 10
+    talk_interval_active: 60
+    auto_adjust_talk_interval: true
+    budget_mode: "normal"
+    anchor_resolution: true
+  ollama:
+    provider: "ollama"
+    api_key: "ollama"
+    base_url: "http://localhost:11434"
+    model: "gemma4"
+    compact_prompt: true
+    talk_interval_reactive: 10
+    talk_interval_active: 60
+    auto_adjust_talk_interval: true
+    budget_mode: "normal"
+    anchor_resolution: true
+  openai_compat:
+    provider: "openai_compat"
+    api_key: ""
+    base_url: "https://api.openai.com/v1"
+    model: "gpt-4o-mini"
+    compact_prompt: true
+    talk_interval_reactive: 10
+    talk_interval_active: 60
+    auto_adjust_talk_interval: true
+    budget_mode: "normal"
+    anchor_resolution: true
 
 # --- フォールバック設定 (任意) ---
-# メインのLLM（上記 llm セクション）がタイムアウトやエラーで接続失敗した場合に、
-# 代替として接続を試みるLLMの設定です。
 # llm_fallback:
-#   provider: "openai_compat"
-#   base_url: "https://api.openai.com"
-#   api_key: "sk-..."
-#   model: "gpt-4o-mini"
-#   temperature: 0.7
+#   provider: "ollama"
+#   api_key: "ollama"
+#   base_url: "http://localhost:11434"
+#   model: "gemma4"
+#   compact_prompt: true
 
 log:
   max_size_mb: 10    # ローテーション上限（MB）

@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 # -*- coding: utf-8 -*-
 
+ENV['ANMAN_TEST_MODE'] ||= 'true'
+
 require 'net/http'
 require 'uri'
 require 'pstore'

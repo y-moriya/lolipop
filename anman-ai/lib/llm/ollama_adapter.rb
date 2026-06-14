@@ -7,7 +7,8 @@ module AnmanAI
   module LLM
     class OllamaAdapter
       def initialize(config)
-        @base_url = config.dig('llm', 'base_url') || "http://localhost:11434"
+        url = config.dig('llm', 'base_url')
+        @base_url = (url.nil? || url.to_s.strip.empty?) ? "http://localhost:11434" : url
         @model = config.dig('llm', 'model')
         @api_key = ENV['ANMAN_LLM_API_KEY'] || config.dig('llm', 'api_key')
       end

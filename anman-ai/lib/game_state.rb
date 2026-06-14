@@ -99,13 +99,13 @@ module AnmanAI
         end
       end
 
-      # 進行ブロックから昼夜変更を判別
-      if e['type'] == 'state_change' && e['type_code'] == 'time'
-        content = e['content']
+      # 進行ブロックまたはシステムアナウンスから昼夜変更を判別
+      if (e['type'] == 'state_change' && e['type_code'] == 'time') || (e['type'] == 'system' && e['type_code'] == 'announce')
+        content = e['content'].to_s
         if content.include?("夜になりました")
           @is_night = true
           add_key_event("#{@current_day}日目: 夜フェーズ開始")
-        elsif content.include?("朝になりました") || content.include?("昼になりました") || content.include?("話し合い")
+        elsif content.include?("朝になりました") || content.include?("昼になりました") || content.include?("話し合い") || content.include?("不安な夜が明けました")
           @is_night = false
           add_key_event("#{@current_day}日目: 昼フェーズ開始（話し合い）")
         end
