@@ -74,7 +74,8 @@ module AnmanAI
 
       # 4. Trigger file replacement script and exit
       puts "Preparing update application script..."
-      if AnmanAI::BUILD_TIME == "local development"
+      is_local_dev = AnmanAI::BUILD_TIME == "local development" && !defined?(Ocran) && !ENV['OCRAN_EXECUTABLE']
+      if is_local_dev
         puts "[System] Local development environment detected: skipping physical file replacement to protect source code."
         # Clean up downloaded zip and extracted folder
         FileUtils.rm_rf(tmp_dir)

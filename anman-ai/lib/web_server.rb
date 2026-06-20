@@ -581,7 +581,8 @@ module AnmanAI
           release_notes: release_notes
         }
         
-        if AnmanAI::BUILD_TIME == "local development"
+        is_local_dev = AnmanAI::BUILD_TIME == "local development" && !defined?(Ocran) && !ENV['OCRAN_EXECUTABLE']
+        if is_local_dev
           res_data[:message] = "開発環境（ローカル）のため、実際の更新ファイル適用はシミュレーション（スキップ）されます。"
         end
 
@@ -599,15 +600,16 @@ module AnmanAI
         zip_url = data['zip_url']
 
         require 'updater'
+        is_local_dev = AnmanAI::BUILD_TIME == "local development" && !defined?(Ocran) && !ENV['OCRAN_EXECUTABLE']
         # Run update asynchronously to allow HTTP response to complete first
         Thread.new do
           sleep 1.0
           success = AnmanAI::Updater.run(@exe_dir, zip_url)
-          if success && AnmanAI::BUILD_TIME != "local development"
+          if success && !is_local_dev
             exit 0
           end
         end
-        msg = AnmanAI::BUILD_TIME == "local development" ? "アップデート（シミュレーション）を完了しました。" : "アップデートを開始しました。数秒後に自動で再起動されます。"
+        msg = is_local_dev ? "アップデート（シミュレーション）を完了しました。" : "アップデートを開始しました。数秒後に自動で再起動されます。"
         res.body = { success: true, message: msg }.to_json
       rescue => e
         res.status = 500
