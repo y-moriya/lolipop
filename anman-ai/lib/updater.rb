@@ -213,31 +213,43 @@ module AnmanAI
         timeout /t 2 /nobreak > nul
 
         echo Copying update files...
-        robocopy "#{extracted_root.gsub('/', '\\')}" "#{exe_dir.gsub('/', '\\')}" /E /XD "#{File.join(exe_dir, 'update_tmp').gsub('/', '\\')}" /R:30 /W:1 /NFL /NDL /NP /NJH /NJS
-        if errorlevel 8 (
-          echo.
-          echo [Error] Update failed: Files could not be copied.
-          echo Please close any running anman-ai instances and try again.
-          pause
-          exit /b 1
-        )
+        robocopy "#{extracted_root.gsub('/', '\\')}" "#{exe_dir.gsub('/', '\\')}" /E /R:30 /W:1 /NFL /NDL /NP /NJH /NJS
+        if errorlevel 8 goto copy_failed
 
         echo Cleaning up...
         rmdir /s /q "#{File.join(exe_dir, 'update_tmp').gsub('/', '\\')}"
         if exist "#{File.join(exe_dir, zip_filename).gsub('/', '\\')}" (
           del "#{File.join(exe_dir, zip_filename).gsub('/', '\\')}"
         )
+        
         echo Update complete! Restarting...
-        if exist "anman-ai.exe" (
-          start "" "anman-ai.exe"
-        ) else if exist "start.bat" (
-          start "" "start.bat"
-        )
+        if exist "anman-ai.exe" goto start_exe
+        if exist "start.bat" goto start_bat
+        goto end_update
+
+        :start_exe
+        start "" "anman-ai.exe"
+        goto end_update
+
+        :start_bat
+        start "" "start.bat"
+        goto end_update
+
+        :copy_failed
+        echo.
+        echo [Error] Update failed: Files could not be copied.
+        echo Please close any running anman-ai instances and try again.
+        pause
+        exit /b 1
+
+        :end_update
         del "%~f0"
       BATCH
 
+      # Ensure Windows style line endings (CRLF) and write as binary
+      bat_content_crlf = bat_content.gsub("\n", "\r\n")
       bat_path_win = bat_path.gsub('/', '\\')
-      File.write(bat_path, bat_content)
+      File.binwrite(bat_path, bat_content_crlf)
       spawn("cmd.exe /c start \"\" \"#{bat_path_win}\"")
     end
 
