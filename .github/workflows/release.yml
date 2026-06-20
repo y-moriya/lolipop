@@ -86,10 +86,10 @@ jobs:
             ## ${{ steps.vars.outputs.body_title }}
             ${{ steps.vars.outputs.is_prerelease == 'true' && 'このリリースは `main` ブランチへのプッシュ毎に自動で上書き更新されるテスト用ビルド（Snapshot）です。' || '正式リリース版です。' }}
 
-            ### インストール方法
-            1. ZIP をダウンロードして任意のフォルダに解凍
-            2. `config\config.yaml` をテキストエディタで開いて設定
-            3. `start.bat` をダブルクリックして起動
+            ### 使用方法
+            1. ZIP をダウンロードして任意のフォルダに解凍します。
+            2. `anman-ai.exe` をダブルクリックして起動します。
+            3. 自動的にブラウザで設定画面（ http://localhost:8064 ）が開くので、人狼サーバー接続先やAPIキーなどを入力して「接続テスト」を行って保存してください。
 
             ### ⚠️ SmartScreen 警告について
             初回起動時に Windows Defender SmartScreen が警告を出す場合があります。
