@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/assets/index-ab_r3Rrn.js"></script>
+  <script type="module" crossorigin src="/assets/index-CKgGD_nj.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/index-Bn3KZ-W2.css">
 </head>
 <body>
@@ -138,6 +138,10 @@
                     <input type="password" id="user-password" name="user.password" placeholder="••••••••" required>
                   </div>
                 </div>
+                <div class="form-group" style="margin-top: 15px; display: flex; align-items: center; gap: 10px;">
+                  <button type="button" class="btn btn-secondary" id="btn-test-aiwolf" style="padding: 8px 16px; font-size: 0.9em; background-color: #4b5563; border-color: #4b5563; color: #fff;">🔌 AIWolf 接続テスト</button>
+                  <span id="aiwolf-test-status" class="test-status-msg" style="font-size: 0.9em;"></span>
+                </div>
               </div>
 
               <!-- メイン LLM 設定 -->
@@ -246,9 +250,25 @@
               <!-- システムアップデート -->
               <div class="card">
                 <h3>🔄 システムアップデート</h3>
-                <p style="font-size: 0.9em; color: #9ca3af; margin-bottom: 15px;">GitHub から最新の snapshot ビルドをダウンロードしてアップデートします。現在の設定ファイルは自動的に維持されます。</p>
-                <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
-                  <button type="button" class="btn btn-danger" id="btn-run-update" style="padding: 8px 16px; font-size: 0.9em; background-color: #dc2626; border-color: #dc2626; color: #fff;">🚀 自己アップデートを実行</button>
+                <p style="font-size: 0.9em; color: #9ca3af; margin-bottom: 15px;">GitHub から最新バージョンをダウンロードしてアップデートします。現在の設定ファイルは自動的に維持されます。</p>
+                
+                <div class="checkbox-group" style="margin-bottom: 15px;">
+                  <label class="checkbox-container">
+                    <input type="checkbox" id="update-usesnapshot" name="update.use_snapshot">
+                    <span class="checkmark"></span>
+                    SNAPSHOTビルド（開発中最新版）を利用する
+                  </label>
+                </div>
+
+                <div class="update-info-block" style="margin-bottom: 15px; font-size: 0.9em; color: #e5e7eb; display: flex; flex-direction: column; gap: 4px;">
+                  <div>現在のバージョン: <span id="update-current-ver" style="font-weight: bold;">-</span></div>
+                  <div>最新バージョン: <span id="update-latest-ver" style="font-weight: bold;">-</span></div>
+                  <div id="update-check-result" style="margin-top: 5px; font-weight: bold; color: #fbbf24;"></div>
+                </div>
+
+                <div class="form-group" style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px;">
+                  <button type="button" class="btn btn-secondary" id="btn-check-update" style="padding: 8px 16px; font-size: 0.9em; background-color: #4b5563; border-color: #4b5563; color: #fff;">🔍 アップデートを確認</button>
+                  <button type="button" class="btn btn-danger" id="btn-run-update" style="padding: 8px 16px; font-size: 0.9em; background-color: #dc2626; border-color: #dc2626; color: #fff;" disabled>🚀 自己アップデートを実行</button>
                   <span id="update-status-msg" class="update-status-msg" style="font-size: 0.9em;"></span>
                 </div>
               </div>

@@ -63,6 +63,12 @@ module AnmanAI
           if req.request_method == 'POST'
             handle_test_llm(req, res)
           end
+        when '/api/test_aiwolf'
+          if req.request_method == 'POST'
+            handle_test_aiwolf(req, res)
+          end
+        when '/api/check_update'
+          handle_check_update(req, res)
         when '/api/update'
           if req.request_method == 'POST'
             handle_update(req, res)
@@ -104,6 +110,9 @@ module AnmanAI
     def handle_get_config(req, res)
       config_path = @client.config_path
       config = YAML.load_file(config_path) rescue {}
+      
+      # Default update configuration if missing
+      config['update'] ||= { 'use_snapshot' => false }
       
       # llm_configがあれば外部ファイルからもLLM設定を読み込んでマージ (後方互換性)
       if config['llm_config']
@@ -199,6 +208,9 @@ module AnmanAI
         current_config = YAML.load_file(config_path) rescue {}
         
         # 送信されたデータで更新
+        current_config['update'] ||= {}
+        current_config['update']['use_snapshot'] = data.dig('update', 'use_snapshot') == true
+
         current_config['server'] ||= {}
         current_config['server']['url'] = data.dig('server', 'url') if data.dig('server', 'url')
         current_config['server']['vid'] = data.dig('server', 'vid').to_i if data.dig('server', 'vid')
@@ -252,8 +264,15 @@ module AnmanAI
       if @client.running
         res.body = { success: true, message: "Already running" }.to_json
       else
-        @client.start_async!
-        res.body = { success: true }.to_json
+        # 起動前接続テスト
+        test_res = @client.test_connection
+        if test_res[:success]
+          @client.start_async!
+          res.body = { success: true }.to_json
+        else
+          res.status = 400
+          res.body = { success: false, error: "起動時の接続テストに失敗しました: #{test_res[:error]}" }.to_json
+        end
       end
     end
 
@@ -456,13 +475,124 @@ module AnmanAI
       end
     end
 
+    def handle_test_aiwolf(req, res)
+      begin
+        data = JSON.parse(req.body)
+        url = data['url']
+        userid = data['userid']
+        password = data['password']
+
+        result = AnmanAI::Client.test_connection(url, userid, password)
+        res.body = result.to_json
+      rescue => e
+        res.body = { success: false, error: e.message }.to_json
+      end
+    end
+
+    def handle_check_update(req, res)
+      begin
+        require 'time'
+        config_path = @client.config_path
+        config = YAML.load_file(config_path) rescue {}
+        use_snapshot = config.dig('update', 'use_snapshot') == true
+
+        if AnmanAI::BUILD_TIME == "local development"
+          res.body = {
+            success: true,
+            update_available: false,
+            message: "開発環境（ローカル）のため、アップデートは利用できません。",
+            current_version: AnmanAI::VERSION,
+            latest_version: "N/A"
+          }.to_json
+          return
+        end
+
+        uri = URI.parse("https://api.github.com/repos/y-moriya/lolipop/releases")
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = true
+        http.open_timeout = 10
+        http.read_timeout = 10
+
+        api_req = Net::HTTP::Get.new(uri.path)
+        api_req['User-Agent'] = 'anman-ai-updater/1.0'
+        
+        http_res = http.request(api_req)
+        unless http_res.code == '200'
+          raise "GitHub API error: #{http_res.code} - #{http_res.body[0..200]}"
+        end
+
+        releases = JSON.parse(http_res.body)
+        
+        update_available = false
+        latest_version = ""
+        download_url = nil
+        release_notes = ""
+
+        if use_snapshot
+          snapshot_release = releases.find { |r| r['tag_name'] == 'snapshot' }
+          if snapshot_release
+            asset = snapshot_release['assets']&.find { |a| a['name'] =~ /anman-ai.*\.zip/ }
+            asset_time_str = asset ? asset['updated_at'] : snapshot_release['published_at']
+            
+            if asset_time_str
+              remote_time = Time.parse(asset_time_str) rescue nil
+              local_time = Time.parse(AnmanAI::BUILD_TIME) rescue nil
+              
+              if remote_time && local_time && remote_time > local_time
+                update_available = true
+                latest_version = "SNAPSHOT (#{remote_time.strftime('%Y-%m-%d %H:%M:%S')})"
+                download_url = asset ? asset['browser_download_url'] : nil
+                release_notes = snapshot_release['body'] || ""
+              end
+            end
+          end
+        else
+          stable_releases = releases.reject { |r| r['tag_name'] == 'snapshot' || r['draft'] == true || r['prerelease'] == true }
+          latest_release = stable_releases.first
+          
+          if latest_release
+            latest_version = latest_release['tag_name']
+            
+            clean_local = AnmanAI::VERSION.to_s.sub(/\A[vV]/, '').split('-').first
+            clean_remote = latest_version.to_s.sub(/\A[vV]/, '').split('-').first
+            
+            begin
+              if Gem::Version.new(clean_remote) > Gem::Version.new(clean_local)
+                update_available = true
+                asset = latest_release['assets']&.find { |a| a['name'] =~ /anman-ai.*\.zip/ }
+                download_url = asset ? asset['browser_download_url'] : latest_release['zipball_url']
+                release_notes = latest_release['body'] || ""
+              end
+            rescue
+            end
+          end
+        end
+
+        res.body = {
+          success: true,
+          update_available: update_available,
+          current_version: AnmanAI::VERSION,
+          latest_version: latest_version.empty? ? "未検出" : latest_version,
+          download_url: download_url,
+          release_notes: release_notes
+        }.to_json
+
+      rescue => e
+        res.status = 500
+        res.body = { success: false, error: e.message }.to_json
+      end
+    end
+
     def handle_update(req, res)
       begin
+        data = JSON.parse(req.body) rescue {}
+        zip_url = data['zip_url']
+
         require 'updater'
         # Run update asynchronously to allow HTTP response to complete first
         Thread.new do
           sleep 1.0
-          AnmanAI::Updater.run(@exe_dir)
+          AnmanAI::Updater.run(@exe_dir, zip_url)
           exit 0
         end
         res.body = { success: true, message: "アップデートを開始しました。数秒後に自動で再起動されます。" }.to_json

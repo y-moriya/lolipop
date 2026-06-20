@@ -104,6 +104,95 @@ module AnmanAI
       puts "[System] Anchor resolution: #{@anchor_resolution ? 'ON（>>Nを発言内容に展開）' : 'OFF（原文のまま）'}"
     end
     
+    # 接続テスト（ログイン＋API疎通）
+    # 引数を指定した場合はその設定でテストし、指定しない場合はインスタンスの設定でテストします。
+    def test_connection(target_url = nil, target_userid = nil, target_password = nil)
+      test_url = target_url || @url
+      test_userid = target_userid || @userid
+      test_password = target_password || @password
+
+      self.class.test_connection(test_url, test_userid, test_password)
+    end
+
+    def self.test_connection(url, userid, password)
+      target_url = url.to_s.sub(/\/aiwolf\/?\z/, '').chomp('/')
+      if target_url.empty?
+        return { success: false, error: "URLが指定されていません。" }
+      end
+
+      # 1. ログイン試行 (Cookieの取得)
+      uri = URI.parse("#{target_url}/aiwolf/index.cgi")
+      req = Net::HTTP::Post.new(uri.path)
+      req.set_form_data('cmd' => 'login', 'userid' => userid, 'pass' => password)
+      
+      cookie = nil
+      begin
+        res = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http|
+          http.open_timeout = 10
+          http.read_timeout = 10
+          http.request(req)
+        end
+        if res.code == '200' || res.code == '302'
+          set_cookie_header = res['Set-Cookie']
+          cookie = set_cookie_header.split(';').first if set_cookie_header
+        else
+          return { success: false, error: "ログインに失敗しました（HTTPステータス: #{res.code}）" }
+        end
+      rescue => e
+        return { success: false, error: "サーバーとの通信に失敗しました: #{e.message}" }
+      end
+
+      # 2. Cookieを用いた index.cgi (トップページ) へのアクセスによるパスワード合致検証
+      # CGIの仕様上、ログイン失敗(パスワード不一致)でもCookieが返ってくるため、
+      # 実際にそのCookieを使ってログイン済みのページが返ってくるかを検証する。
+      begin
+        get_req = Net::HTTP::Get.new(uri.path)
+        get_req['Cookie'] = cookie if cookie
+        
+        get_res = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http|
+          http.open_timeout = 10
+          http.read_timeout = 10
+          http.request(get_req)
+        end
+        
+        if get_res.code == '200'
+          body = get_res.body.to_s
+          # ログイン成功時にはHTML内に「logout」または「ログアウト」が含まれる
+          # エンコーディング(EUC-JP)を考慮し、半角英数字の "value=\"logout\"" や "logout" の存在を優先チェックする
+          unless body.include?("value=\"logout\"") || body.include?("logout") || body.force_encoding('UTF-8').include?("ログアウト")
+            return { success: false, error: "ログインに失敗しました。ユーザーIDまたはパスワードが正しくありません。" }
+          end
+        else
+          return { success: false, error: "ログイン検証に失敗しました（HTTPステータス: #{get_res.code}）" }
+        end
+      rescue => e
+        return { success: false, error: "ログイン検証の通信に失敗しました: #{e.message}" }
+      end
+      
+      # 3. API疎通試行 (vilsを取得)
+      api_uri = URI.parse("#{target_url}/aiwolf/api.cgi")
+      api_uri.query = URI.encode_www_form('cmd' => 'vils')
+      api_req = Net::HTTP::Get.new(api_uri)
+      api_req['Cookie'] = cookie if cookie
+      
+      begin
+        api_res = Net::HTTP.start(api_uri.host, api_uri.port, use_ssl: api_uri.scheme == 'https') do |http|
+          http.open_timeout = 10
+          http.read_timeout = 10
+          http.request(api_req)
+        end
+        if api_res.code == '200'
+          # JSONパース確認
+          JSON.parse(api_res.body)
+          return { success: true, message: "AIWolfサーバーへの接続およびログインテストに成功しました！" }
+        else
+          return { success: false, error: "APIへの疎通に失敗しました（HTTPステータス: #{api_res.code}）" }
+        end
+      rescue => e
+        return { success: false, error: "APIへのアクセスに失敗しました: #{e.message}" }
+      end
+    end
+
     # 接続・ログイン (Cookieの取得)
     def login!
       uri = URI.parse("#{@url}/aiwolf/index.cgi")

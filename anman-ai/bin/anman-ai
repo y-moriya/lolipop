@@ -101,6 +101,17 @@ begin
   client = AnmanAI::Client.new(config_path, exe_dir, internal_root_dir)
   
   if no_web
+    puts "[System] Performing connection test to AIWolf server..."
+    test_res = client.test_connection
+    unless test_res[:success]
+      puts "===================================================="
+      puts "[Fatal Error] Connection test failed: #{test_res[:error]}"
+      puts "Please check your server URL, userid, and password in config."
+      puts "===================================================="
+      exit 1
+    end
+    puts "[System] Connection test passed."
+
     client.login!
     
     vid = client.instance_variable_get(:@vid)

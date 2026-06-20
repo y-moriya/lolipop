@@ -8,15 +8,33 @@ module AnmanAI
   class Updater
     SNAPSHOT_ZIP_URL = "https://github.com/y-moriya/lolipop/releases/download/snapshot/anman-ai-snapshot-windows.zip"
 
-    def self.run(exe_dir)
+    def self.run(exe_dir, zip_url = nil)
       puts "=== starting self-update ==="
-      zip_path = File.join(exe_dir, 'anman-ai-snapshot-windows.zip')
+      
+      if zip_url.nil? || zip_url.to_s.strip.empty?
+        config_path = File.join(exe_dir, 'config', 'config.yaml')
+        config = YAML.load_file(config_path) rescue {}
+        use_snapshot = config.dig('update', 'use_snapshot') == true
+        
+        if use_snapshot
+          zip_url = SNAPSHOT_ZIP_URL
+        else
+          zip_url = get_latest_release_url || SNAPSHOT_ZIP_URL
+        end
+      end
+
+      # Resolve filename from zip_url
+      uri = URI.parse(zip_url) rescue nil
+      filename = uri ? File.basename(uri.path) : 'anman-ai-update.zip'
+      filename = 'anman-ai-update.zip' if filename.empty? || !filename.end_with?('.zip')
+
+      zip_path = File.join(exe_dir, filename)
       tmp_dir = File.join(exe_dir, 'update_tmp')
 
       # 1. Download
-      puts "Downloading latest snapshot from: #{SNAPSHOT_ZIP_URL}"
+      puts "Downloading update package from: #{zip_url}"
       begin
-        download_file(SNAPSHOT_ZIP_URL, zip_path)
+        download_file(zip_url, zip_path)
       rescue => e
         puts "[Error] Download failed: #{e.message}"
         return false
@@ -38,8 +56,14 @@ module AnmanAI
 
       # 3. Merge configurations
       puts "Merging configuration files..."
-      extracted_root = File.join(tmp_dir, 'anman-ai-snapshot-windows')
-      extracted_root = tmp_dir unless Dir.exist?(extracted_root)
+      extracted_root = tmp_dir
+      children = Dir.glob(File.join(tmp_dir, '*')).select { |f| File.directory?(f) }
+      if children.size == 1
+        extracted_root = children.first
+      else
+        sub_root = File.join(tmp_dir, 'anman-ai-snapshot-windows')
+        extracted_root = sub_root if Dir.exist?(sub_root)
+      end
 
       extracted_config_dir = File.join(extracted_root, 'config')
       local_config_dir = File.join(exe_dir, 'config')
@@ -51,9 +75,9 @@ module AnmanAI
       # 4. Trigger file replacement script and exit
       puts "Preparing update application script..."
       if Gem.win_platform?
-        apply_update_windows(extracted_root, exe_dir)
+        apply_update_windows(extracted_root, exe_dir, filename)
       else
-        apply_update_unix(extracted_root, exe_dir)
+        apply_update_unix(extracted_root, exe_dir, filename)
       end
 
       puts "Update prepared successfully. Exiting to apply update..."
@@ -61,6 +85,33 @@ module AnmanAI
     end
 
     private
+
+    def self.get_latest_release_url
+      begin
+        require 'json'
+        uri = URI.parse("https://api.github.com/repos/y-moriya/lolipop/releases")
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = true
+        http.open_timeout = 10
+        http.read_timeout = 10
+
+        req = Net::HTTP::Get.new(uri.path)
+        req['User-Agent'] = 'anman-ai-updater/1.0'
+        res = http.request(req)
+        if res.code == '200'
+          releases = JSON.parse(res.body)
+          stable_releases = releases.reject { |r| r['tag_name'] == 'snapshot' || r['draft'] == true || r['prerelease'] == true }
+          latest_release = stable_releases.first
+          if latest_release
+            asset = latest_release['assets']&.find { |a| a['name'] =~ /anman-ai.*\.zip/ }
+            return asset ? asset['browser_download_url'] : latest_release['zipball_url']
+          end
+        end
+      rescue
+        # fallback to nil
+      end
+      nil
+    end
 
     def self.download_file(url, dest_path)
       current_url = url
@@ -140,7 +191,7 @@ module AnmanAI
       end
     end
 
-    def self.apply_update_windows(extracted_root, exe_dir)
+    def self.apply_update_windows(extracted_root, exe_dir, zip_filename)
       bat_path = File.join(exe_dir, 'apply_update.bat')
       bat_content = <<~BATCH
         @echo off
@@ -164,7 +215,9 @@ module AnmanAI
 
         echo Cleaning up...
         rmdir /s /q "#{File.join(exe_dir, 'update_tmp').gsub('/', '\\')}"
-        del "#{File.join(exe_dir, 'anman-ai-snapshot-windows.zip').gsub('/', '\\')}"
+        if exist "#{File.join(exe_dir, zip_filename).gsub('/', '\\')}" (
+          del "#{File.join(exe_dir, zip_filename).gsub('/', '\\')}"
+        )
         echo Update complete! Restarting...
         if exist "anman-ai.exe" (
           start "" "anman-ai.exe"
@@ -179,7 +232,7 @@ module AnmanAI
       spawn("cmd.exe /c start \"\" \"#{bat_path_win}\"")
     end
 
-    def self.apply_update_unix(extracted_root, exe_dir)
+    def self.apply_update_unix(extracted_root, exe_dir, zip_filename)
       sh_path = File.join(exe_dir, 'apply_update.sh')
       sh_content = <<~SHELL
         #!/bin/sh
@@ -189,7 +242,7 @@ module AnmanAI
         cp -R "#{extracted_root}"/* "#{exe_dir}"/
         echo "Cleaning up..."
         rm -rf "#{File.join(exe_dir, 'update_tmp')}"
-        rm -f "#{File.join(exe_dir, 'anman-ai-snapshot-windows.zip')}"
+        rm -f "#{File.join(exe_dir, zip_filename)}"
         echo "Update complete!"
         rm -- "$0"
       SHELL

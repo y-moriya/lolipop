@@ -50,6 +50,7 @@ let logsIntervalId: number | null = null;
 let lastChatLogsCount = 0;
 let llmPresets: Record<string, any> = {};
 let previousProvider = 'gemini';
+let updateDownloadUrl: string | null = null;
 
 // DOM Elements
 const elements = {
@@ -91,6 +92,13 @@ const elements = {
   btnClearLogView: document.getElementById('btn-clear-log-view') as HTMLButtonElement,
   btnTestLlm: document.getElementById('btn-test-llm') as HTMLButtonElement,
   llmTestStatus: document.getElementById('llm-test-status') as HTMLElement,
+  btnTestAiwolf: document.getElementById('btn-test-aiwolf') as HTMLButtonElement,
+  aiwolfTestStatus: document.getElementById('aiwolf-test-status') as HTMLElement,
+  btnCheckUpdate: document.getElementById('btn-check-update') as HTMLButtonElement,
+  updateUseSnapshot: document.getElementById('update-usesnapshot') as HTMLInputElement,
+  updateCurrentVer: document.getElementById('update-current-ver') as HTMLElement,
+  updateLatestVer: document.getElementById('update-latest-ver') as HTMLElement,
+  updateCheckResult: document.getElementById('update-check-result') as HTMLElement,
   btnRunUpdate: document.getElementById('btn-run-update') as HTMLButtonElement,
   updateStatusMsg: document.getElementById('update-status-msg') as HTMLElement,
 };
@@ -188,10 +196,13 @@ async function toggleClient() {
   
   try {
     const res = await fetch(endpoint, { method: 'POST' });
-    if (!res.ok) throw new Error('API action failed');
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({ error: 'API action failed' }));
+      throw new Error(errData.error || 'API action failed');
+    }
     await pollStatus();
-  } catch (error) {
-    alert(`操作に失敗しました: ${error}`);
+  } catch (error: any) {
+    alert(`操作に失敗しました: ${error.message}`);
   } finally {
     elements.btnToggleClient.disabled = false;
   }
@@ -316,6 +327,9 @@ async function loadConfig() {
     const config = await res.json();
 
     setFormData(elements.settingsForm, config);
+    if (elements.updateCurrentVer) {
+      elements.updateCurrentVer.textContent = config.version || '-';
+    }
     
     // Presets configuration cache
     llmPresets = config.llm_presets || {};
@@ -655,6 +669,82 @@ function setupListeners() {
     }
   });
 
+  // AIWolf Test Connection
+  elements.btnTestAiwolf.addEventListener('click', async () => {
+    elements.btnTestAiwolf.disabled = true;
+    elements.aiwolfTestStatus.textContent = '接続テスト中...';
+    elements.aiwolfTestStatus.style.color = '#3b82f6';
+
+    try {
+      const url = (document.getElementById('server-url') as HTMLInputElement).value;
+      const userid = (document.getElementById('user-userid') as HTMLInputElement).value;
+      const password = (document.getElementById('user-password') as HTMLInputElement).value;
+
+      const res = await fetch('/api/test_aiwolf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, userid, password })
+      });
+
+      if (!res.ok) throw new Error('API リクエストに失敗しました');
+      const data = await res.json();
+
+      if (data.success) {
+        elements.aiwolfTestStatus.textContent = '✅ 接続成功！';
+        elements.aiwolfTestStatus.style.color = '#10b981';
+      } else {
+        elements.aiwolfTestStatus.textContent = `❌ 接続失敗: ${data.error || data.message}`;
+        elements.aiwolfTestStatus.style.color = '#ef4444';
+      }
+    } catch (error: any) {
+      elements.aiwolfTestStatus.textContent = `❌ エラー: ${error.message}`;
+      elements.aiwolfTestStatus.style.color = '#ef4444';
+    } finally {
+      elements.btnTestAiwolf.disabled = false;
+    }
+  });
+
+  // Check Update
+  elements.btnCheckUpdate.addEventListener('click', async () => {
+    elements.btnCheckUpdate.disabled = true;
+    elements.updateCheckResult.textContent = 'アップデートを確認中...';
+    elements.updateCheckResult.style.color = '#3b82f6';
+    elements.btnRunUpdate.disabled = true;
+    updateDownloadUrl = null;
+
+    try {
+      // Save settings first to apply snapshot config
+      await saveConfig();
+
+      const res = await fetch('/api/check_update');
+      if (!res.ok) throw new Error('API リクエストに失敗しました');
+      const data = await res.json();
+
+      if (data.success) {
+        elements.updateCurrentVer.textContent = data.current_version;
+        elements.updateLatestVer.textContent = data.latest_version;
+
+        if (data.update_available) {
+          elements.updateCheckResult.textContent = '🆕 新しいアップデートがあります！';
+          elements.updateCheckResult.style.color = '#10b981';
+          elements.btnRunUpdate.disabled = false;
+          updateDownloadUrl = data.download_url;
+        } else {
+          elements.updateCheckResult.textContent = data.message || '✅ 最新バージョンを使用しています。';
+          elements.updateCheckResult.style.color = '#9ca3af';
+        }
+      } else {
+        elements.updateCheckResult.textContent = `❌ アップデートの確認に失敗しました: ${data.error}`;
+        elements.updateCheckResult.style.color = '#ef4444';
+      }
+    } catch (error: any) {
+      elements.updateCheckResult.textContent = `❌ エラー: ${error.message}`;
+      elements.updateCheckResult.style.color = '#ef4444';
+    } finally {
+      elements.btnCheckUpdate.disabled = false;
+    }
+  });
+
   // Run self-update
   elements.btnRunUpdate.addEventListener('click', async () => {
     if (!confirm('自己アップデートを実行しますか？実行すると最新版がダウンロードされ、本アプリケーションは自動的に再起動します。')) {
@@ -666,7 +756,11 @@ function setupListeners() {
     elements.updateStatusMsg.style.color = '#3b82f6';
     
     try {
-      const res = await fetch('/api/update', { method: 'POST' });
+      const res = await fetch('/api/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ zip_url: updateDownloadUrl })
+      });
       if (!res.ok) throw new Error('API リクエストに失敗しました');
       const data = await res.json();
       
