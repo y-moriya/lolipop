@@ -529,20 +529,32 @@ module AnmanAI
         release_notes = ""
 
         if use_snapshot
-          snapshot_release = releases.find { |r| r['tag_name'] == 'snapshot' }
-          if snapshot_release
-            asset = snapshot_release['assets']&.find { |a| a['name'] =~ /anman-ai.*\.zip/ }
-            asset_time_str = asset ? asset['updated_at'] : snapshot_release['published_at']
-            
-            if asset_time_str
-              remote_time = Time.parse(asset_time_str) rescue nil
-              local_time = Time.parse(AnmanAI::BUILD_TIME) rescue nil
+          # Get latest commit hash from commits API to check for updates reliably without time lags
+          commit_uri = URI.parse("https://api.github.com/repos/y-moriya/lolipop/commits?per_page=1")
+          commit_req = Net::HTTP::Get.new(commit_uri.path + "?" + commit_uri.query)
+          commit_req['User-Agent'] = 'anman-ai-updater/1.0'
+          
+          commit_res = http.request(commit_req)
+          if commit_res.code == '200'
+            latest_commit = JSON.parse(commit_res.body).first
+            if latest_commit && latest_commit['sha']
+              remote_sha = latest_commit['sha']
+              local_sha = AnmanAI::VERSION.to_s.sub(/\ASNAPSHOT-/, '').strip
               
-              if remote_time && local_time && remote_time > local_time
-                update_available = true
-                latest_version = "SNAPSHOT (#{remote_time.strftime('%Y-%m-%d %H:%M:%S')})"
-                download_url = asset ? asset['browser_download_url'] : nil
-                release_notes = snapshot_release['body'] || ""
+              unless remote_sha.start_with?(local_sha)
+                snapshot_release = releases.find { |r| r['tag_name'] == 'snapshot' }
+                if snapshot_release
+                  asset = snapshot_release['assets']&.find { |a| a['name'] =~ /anman-ai.*\.zip/ }
+                  download_url = asset ? asset['browser_download_url'] : nil
+                  release_notes = snapshot_release['body'] || ""
+                  
+                  commit_date_str = latest_commit.dig('commit', 'committer', 'date')
+                  commit_time = commit_date_str ? (Time.parse(commit_date_str) rescue nil) : nil
+                  commit_time_formatted = commit_time ? commit_time.localtime.strftime('%Y-%m-%d %H:%M:%S') : ""
+                  
+                  update_available = true
+                  latest_version = "SNAPSHOT-#{remote_sha[0..6]} (#{commit_time_formatted})"
+                end
               end
             end
           end
