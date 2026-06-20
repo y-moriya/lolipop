@@ -132,14 +132,18 @@ LLM呼び出し時に `compact_prompt: true` が有効な場合、チャット�
 - **プレースホルダー自動クリア**:
   新規セットアップ時に `config.yaml.example` から設定をロードする際、`your_username` や `your_password` などのテンプレート初期値を検出し、WebUI上の入力フィールドを自動で空文字にしてユーザーの入力ミスを防止する機構が実装されています。
 
-### 自己アップデート機構 (Windows / UNIX)
+### 自己アップデート機構 (Windows / UNIX)とログ永続化
+- **ログの永続化**:
+  自己アップデート実行時の進捗、設定マージ結果、およびファイルコピー（`robocopy` / `cp`）の一連のログは **`log/updater.log`** にすべて追記・出力されます。
 - **Windows環境 (`apply_update.bat`)**:
-  WebUIからのアップデート実行時、実行ファイル（`anman-ai.exe`等）のロック解放やコピー時のプロンプトによるハングアップを防ぐため、以下の設計が行われています。
+  WebUIからのアップデート実行時、実行ファイル（`anman-ai.exe`等）のロック解放やファイルコピーを確実に行うため、以下の設計が行われています。
   - 親プロセス終了待ちウェイトとして実行開始時に 2秒間待機 (`timeout /t 2`)。
-  - `xcopy` に代わって `robocopy` コマンドを使用し、対話的なプロンプトによるハングを回避しつつ、一時ディレクトリ `update_tmp` を `/XD` オプションで除外してコピー競合を防止。
-  - ファイルロック時の自動リトライ (`/R:30 /W:1`) と、終了コード（`errorlevel` 8以上）による正確な成否判定。
+  - コピー対象（`anman-ai.exe`等）自体を除外してしまう競合を防ぐため、`robocopy` のオプションから不要な除外（`/XD`）指定を排除。
+  - 改行コードの差異による `cmd.exe` の構文解析エラーを防ぐため、バッチファイル内から括弧 `( )` ブロックを完全に排除し、クラシックな `goto` ラベルを用いた制御構造を採用。
+  - バッチ書き出し時に強制的に **CRLF** (`\r\n`) に置換してバイナリ出力。
+  - ファイルロック時の自動リトライ (`/R:30 /W:1`) と、終了コード（`errorlevel` 8以上）による正確な成否判定およびエラー時の `pause` 一時停止。
 - **UNIX環境 (`apply_update.sh`)**:
-  非同期のシェルスクリプトでファイルをコピーし、一時フォルダを削除して完了するシンプルなアップデートロジックが動作します。
+  非同期のシェルスクリプトでファイルをコピーし、一時フォルダを削除して完了するシンプルなアップデートロジックが動作します（`updater.log` へ進捗と出力をすべてリダイレクトします）。
 
 ### テスト環境におけるモックと安定化
 - **テストモード (`ANMAN_TEST_MODE`)**:
@@ -156,7 +160,10 @@ LLM呼び出し時に `compact_prompt: true` が有効な場合、チャット�
 - **[test_ai.sh](file:///home/wellk/project/lolipop/test_ai.sh) / [test_lifecycle.sh](file:///home/wellk/project/lolipop/test_lifecycle.sh) / [test_security.sh](file:///home/wellk/project/lolipop/test_security.sh)**:
   AIクライアントとサーバー間のシナリオテスト、点呼や決着などのライフサイクルテスト、および他陣営のささやき等の秘匿情報が漏洩していないかをチェックするセキュリティテストを実行するスクリプトです。
 - **[build/build_windows.rb](file:///home/wellk/project/lolipop/build/build_windows.rb)**:
-  Windows環境でスタンドアロンの実行ファイル（`dist/anman-ai.exe`）をビルドするためのスクリプトです。`ocran` パッケージングツールを用いて、コード、プロンプト、設定テンプレートを1つの実行ファイルにまとめます。ビルド時にGitのコミットハッシュやタグから [version.rb](file:///home/wellk/project/lolipop/anman-ai/lib/version.rb) を動的に生成します。
+  Windows環境でスタンドアロンの実行ファイル（`dist/anman-ai.exe`）をビルドするためのスクリプトです。`ocran` パッケージングツールを用いて、コード、プロンプト、設定テンプレートを1つの実行ファイルにまとめます。
+  - ビルド時にGitのコミットハッシュやタグ情報を自動判別し、[version.rb](file:///home/wellk/project/lolipop/anman-ai/lib/anman-ai/version.rb) を動的に生成して埋め込みます（`fsync` および待機処理によりファイル書き込み完了を保証）。
+  - リリース時はGitタグ（`v*.*.*`）をプッシュすることで Actions 上でビルドが走り、タグ名のバージョンが正式に埋め込まれます。タグがない場合は `SNAPSHOT-（ハッシュ）` バージョンとなります。
+  - デフォルトのローカル開発中バージョンは `0.0.1-local` に設定されています。
 
 ---
 
