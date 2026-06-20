@@ -80,7 +80,7 @@ require 'log_manager'
 AnmanAI.setup_logger(exe_dir, config)
 
 require 'client'
-require_relative '../lib/version'
+require 'anman-ai/version'
 require 'web_server'
 
 # OCRANビルドの依存関係ロード用：ビルド中であれば即終了

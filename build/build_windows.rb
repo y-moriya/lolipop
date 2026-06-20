@@ -21,7 +21,12 @@ version_content = <<~RUBY
   end
 RUBY
 
-File.write('anman-ai/lib/version.rb', version_content)
+FileUtils.mkdir_p('anman-ai/lib/anman-ai')
+File.open('anman-ai/lib/anman-ai/version.rb', 'w') do |f|
+  f.write(version_content)
+  f.fsync rescue nil
+end
+sleep 1.0
 puts "Generated version.rb with VERSION=#{version_str}, BUILD_TIME=#{build_time}"
 
 entry_point = 'anman-ai/bin/anman-ai'
