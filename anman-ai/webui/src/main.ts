@@ -51,6 +51,7 @@ let lastChatLogsCount = 0;
 let llmPresets: Record<string, any> = {};
 let previousProvider = 'gemini';
 let updateDownloadUrl: string | null = null;
+let isConfigDirty = false;
 
 // DOM Elements
 const elements = {
@@ -106,6 +107,13 @@ const elements = {
 // Initialize Tab Switching
 function initTabs() {
   const switchTab = (tabName: string) => {
+    if (currentTab === 'settings' && tabName !== 'settings' && isConfigDirty) {
+      if (!confirm('設定の変更が保存されていません。移動してよろしいですか？')) {
+        return;
+      }
+      isConfigDirty = false;
+    }
+    
     currentTab = tabName;
     
     // Tab active states
@@ -339,6 +347,8 @@ async function loadConfig() {
     const hasFallback = !!config.llm_fallback;
     elements.fallbackEnable.checked = hasFallback;
     elements.fallbackWrapper.classList.toggle('disabled', !hasFallback);
+    
+    isConfigDirty = false;
   } catch (error) {
     alert(`設定のロードに失敗しました: ${error}`);
   }
@@ -382,6 +392,7 @@ async function saveConfig() {
 
     elements.saveStatusMsg.textContent = '✅ 設定を保存し、適用しました！';
     elements.saveStatusMsg.className = 'save-status-msg success';
+    isConfigDirty = false;
   } catch (error: any) {
     elements.saveStatusMsg.textContent = `❌ 保存失敗: ${error.message}`;
     elements.saveStatusMsg.className = 'save-status-msg error';
@@ -630,11 +641,20 @@ function setupListeners() {
 
   // LLM Test Connection
   elements.btnTestLlm.addEventListener('click', async () => {
+    if (!elements.settingsForm.checkValidity()) {
+      elements.settingsForm.reportValidity();
+      return;
+    }
+
     elements.btnTestLlm.disabled = true;
-    elements.llmTestStatus.textContent = '接続テスト中...';
+    elements.llmTestStatus.textContent = '設定を保存中...';
     elements.llmTestStatus.style.color = '#3b82f6';
 
     try {
+      // Auto-save settings first
+      await saveConfig();
+
+      elements.llmTestStatus.textContent = '接続テスト中...';
       const provider = (document.getElementById('llm-provider') as HTMLSelectElement).value;
       const apiKey = (document.getElementById('llm-apikey') as HTMLInputElement).value;
       const model = (document.getElementById('llm-model') as HTMLInputElement).value;
@@ -671,11 +691,20 @@ function setupListeners() {
 
   // AIWolf Test Connection
   elements.btnTestAiwolf.addEventListener('click', async () => {
+    if (!elements.settingsForm.checkValidity()) {
+      elements.settingsForm.reportValidity();
+      return;
+    }
+
     elements.btnTestAiwolf.disabled = true;
-    elements.aiwolfTestStatus.textContent = '接続テスト中...';
+    elements.aiwolfTestStatus.textContent = '設定を保存中...';
     elements.aiwolfTestStatus.style.color = '#3b82f6';
 
     try {
+      // Auto-save settings first
+      await saveConfig();
+
+      elements.aiwolfTestStatus.textContent = '接続テスト中...';
       const url = (document.getElementById('server-url') as HTMLInputElement).value;
       const userid = (document.getElementById('user-userid') as HTMLInputElement).value;
       const password = (document.getElementById('user-password') as HTMLInputElement).value;
@@ -782,6 +811,14 @@ function setupListeners() {
       elements.updateStatusMsg.style.color = '#ef4444';
       elements.btnRunUpdate.disabled = false;
     }
+  });
+
+  // Monitor settings form changes
+  elements.settingsForm.addEventListener('input', () => {
+    isConfigDirty = true;
+  });
+  elements.settingsForm.addEventListener('change', () => {
+    isConfigDirty = true;
   });
 }
 
