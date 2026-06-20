@@ -12,11 +12,15 @@ module AnmanAI
         @base_url = config.dig('llm', 'base_url') || "https://generativelanguage.googleapis.com"
         
         if @api_key.nil? || @api_key.to_s.strip.empty? || @api_key == "ollama"
-          raise "Gemini API Key is missing. Please set GEMINI_API_KEY in environment or config.yaml."
+          STDERR.puts "[LLM Warning] Gemini API Key is missing. You must configure GEMINI_API_KEY in environment or config.yaml before running gameplay."
         end
       end
 
       def chat(system_prompt, user_prompt, temperature: 0.7, max_retries: 2)
+        if @api_key.nil? || @api_key.to_s.strip.empty? || @api_key == "ollama"
+          raise "Gemini API Key is missing. Please configure GEMINI_API_KEY in environment or config.yaml."
+        end
+
         model_path = @model.include?('/') ? @model : "v1beta/models/#{@model}"
         target_url = "#{@base_url.sub(/\/+$/, '')}/#{model_path}:generateContent?key=#{@api_key}"
         uri = URI.parse(target_url)
