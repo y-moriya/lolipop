@@ -27,6 +27,11 @@ test.describe('anman-ai WebUI E2E Tests', () => {
     const tabSettings = page.locator('#tab-settings');
     await expect(tabSettings).toBeVisible();
 
+    // Verify info-next-update card is visible on dashboard
+    const infoNextUpdate = page.locator('#info-next-update');
+    await expect(infoNextUpdate).toBeVisible();
+    await expect(infoNextUpdate).toHaveText('-');
+
     // 2. Go to Settings tab
     await tabSettings.click();
     await page.waitForTimeout(500); // Allow config to load

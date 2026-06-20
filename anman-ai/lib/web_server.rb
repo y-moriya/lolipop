@@ -312,7 +312,8 @@ module AnmanAI
             userid: p[:userid],
             num_id: p[:num_id],
             dead: p[:dead],
-            role: p[:role]
+            role: p[:role],
+            voted: p[:voted]
           }
         end
 
@@ -327,7 +328,9 @@ module AnmanAI
           action_results: gs.action_results,
           werewolf_partners: gs.werewolf_partners,
           game_started: gs.game_started,
-          summary: gs.game_summary
+          summary: gs.game_summary,
+          update_time: gs.update_time,
+          server_time: Time.now.to_i
         }
         res.body = state_data.to_json
       else

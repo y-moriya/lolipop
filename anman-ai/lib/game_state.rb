@@ -2,7 +2,7 @@ module AnmanAI
   class GameState
     attr_accessor :current_day, :is_night, :my_name, :my_role, :my_reasoning_notes,
                   :players, :chat_logs, :action_results, :werewolf_partners,
-                  :game_started
+                  :game_started, :update_time
 
     def initialize(my_name)
       @my_name = my_name
@@ -15,6 +15,7 @@ module AnmanAI
       @my_reasoning_notes = "特になし。怪しいプレイヤーのリストアップやカミングアウト（CO）のタイミングを整理してください。"
       @werewolf_partners = []
       @game_started = false
+      @update_time = 0
 
       # --- コンパクトプロンプト用 ---
       # ゲームの重要イベントを蓄積して要約文を生成する
@@ -37,7 +38,8 @@ module AnmanAI
           userid: p['userid'],
           num_id: p['num_id'].to_i,
           dead: p['dead'].to_i,
-          role: "不明"
+          role: "不明",
+          voted: p['voted']
         }
       end
 

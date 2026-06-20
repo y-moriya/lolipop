@@ -460,6 +460,12 @@ input, button, select, textarea {
   text-decoration: line-through;
 }
 
+.player-status-badge.voted {
+  background-color: var(--accent-secondary-glow);
+  color: var(--accent-secondary);
+  margin-right: 4px;
+}
+
 .player-item.is-dead {
   opacity: 0.65;
   background-color: rgba(10, 11, 16, 0.2);

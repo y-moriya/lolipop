@@ -4,6 +4,7 @@ interface Player {
   num_id: number;
   dead: number;
   role: string;
+  voted?: boolean;
 }
 
 interface ChatLog {
@@ -29,6 +30,8 @@ interface GameState {
   werewolf_partners: string[];
   game_started: boolean;
   summary: string;
+  update_time?: number;
+  server_time?: number;
 }
 
 interface ClientStatus {
@@ -52,6 +55,9 @@ let llmPresets: Record<string, any> = {};
 let previousProvider = 'gemini';
 let updateDownloadUrl: string | null = null;
 let isConfigDirty = false;
+let nextUpdateTimerId: number | null = null;
+let nextUpdateEpoch = 0;
+let serverTimeOffset = 0;
 
 // DOM Elements
 const elements = {
@@ -102,6 +108,7 @@ const elements = {
   updateCheckResult: document.getElementById('update-check-result') as HTMLElement,
   btnRunUpdate: document.getElementById('btn-run-update') as HTMLButtonElement,
   updateStatusMsg: document.getElementById('update-status-msg') as HTMLElement,
+  infoNextUpdate: document.getElementById('info-next-update') as HTMLElement,
 };
 
 // Initialize Tab Switching
@@ -149,6 +156,7 @@ function initTabs() {
 function stopAllPolling() {
   if (gameIntervalId) { clearInterval(gameIntervalId); gameIntervalId = null; }
   if (logsIntervalId) { clearInterval(logsIntervalId); logsIntervalId = null; }
+  if (nextUpdateTimerId) { clearInterval(nextUpdateTimerId); nextUpdateTimerId = null; }
 }
 
 // Start polling depending on currently active tab
@@ -240,6 +248,25 @@ async function pollGameState() {
     // Populate players list
     updatePlayersList(state.players, state.my_name);
 
+    // Update countdown parameters
+    nextUpdateEpoch = state.update_time || 0;
+    if (state.server_time) {
+      serverTimeOffset = state.server_time * 1000 - Date.now();
+    }
+
+    if (state.game_started && isClientRunning) {
+      if (!nextUpdateTimerId) {
+        nextUpdateTimerId = window.setInterval(updateCountdownDisplay, 1000);
+      }
+      updateCountdownDisplay();
+    } else {
+      if (nextUpdateTimerId) {
+        clearInterval(nextUpdateTimerId);
+        nextUpdateTimerId = null;
+      }
+      elements.infoNextUpdate.textContent = '-';
+    }
+
     // Action results
     updateActionResults(state.action_results);
 
@@ -249,6 +276,22 @@ async function pollGameState() {
   } catch (error) {
     // If not started yet, show empty/waiting
     console.warn('Game state not ready:', error);
+  }
+}
+
+function updateCountdownDisplay() {
+  if (nextUpdateEpoch <= 0 || !isClientRunning) {
+    elements.infoNextUpdate.textContent = '-';
+    return;
+  }
+  const currentServerTime = Date.now() + serverTimeOffset;
+  const remainMs = nextUpdateEpoch * 1000 - currentServerTime;
+  const remainSec = Math.max(0, Math.ceil(remainMs / 1000));
+  
+  if (remainSec > 0) {
+    elements.infoNextUpdate.textContent = `${remainSec}秒`;
+  } else {
+    elements.infoNextUpdate.textContent = '更新中...';
   }
 }
 
@@ -265,13 +308,20 @@ function updatePlayersList(players: Record<string, Player>, myName: string) {
       const isMe = name === myName;
       const isDead = p.dead !== 0;
       
+      const votedBadge = (!isDead && p.voted)
+        ? `<span class="player-status-badge voted">投票済</span>`
+        : '';
+      
       html += `
         <div class="player-item ${isMe ? 'me' : ''} ${isDead ? 'is-dead' : ''}">
           <div class="player-name">${isMe ? '⭐ ' : ''}${name}</div>
           <div class="player-role">${p.role !== '不明' ? p.role : ''}</div>
-          <span class="player-status-badge ${isDead ? 'dead' : 'alive'}">
-            ${isDead ? '無残な死' : '生存'}
-          </span>
+          <div style="display: flex; gap: 4px; align-items: center;">
+            ${votedBadge}
+            <span class="player-status-badge ${isDead ? 'dead' : 'alive'}">
+              ${isDead ? '無残な死' : '生存'}
+            </span>
+          </div>
         </div>
       `;
     });

@@ -511,6 +511,7 @@ module AnmanAI
             if res_vil && res_vil.code == '200'
               vil_info = JSON.parse(res_vil.body)
               update_time = vil_info['update_time'].to_i
+              @game_state.update_time = update_time
               game_state_val = vil_info['state'].to_i
               @game_state.current_day = vil_info['date'].to_i
               @game_state.is_night = vil_info['night']
@@ -533,6 +534,7 @@ module AnmanAI
             if res_vil && res_vil.code == '200'
               vil_info = JSON.parse(res_vil.body)
               update_time = vil_info['update_time'].to_i
+              @game_state.update_time = update_time
               game_state_val = vil_info['state'].to_i
               
               @game_state.current_day = vil_info['date'].to_i
