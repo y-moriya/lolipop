@@ -499,17 +499,6 @@ module AnmanAI
         config = YAML.load_file(config_path) rescue {}
         use_snapshot = config.dig('update', 'use_snapshot') == true
 
-        if AnmanAI::BUILD_TIME == "local development"
-          res.body = {
-            success: true,
-            update_available: false,
-            message: "開発環境（ローカル）のため、アップデートは利用できません。",
-            current_version: AnmanAI::VERSION,
-            latest_version: "N/A"
-          }.to_json
-          return
-        end
-
         uri = URI.parse("https://api.github.com/repos/y-moriya/lolipop/releases")
         http = Net::HTTP.new(uri.host, uri.port)
         http.use_ssl = true
@@ -583,14 +572,20 @@ module AnmanAI
           end
         end
 
-        res.body = {
+        res_data = {
           success: true,
           update_available: update_available,
           current_version: AnmanAI::VERSION,
           latest_version: latest_version.empty? ? "未検出" : latest_version,
           download_url: download_url,
           release_notes: release_notes
-        }.to_json
+        }
+        
+        if AnmanAI::BUILD_TIME == "local development"
+          res_data[:message] = "開発環境（ローカル）のため、実際の更新ファイル適用はシミュレーション（スキップ）されます。"
+        end
+
+        res.body = res_data.to_json
 
       rescue => e
         res.status = 500
@@ -607,10 +602,13 @@ module AnmanAI
         # Run update asynchronously to allow HTTP response to complete first
         Thread.new do
           sleep 1.0
-          AnmanAI::Updater.run(@exe_dir, zip_url)
-          exit 0
+          success = AnmanAI::Updater.run(@exe_dir, zip_url)
+          if success && AnmanAI::BUILD_TIME != "local development"
+            exit 0
+          end
         end
-        res.body = { success: true, message: "アップデートを開始しました。数秒後に自動で再起動されます。" }.to_json
+        msg = AnmanAI::BUILD_TIME == "local development" ? "アップデート（シミュレーション）を完了しました。" : "アップデートを開始しました。数秒後に自動で再起動されます。"
+        res.body = { success: true, message: msg }.to_json
       rescue => e
         res.status = 500
         res.body = { success: false, error: e.message }.to_json

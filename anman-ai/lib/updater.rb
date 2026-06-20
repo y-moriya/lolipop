@@ -74,6 +74,14 @@ module AnmanAI
 
       # 4. Trigger file replacement script and exit
       puts "Preparing update application script..."
+      if AnmanAI::BUILD_TIME == "local development"
+        puts "[System] Local development environment detected: skipping physical file replacement to protect source code."
+        # Clean up downloaded zip and extracted folder
+        FileUtils.rm_rf(tmp_dir)
+        FileUtils.rm_f(zip_path)
+        return true
+      end
+
       if Gem.win_platform?
         apply_update_windows(extracted_root, exe_dir, filename)
       else
