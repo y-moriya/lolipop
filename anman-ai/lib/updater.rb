@@ -8,8 +8,22 @@ module AnmanAI
   class Updater
     SNAPSHOT_ZIP_URL = "https://github.com/y-moriya/lolipop/releases/download/snapshot/anman-ai-snapshot-windows.zip"
 
+    def self.log_info(exe_dir, msg)
+      puts msg
+      begin
+        log_dir = File.join(exe_dir, 'log')
+        FileUtils.mkdir_p(log_dir)
+        log_file = File.join(log_dir, 'updater.log')
+        File.open(log_file, 'a') do |f|
+          f.puts "[#{Time.now.strftime('%Y-%m-%d %H:%M:%S')}] #{msg}"
+        end
+      rescue => e
+        # Ignore logging errors to avoid blocking updates
+      end
+    end
+
     def self.run(exe_dir, zip_url = nil)
-      puts "=== starting self-update ==="
+      log_info(exe_dir, "=== starting self-update ===")
       
       if zip_url.nil? || zip_url.to_s.strip.empty?
         config_path = File.join(exe_dir, 'config', 'config.yaml')
@@ -32,30 +46,30 @@ module AnmanAI
       tmp_dir = File.join(exe_dir, 'update_tmp')
 
       # 1. Download
-      puts "Downloading update package from: #{zip_url}"
+      log_info(exe_dir, "Downloading update package from: #{zip_url}")
       begin
         download_file(zip_url, zip_path)
       rescue => e
-        puts "[Error] Download failed: #{e.message}"
+        log_info(exe_dir, "[Error] Download failed: #{e.message}")
         return false
       end
 
       # 2. Extract
-      puts "Extracting ZIP package..."
+      log_info(exe_dir, "Extracting ZIP package...")
       begin
         FileUtils.rm_rf(tmp_dir)
         success = extract_zip(zip_path, tmp_dir)
         unless success
-          puts "[Error] Extraction failed."
+          log_info(exe_dir, "[Error] Extraction failed.")
           return false
         end
       rescue => e
-        puts "[Error] Extraction failed with exception: #{e.message}"
+        log_info(exe_dir, "[Error] Extraction failed with exception: #{e.message}")
         return false
       end
 
       # 3. Merge configurations
-      puts "Merging configuration files..."
+      log_info(exe_dir, "Merging configuration files...")
       extracted_root = tmp_dir
       children = Dir.glob(File.join(tmp_dir, '*')).select { |f| File.directory?(f) }
       if children.size == 1
@@ -69,14 +83,14 @@ module AnmanAI
       local_config_dir = File.join(exe_dir, 'config')
 
       if Dir.exist?(extracted_config_dir)
-        merge_configurations(extracted_config_dir, local_config_dir)
+        merge_configurations(exe_dir, extracted_config_dir, local_config_dir)
       end
 
       # 4. Trigger file replacement script and exit
-      puts "Preparing update application script..."
+      log_info(exe_dir, "Preparing update application script...")
       is_local_dev = AnmanAI::BUILD_TIME == "local development" && !defined?(Ocran) && !ENV['OCRAN_EXECUTABLE']
       if is_local_dev
-        puts "[System] Local development environment detected: skipping physical file replacement to protect source code."
+        log_info(exe_dir, "[System] Local development environment detected: skipping physical file replacement to protect source code.")
         # Clean up downloaded zip and extracted folder
         FileUtils.rm_rf(tmp_dir)
         FileUtils.rm_f(zip_path)
@@ -89,7 +103,7 @@ module AnmanAI
         apply_update_unix(extracted_root, exe_dir, filename)
       end
 
-      puts "Update prepared successfully. Exiting to apply update..."
+      log_info(exe_dir, "Update prepared successfully. Exiting to apply update...")
       true
     end
 
@@ -177,7 +191,7 @@ module AnmanAI
       end
     end
 
-    def self.merge_configurations(extracted_config_dir, local_config_dir)
+    def self.merge_configurations(exe_dir, extracted_config_dir, local_config_dir)
       FileUtils.mkdir_p(local_config_dir)
       Dir.glob(File.join(extracted_config_dir, "*.{yaml,yml}")).each do |new_config_path|
         filename = File.basename(new_config_path)
@@ -189,60 +203,74 @@ module AnmanAI
             local_data = YAML.load_file(local_config_path) || {}
             merged_data = deep_merge(new_data, local_data)
             File.write(local_config_path, YAML.dump(merged_data))
-            puts "  -> Merged config: #{filename}"
+            log_info(exe_dir, "  -> Merged config: #{filename}")
           rescue => e
-            puts "  -> [Warning] Failed to merge #{filename}: #{e.message}"
+            log_info(exe_dir, "  -> [Warning] Failed to merge #{filename}: #{e.message}")
           end
         else
           FileUtils.cp(new_config_path, local_config_path)
-          puts "  -> Installed new config template: #{filename}"
+          log_info(exe_dir, "  -> Installed new config template: #{filename}")
         end
       end
     end
 
     def self.apply_update_windows(extracted_root, exe_dir, zip_filename)
       bat_path = File.join(exe_dir, 'apply_update.bat')
+      log_file = File.join(exe_dir, 'log', 'updater.log')
       bat_content = <<~BATCH
         @echo off
-        echo ============================================
-        echo  anman-ai Updater
-        echo ============================================
-        echo Waiting for old processes to release files...
+        set "LOG_FILE=#{log_file.gsub('/', '\\')}"
+
+        echo ============================================ >> "%LOG_FILE%"
+        echo  anman-ai Updater (Windows Script) >> "%LOG_FILE%"
+        echo  Time: %date% %time% >> "%LOG_FILE%"
+        echo ============================================ >> "%LOG_FILE%"
+        echo Waiting for old processes to release files... >> "%LOG_FILE%"
 
         :: Wait 2 seconds for parent process to release file handles
         timeout /t 2 /nobreak > nul
 
-        echo Copying update files...
-        robocopy "#{extracted_root.gsub('/', '\\')}" "#{exe_dir.gsub('/', '\\')}" /E /R:30 /W:1 /NFL /NDL /NP /NJH /NJS
+        echo Copying update files... >> "%LOG_FILE%"
+        robocopy "#{extracted_root.gsub('/', '\\')}" "#{exe_dir.gsub('/', '\\')}" /E /R:30 /W:1 /NFL /NDL /NP /NJH /NJS >> "%LOG_FILE%" 2>&1
         if errorlevel 8 goto copy_failed
 
-        echo Cleaning up...
-        rmdir /s /q "#{File.join(exe_dir, 'update_tmp').gsub('/', '\\')}"
+        echo Cleaning up... >> "%LOG_FILE%"
+        rmdir /s /q "#{File.join(exe_dir, 'update_tmp').gsub('/', '\\')}" >> "%LOG_FILE%" 2>&1
         if exist "#{File.join(exe_dir, zip_filename).gsub('/', '\\')}" (
-          del "#{File.join(exe_dir, zip_filename).gsub('/', '\\')}"
+          del "#{File.join(exe_dir, zip_filename).gsub('/', '\\')}" >> "%LOG_FILE%" 2>&1
         )
         
-        echo Update complete! Restarting...
+        echo Update complete! Restarting... >> "%LOG_FILE%"
         if exist "anman-ai.exe" goto start_exe
         if exist "start.bat" goto start_bat
         goto end_update
 
         :start_exe
+        echo Restarting anman-ai.exe... >> "%LOG_FILE%"
         start "" "anman-ai.exe"
         goto end_update
 
         :start_bat
+        echo Restarting start.bat... >> "%LOG_FILE%"
         start "" "start.bat"
         goto end_update
 
         :copy_failed
+        echo. >> "%LOG_FILE%"
+        echo [Error] Update failed: Files could not be copied. >> "%LOG_FILE%"
+        echo Please close any running anman-ai instances and try again. >> "%LOG_FILE%"
+        
         echo.
-        echo [Error] Update failed: Files could not be copied.
-        echo Please close any running anman-ai instances and try again.
+        echo =======================================================
+        echo  [Error] Update failed!
+        echo  Please check details in:
+        echo  "%LOG_FILE%"
+        echo =======================================================
         pause
         exit /b 1
 
         :end_update
+        echo Update process finished successfully. >> "%LOG_FILE%"
         del "%~f0"
       BATCH
 
@@ -255,17 +283,23 @@ module AnmanAI
 
     def self.apply_update_unix(extracted_root, exe_dir, zip_filename)
       sh_path = File.join(exe_dir, 'apply_update.sh')
+      log_file = File.join(exe_dir, 'log', 'updater.log')
       sh_content = <<~SHELL
         #!/bin/sh
-        echo "Waiting for anman-ai process to exit..."
+        LOG_FILE="#{log_file}"
+        echo "============================================" >> "$LOG_FILE"
+        echo " anman-ai Updater (UNIX Script)" >> "$LOG_FILE"
+        echo " Time: \$(date)" >> "$LOG_FILE"
+        echo "============================================" >> "$LOG_FILE"
+        echo "Waiting for anman-ai process to exit..." >> "$LOG_FILE"
         sleep 2
-        echo "Copying update files..."
-        cp -R "#{extracted_root}"/* "#{exe_dir}"/
-        echo "Cleaning up..."
-        rm -rf "#{File.join(exe_dir, 'update_tmp')}"
-        rm -f "#{File.join(exe_dir, zip_filename)}"
-        echo "Update complete!"
-        rm -- "$0"
+        echo "Copying update files..." >> "$LOG_FILE"
+        cp -R "#{extracted_root}"/* "#{exe_dir}"/ >> "$LOG_FILE" 2>&1
+        echo "Cleaning up..." >> "$LOG_FILE"
+        rm -rf "#{File.join(exe_dir, 'update_tmp')}" >> "$LOG_FILE" 2>&1
+        rm -f "#{File.join(exe_dir, zip_filename)}" >> "$LOG_FILE" 2>&1
+        echo "Update complete! Restarting..." >> "$LOG_FILE"
+        rm -- "\$0"
       SHELL
 
       File.write(sh_path, sh_content)
