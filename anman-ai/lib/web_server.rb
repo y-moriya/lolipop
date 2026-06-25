@@ -556,18 +556,28 @@ module AnmanAI
           
           if latest_release
             latest_version = latest_release['tag_name']
-            
+
             clean_local = AnmanAI::VERSION.to_s.sub(/\A[vV]/, '').split('-').first
             clean_remote = latest_version.to_s.sub(/\A[vV]/, '').split('-').first
-            
-            begin
-              if Gem::Version.new(clean_remote) > Gem::Version.new(clean_local)
-                update_available = true
-                asset = latest_release['assets']&.find { |a| a['name'] =~ /anman-ai.*\.zip/ }
-                download_url = asset ? asset['browser_download_url'] : latest_release['zipball_url']
-                release_notes = latest_release['body'] || ""
+
+            # ローカルが SNAPSHOT ビルドの場合、安定版リリースが存在すれば常に更新対象とする
+            is_local_snapshot = AnmanAI::VERSION.to_s.upcase.start_with?('SNAPSHOT')
+
+            update_needed = if is_local_snapshot
+              true
+            else
+              begin
+                Gem::Version.new(clean_remote) > Gem::Version.new(clean_local)
+              rescue
+                false
               end
-            rescue
+            end
+
+            if update_needed
+              update_available = true
+              asset = latest_release['assets']&.find { |a| a['name'] =~ /anman-ai.*\.zip/ }
+              download_url = asset ? asset['browser_download_url'] : latest_release['zipball_url']
+              release_notes = latest_release['body'] || ""
             end
           end
         end
