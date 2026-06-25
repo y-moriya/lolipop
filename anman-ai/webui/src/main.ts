@@ -150,6 +150,8 @@ function initTabs() {
   elements.tabDashboard.addEventListener('click', () => switchTab('dashboard'));
   elements.tabSettings.addEventListener('click', () => switchTab('settings'));
   elements.tabLogs.addEventListener('click', () => switchTab('logs'));
+
+  return { switchTab };
 }
 
 // Stop polling for tab sections
@@ -873,10 +875,25 @@ function setupListeners() {
 }
 
 // Application Entrance
-function main() {
-  initTabs();
+async function main() {
+  const { switchTab } = initTabs();
   setupListeners();
   startAllPolling();
+
+  // 初回起動チェック: userid / password が未設定なら設定画面を最初に表示する
+  try {
+    const res = await fetch('/api/config');
+    if (res.ok) {
+      const config = await res.json();
+      const userid = (config.user?.userid ?? '').toString().trim();
+      const password = (config.user?.password ?? '').toString().trim();
+      if (!userid || !password) {
+        switchTab('settings');
+      }
+    }
+  } catch (_) {
+    // 設定取得失敗時はダッシュボードのまま
+  }
 }
 
 window.addEventListener('DOMContentLoaded', main);
