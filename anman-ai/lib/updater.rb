@@ -226,6 +226,7 @@ module AnmanAI
       # 左寄せで生成してインデント混入を防ぐ。CRLFに変換してbinary書き込み。
       lines = []
       lines << '@echo off'
+      lines << 'cd /d "%~dp0"'
       lines << "set \"LOG_FILE=#{log_win}\""
       lines << ''
       lines << 'echo ============================================ >> "%LOG_FILE%"'
@@ -275,7 +276,7 @@ module AnmanAI
       lines << ''
       lines << ':end_update'
       lines << 'echo Update process finished successfully. >> "%LOG_FILE%"'
-      lines << 'del "%~f0"'
+      lines << 'del "%~f0" & exit'
 
       bat_content_crlf = lines.join("\r\n") + "\r\n"
       bat_path_win = bat_path.gsub('/', '\\')

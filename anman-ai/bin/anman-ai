@@ -96,6 +96,8 @@ puts "Build Time:     #{AnmanAI::BUILD_TIME}"
 puts "Root Directory: #{exe_dir}"
 puts "Config File:    #{config_path}"
 puts "Mode:           #{no_web ? 'Legacy CUI' : 'WebUI (Default)'}"
+puts "Arguments:      #{ARGV.inspect}"
+puts "No Browser:     #{no_browser}"
 puts "===================================================="
 
 begin
