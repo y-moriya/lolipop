@@ -4,15 +4,21 @@
 # Windows上で実行: ruby build/build_windows.rb
 
 require 'fileutils'
+require 'open3'
 
 # Generate version file dynamically from Git
-git_commit = `git rev-parse --short HEAD`.strip rescue 'unknown'
-git_tag = `git describe --tags --exact-match 2>/dev/null`.strip rescue nil
+git_commit = Open3.capture3('git rev-parse --short HEAD')[0].strip rescue 'unknown'
+
+git_tag_out, _, git_tag_stat = Open3.capture3('git describe --tags --exact-match')
+git_tag = git_tag_stat.success? ? git_tag_out.strip : nil
+
 if git_tag && !git_tag.empty?
   version_str = git_tag
 else
   # 直近のタグを取得して {tag}-SNAPSHOT-{hash} 形式にする
-  latest_tag = `git describe --tags --abbrev=0 2>/dev/null`.strip rescue nil
+  latest_tag_out, _, latest_tag_stat = Open3.capture3('git describe --tags --abbrev=0')
+  latest_tag = latest_tag_stat.success? ? latest_tag_out.strip : nil
+  
   version_str = if latest_tag && !latest_tag.empty?
     "#{latest_tag}-SNAPSHOT-#{git_commit}"
   else
