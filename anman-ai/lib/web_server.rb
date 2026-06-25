@@ -532,18 +532,21 @@ module AnmanAI
             if latest_commit && latest_commit['sha']
               remote_sha = latest_commit['sha']
               local_sha = AnmanAI::VERSION.to_s.sub(/.*SNAPSHOT-/i, '').strip
-              
-              unless remote_sha.start_with?(local_sha)
+
+              commit_date_str = latest_commit.dig('commit', 'committer', 'date')
+              commit_time = commit_date_str ? (Time.parse(commit_date_str) rescue nil) : nil
+              commit_time_formatted = commit_time ? commit_time.localtime.strftime('%Y-%m-%d %H:%M:%S') : ""
+
+              if remote_sha.start_with?(local_sha)
+                # 最新と一致: 更新なし。latest_versionに現在のバージョンを設定して「未検出」を防ぐ
+                latest_version = "SNAPSHOT-#{remote_sha[0..6]} (#{commit_time_formatted})"
+              else
                 snapshot_release = releases.find { |r| r['tag_name'] == 'snapshot' }
                 if snapshot_release
                   asset = snapshot_release['assets']&.find { |a| a['name'] =~ /anman-ai.*\.zip/ }
                   download_url = asset ? asset['browser_download_url'] : nil
                   release_notes = snapshot_release['body'] || ""
-                  
-                  commit_date_str = latest_commit.dig('commit', 'committer', 'date')
-                  commit_time = commit_date_str ? (Time.parse(commit_date_str) rescue nil) : nil
-                  commit_time_formatted = commit_time ? commit_time.localtime.strftime('%Y-%m-%d %H:%M:%S') : ""
-                  
+
                   update_available = true
                   latest_version = "SNAPSHOT-#{remote_sha[0..6]} (#{commit_time_formatted})"
                 end
