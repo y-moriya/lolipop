@@ -561,7 +561,7 @@ module AnmanAI
             clean_remote = latest_version.to_s.sub(/\A[vV]/, '').split('-').first
 
             # ローカルが SNAPSHOT ビルドの場合、安定版リリースが存在すれば常に更新対象とする
-            is_local_snapshot = AnmanAI::VERSION.to_s.upcase.start_with?('SNAPSHOT')
+            is_local_snapshot = AnmanAI::VERSION.to_s.upcase.include?('SNAPSHOT')
 
             update_needed = if is_local_snapshot
               true

@@ -8,7 +8,17 @@ require 'fileutils'
 # Generate version file dynamically from Git
 git_commit = `git rev-parse --short HEAD`.strip rescue 'unknown'
 git_tag = `git describe --tags --exact-match 2>/dev/null`.strip rescue nil
-version_str = (git_tag && !git_tag.empty?) ? git_tag : "SNAPSHOT-#{git_commit}"
+if git_tag && !git_tag.empty?
+  version_str = git_tag
+else
+  # 直近のタグを取得して {tag}-SNAPSHOT-{hash} 形式にする
+  latest_tag = `git describe --tags --abbrev=0 2>/dev/null`.strip rescue nil
+  version_str = if latest_tag && !latest_tag.empty?
+    "#{latest_tag}-SNAPSHOT-#{git_commit}"
+  else
+    "SNAPSHOT-#{git_commit}"
+  end
+end
 # GitHub Actions runner is UTC, so add 9 hours to get JST
 build_time = (Time.now.utc + 9 * 3600).strftime('%Y-%m-%d %H:%M:%S JST')
 
