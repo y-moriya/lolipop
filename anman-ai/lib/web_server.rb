@@ -531,7 +531,7 @@ module AnmanAI
             latest_commit = JSON.parse(commit_res.body).first
             if latest_commit && latest_commit['sha']
               remote_sha = latest_commit['sha']
-              local_sha = AnmanAI::VERSION.to_s.sub(/\ASNAPSHOT-/, '').strip
+              local_sha = AnmanAI::VERSION.to_s.sub(/.*SNAPSHOT-/i, '').strip
               
               unless remote_sha.start_with?(local_sha)
                 snapshot_release = releases.find { |r| r['tag_name'] == 'snapshot' }
