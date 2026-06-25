@@ -537,9 +537,14 @@ module AnmanAI
               commit_time = commit_date_str ? (Time.parse(commit_date_str) rescue nil) : nil
               commit_time_formatted = commit_time ? commit_time.localtime.strftime('%Y-%m-%d %H:%M:%S') : ""
 
+              # 最新の安定版タグを取得してSNAPSHOTのプレフィックスに使用する (v0.1.1-SNAPSHOT-xxxの再現)
+              stable_releases = releases.reject { |r| r['tag_name'] == 'snapshot' || r['draft'] == true || r['prerelease'] == true }
+              latest_stable_tag = stable_releases.first ? stable_releases.first['tag_name'] : nil
+              version_prefix = latest_stable_tag ? "#{latest_stable_tag}-" : ""
+
               if remote_sha.start_with?(local_sha)
                 # 最新と一致: 更新なし。latest_versionに現在のバージョンを設定して「未検出」を防ぐ
-                latest_version = "SNAPSHOT-#{remote_sha[0..6]} (#{commit_time_formatted})"
+                latest_version = "#{version_prefix}SNAPSHOT-#{remote_sha[0..6]} (#{commit_time_formatted})"
               else
                 snapshot_release = releases.find { |r| r['tag_name'] == 'snapshot' }
                 if snapshot_release
@@ -548,7 +553,7 @@ module AnmanAI
                   release_notes = snapshot_release['body'] || ""
 
                   update_available = true
-                  latest_version = "SNAPSHOT-#{remote_sha[0..6]} (#{commit_time_formatted})"
+                  latest_version = "#{version_prefix}SNAPSHOT-#{remote_sha[0..6]} (#{commit_time_formatted})"
                 end
               end
             end
