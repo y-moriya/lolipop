@@ -563,11 +563,18 @@ module AnmanAI
             clean_local = AnmanAI::VERSION.to_s.sub(/\A[vV]/, '').split('-').first
             clean_remote = latest_version.to_s.sub(/\A[vV]/, '').split('-').first
 
-            # ローカルが SNAPSHOT ビルドの場合、安定版リリースが存在すれば常に更新対象とする
+            # ローカルが SNAPSHOT ビルドの場合、安定版リリースが存在すれば基本的には更新対象とする
+            # ただし、安定版のバージョン(clean_remote)がローカルのベースバージョン(clean_local)以下であれば
+            # すでにその安定版と同等かそれ以降の機能が含まれているためアップデート不要とする。
             is_local_snapshot = AnmanAI::VERSION.to_s.upcase.include?('SNAPSHOT')
 
             update_needed = if is_local_snapshot
-              true
+              begin
+                Gem::Version.new(clean_remote) > Gem::Version.new(clean_local)
+              rescue
+                # パースできない（タグ名なしの pure SNAPSHOT などの）場合は常にアップデート対象とする
+                true
+              end
             else
               begin
                 Gem::Version.new(clean_remote) > Gem::Version.new(clean_local)
