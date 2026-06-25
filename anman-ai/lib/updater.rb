@@ -72,7 +72,13 @@ module AnmanAI
       log_info(exe_dir, "Merging configuration files...")
       extracted_root = tmp_dir
       children = Dir.glob(File.join(tmp_dir, '*')).select { |f| File.directory?(f) }
-      if children.size == 1
+      
+      # 'anman-ai-' で始まるフォルダを優先的に探す（安定版やSNAPSHOT版のフォルダを確実に掴むため）
+      target_dir = children.find { |d| File.basename(d).start_with?('anman-ai-') }
+      
+      if target_dir
+        extracted_root = target_dir
+      elsif children.size == 1
         extracted_root = children.first
       else
         sub_root = File.join(tmp_dir, 'anman-ai-snapshot-windows')
