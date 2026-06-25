@@ -66,7 +66,7 @@ jobs:
 
           cp dist/anman-ai.exe   "${PKG}/"
           cp dist/README_JA.txt  "${PKG}/"
-          cp dist/config.yaml.example "${PKG}/config/config.yaml"
+          cp anman-ai/config/config.yaml.example "${PKG}/config/config.yaml"
 
           7z a "${PKG}.zip" "${PKG}/"
           echo "PKG_ZIP=${PKG}.zip" >> $GITHUB_ENV
