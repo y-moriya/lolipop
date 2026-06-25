@@ -21,7 +21,8 @@ else
 end
 
 no_web = ARGV.include?('--no-web') || ARGV.include?('--cli')
-clean_argv = ARGV.reject { |arg| arg == '--no-web' || arg == '--cli' }
+no_browser = ARGV.include?('--no-browser')
+clean_argv = ARGV.reject { |arg| ['--no-web', '--cli', '--no-browser'].include?(arg) }
 
 if ARGV.include?('--update')
   require 'updater'
@@ -155,19 +156,21 @@ begin
     puts "\nWebUI Server started at: #{url}"
     puts "Press Ctrl+C to stop the server."
     
-    # 自動で規定のブラウザを開く
-    Thread.new do
-      sleep 1.0 # サーバーの起動待ち
-      begin
-        if RUBY_PLATFORM =~ /mswin|mingw|cygwin/
-          system("start #{url}")
-        elsif RUBY_PLATFORM =~ /darwin/
-          system("open #{url}")
-        else
-          system("xdg-open #{url} > /dev/null 2>&1 &")
+    # 自動で規定のブラウザを開く（--no-browser 指定時はスキップ）
+    unless no_browser
+      Thread.new do
+        sleep 1.0 # サーバーの起動待ち
+        begin
+          if RUBY_PLATFORM =~ /mswin|mingw|cygwin/
+            system("start #{url}")
+          elsif RUBY_PLATFORM =~ /darwin/
+            system("open #{url}")
+          else
+            system("xdg-open #{url} > /dev/null 2>&1 &")
+          end
+        rescue => e
+          puts "[System WARNING] Failed to auto-open browser: #{e.message}"
         end
-      rescue => e
-        puts "[System WARNING] Failed to auto-open browser: #{e.message}"
       end
     end
     

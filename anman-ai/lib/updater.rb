@@ -217,65 +217,67 @@ module AnmanAI
     def self.apply_update_windows(extracted_root, exe_dir, zip_filename)
       bat_path = File.join(exe_dir, 'apply_update.bat')
       log_file = File.join(exe_dir, 'log', 'updater.log')
-      bat_content = <<~BATCH
-        @echo off
-        set "LOG_FILE=#{log_file.gsub('/', '\\')}"
+      extracted_root_win = extracted_root.gsub('/', '\\')
+      exe_dir_win = exe_dir.gsub('/', '\\')
+      tmp_dir_win = File.join(exe_dir, 'update_tmp').gsub('/', '\\')
+      zip_win = File.join(exe_dir, zip_filename).gsub('/', '\\')
+      log_win = log_file.gsub('/', '\\')
 
-        echo ============================================ >> "%LOG_FILE%"
-        echo  anman-ai Updater (Windows Script) >> "%LOG_FILE%"
-        echo  Time: %date% %time% >> "%LOG_FILE%"
-        echo ============================================ >> "%LOG_FILE%"
-        echo Waiting for old processes to release files... >> "%LOG_FILE%"
+      # 左寄せで生成してインデント混入を防ぐ。CRLFに変換してbinary書き込み。
+      lines = []
+      lines << '@echo off'
+      lines << "set \"LOG_FILE=#{log_win}\""
+      lines << ''
+      lines << 'echo ============================================ >> "%LOG_FILE%"'
+      lines << 'echo  anman-ai Updater (Windows Script) >> "%LOG_FILE%"'
+      lines << 'echo  Time: %date% %time% >> "%LOG_FILE%"'
+      lines << 'echo ============================================ >> "%LOG_FILE%"'
+      lines << 'echo Waiting for old processes to release files... >> "%LOG_FILE%"'
+      lines << ''
+      lines << ':: Wait 2 seconds for parent process to release file handles'
+      lines << 'timeout /t 2 /nobreak > nul'
+      lines << ''
+      lines << 'echo Copying update files... >> "%LOG_FILE%"'
+      lines << "robocopy \"#{extracted_root_win}\" \"#{exe_dir_win}\" /E /R:30 /W:1 /NFL /NDL /NP /NJH /NJS >> \"%LOG_FILE%\" 2>&1"
+      lines << 'if errorlevel 8 goto copy_failed'
+      lines << ''
+      lines << 'echo Cleaning up... >> "%LOG_FILE%"'
+      lines << "rmdir /s /q \"#{tmp_dir_win}\" >> \"%LOG_FILE%\" 2>&1"
+      lines << "if exist \"#{zip_win}\" del \"#{zip_win}\" >> \"%LOG_FILE%\" 2>&1"
+      lines << ''
+      lines << 'echo Update complete! Restarting... >> "%LOG_FILE%"'
+      lines << 'if exist "anman-ai.exe" goto start_exe'
+      lines << 'if exist "start.bat" goto start_bat'
+      lines << 'goto end_update'
+      lines << ''
+      lines << ':start_exe'
+      lines << 'echo Restarting anman-ai.exe... >> "%LOG_FILE%"'
+      lines << 'start "" "anman-ai.exe" --no-browser'
+      lines << 'goto end_update'
+      lines << ''
+      lines << ':start_bat'
+      lines << 'echo Restarting start.bat... >> "%LOG_FILE%"'
+      lines << 'start "" "start.bat" --no-browser'
+      lines << 'goto end_update'
+      lines << ''
+      lines << ':copy_failed'
+      lines << 'echo. >> "%LOG_FILE%"'
+      lines << 'echo [Error] Update failed: Files could not be copied. >> "%LOG_FILE%"'
+      lines << 'echo Please close any running anman-ai instances and try again. >> "%LOG_FILE%"'
+      lines << 'echo.'
+      lines << 'echo ======================================================='
+      lines << 'echo  [Error] Update failed!'
+      lines << 'echo  Please check details in:'
+      lines << 'echo  "%LOG_FILE%"'
+      lines << 'echo ======================================================='
+      lines << 'pause'
+      lines << 'exit /b 1'
+      lines << ''
+      lines << ':end_update'
+      lines << 'echo Update process finished successfully. >> "%LOG_FILE%"'
+      lines << 'del "%~f0"'
 
-        :: Wait 2 seconds for parent process to release file handles
-        timeout /t 2 /nobreak > nul
-
-        echo Copying update files... >> "%LOG_FILE%"
-        robocopy "#{extracted_root.gsub('/', '\\')}" "#{exe_dir.gsub('/', '\\')}" /E /R:30 /W:1 /NFL /NDL /NP /NJH /NJS >> "%LOG_FILE%" 2>&1
-        if errorlevel 8 goto copy_failed
-
-        echo Cleaning up... >> "%LOG_FILE%"
-        rmdir /s /q "#{File.join(exe_dir, 'update_tmp').gsub('/', '\\')}" >> "%LOG_FILE%" 2>&1
-        if exist "#{File.join(exe_dir, zip_filename).gsub('/', '\\')}" (
-          del "#{File.join(exe_dir, zip_filename).gsub('/', '\\')}" >> "%LOG_FILE%" 2>&1
-        )
-        
-        echo Update complete! Restarting... >> "%LOG_FILE%"
-        if exist "anman-ai.exe" goto start_exe
-        if exist "start.bat" goto start_bat
-        goto end_update
-
-        :start_exe
-        echo Restarting anman-ai.exe... >> "%LOG_FILE%"
-        start "" "anman-ai.exe"
-        goto end_update
-
-        :start_bat
-        echo Restarting start.bat... >> "%LOG_FILE%"
-        start "" "start.bat"
-        goto end_update
-
-        :copy_failed
-        echo. >> "%LOG_FILE%"
-        echo [Error] Update failed: Files could not be copied. >> "%LOG_FILE%"
-        echo Please close any running anman-ai instances and try again. >> "%LOG_FILE%"
-        
-        echo.
-        echo =======================================================
-        echo  [Error] Update failed!
-        echo  Please check details in:
-        echo  "%LOG_FILE%"
-        echo =======================================================
-        pause
-        exit /b 1
-
-        :end_update
-        echo Update process finished successfully. >> "%LOG_FILE%"
-        del "%~f0"
-      BATCH
-
-      # Ensure Windows style line endings (CRLF) and write as binary
-      bat_content_crlf = bat_content.gsub("\n", "\r\n")
+      bat_content_crlf = lines.join("\r\n") + "\r\n"
       bat_path_win = bat_path.gsub('/', '\\')
       File.binwrite(bat_path, bat_content_crlf)
       spawn("cmd.exe /c start \"\" \"#{bat_path_win}\"")
